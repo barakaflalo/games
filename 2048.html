@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="he">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>2048 — AppNest</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Heebo:wght@300;400;700;900&display=swap" rel="stylesheet">
+<style>
+/* NOTE: page direction is always LTR to avoid grid issues. Text alignment handled manually */
+:root{
+  --gold:#C9A84C;--gold-dim:#6A4E1A;
+  --bg:#0A0A0A;--header:#111;--dark2:#1A1A1A;--dark3:#222;
+  --text:#E8E0D0;--text-dim:#777;--border:#333;
+}
+body.day{
+  --bg:#F0EDE6;--header:#E8E2D8;--dark2:#FFFFFF;--dark3:#F0EDE6;
+  --text:#1A1A1A;--text-dim:#888;--border:#DDD;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+/* IMPORTANT: body is always LTR so grid layout is never flipped */
+body{
+  background:var(--bg);color:var(--text);font-family:'Heebo',sans-serif;
+  min-height:100vh;display:flex;flex-direction:column;align-items:center;
+  direction:ltr;
+  transition:background 0.3s,color 0.3s;
+}
+/* RTL text direction for Hebrew/Arabic UI elements only */
+body.rtl .rtl-text{ direction:rtl; }
+body.rtl .header-inner{ flex-direction:row-reverse; }
+
+.header{width:100%;background:var(--header);border-bottom:1px solid var(--gold-dim);padding:10px 16px;}
+.header-inner{display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.logo{display:flex;align-items:center;gap:8px;flex-shrink:0;}
+.logo-text{font-family:'Cinzel',serif;color:var(--gold);font-size:1rem;}
+.logo-sub{font-size:0.55rem;color:var(--gold-dim);letter-spacing:3px;display:block;}
+.header-btns{display:flex;gap:6px;align-items:center;}
+.icon-btn{background:var(--dark3);border:1px solid var(--gold-dim);color:var(--gold);width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:0.9rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.lang-btn{background:var(--dark3);border:1px solid var(--gold-dim);color:var(--gold);padding:5px 9px;border-radius:16px;cursor:pointer;font-size:0.75rem;font-family:'Heebo',sans-serif;position:relative;white-space:nowrap;}
+.lang-dropdown{position:absolute;top:110%;right:0;background:var(--dark2);border:1px solid var(--gold-dim);border-radius:10px;display:none;min-width:130px;z-index:200;box-shadow:0 4px 20px rgba(0,0,0,0.5);}
+.lang-dropdown.open{display:block;}
+.lang-opt{padding:9px 12px;cursor:pointer;font-size:0.82rem;display:flex;align-items:center;gap:7px;color:var(--text);direction:ltr;}
+.lang-opt:hover{background:var(--dark3);color:var(--gold);}
+
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:300;display:none;align-items:center;justify-content:center;padding:16px;}
+.modal-bg.open{display:flex;}
+.modal{background:var(--dark2);border:1px solid var(--gold-dim);border-radius:18px;padding:24px 20px;max-width:360px;width:100%;max-height:90vh;overflow-y:auto;}
+.modal-title{font-family:'Cinzel',serif;color:var(--gold);font-size:1.2rem;margin-bottom:14px;text-align:center;}
+.modal-close{background:none;border:1px solid var(--gold-dim);color:var(--gold);padding:4px 12px;border-radius:10px;cursor:pointer;font-family:'Heebo',sans-serif;font-size:0.8rem;float:right;}
+.modal p,.modal li{color:var(--text-dim);font-size:0.88rem;line-height:1.7;margin-bottom:6px;}
+.modal ul{padding-left:18px;}
+.key-badge{display:inline-block;background:var(--dark3);border:1px solid var(--gold-dim);color:var(--gold);padding:2px 8px;border-radius:6px;font-size:0.8rem;margin:0 2px;}
+.about-link{color:var(--gold);text-decoration:none;font-weight:700;}
+.section-title{color:var(--gold);font-size:0.8rem;font-weight:700;margin-top:12px;margin-bottom:4px;letter-spacing:1px;}
+
+.game-wrap{width:100%;max-width:380px;padding:14px;display:flex;flex-direction:column;align-items:center;gap:12px;}
+.title{font-family:'Cinzel',serif;font-size:2rem;color:var(--gold);text-align:center;}
+.subtitle{color:var(--text-dim);font-size:0.82rem;text-align:center;}
+
+.top-row{display:flex;align-items:center;justify-content:space-between;width:100%;gap:10px;}
+.scores{display:flex;gap:8px;}
+.stat-box{background:var(--dark2);border:1px solid var(--border);border-radius:10px;padding:8px 14px;text-align:center;min-width:70px;}
+.stat-label{font-size:0.68rem;color:var(--text-dim);}
+.stat-val{font-size:1.2rem;font-weight:700;color:var(--gold);}
+.top-btns{display:flex;gap:6px;flex-direction:column;}
+.gold-btn{background:linear-gradient(135deg,var(--gold-dim),var(--gold));color:#0A0A0A;border:none;padding:9px 18px;border-radius:20px;font-family:'Heebo',sans-serif;font-size:0.88rem;font-weight:700;cursor:pointer;transition:all 0.2s;white-space:nowrap;}
+.gold-btn:hover{transform:scale(1.04);}
+.outline-btn{background:transparent;color:var(--gold);border:1px solid var(--gold-dim);padding:8px 16px;border-radius:20px;font-family:'Heebo',sans-serif;font-size:0.85rem;cursor:pointer;white-space:nowrap;}
+.outline-btn:hover{background:var(--dark3);}
+
+/* GRID — always LTR, no direction changes */
+.board-wrap{position:relative;background:var(--dark3);border-radius:14px;padding:8px;border:2px solid var(--gold-dim);width:100%;}
+.grid{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:8px;
+  direction:ltr; /* NEVER change this */
+}
+.cell{
+  aspect-ratio:1;
+  background:#1E1E1E;
+  border-radius:8px;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Cinzel',serif;font-weight:700;font-size:1.4rem;
+  border:1px solid #2A2A2A;
+  transition:background 0.1s;
+}
+.t2   {background:#2A2010;color:#C9A84C;}
+.t4   {background:#3A2E10;color:#D4A840;}
+.t8   {background:#C9A84C;color:#0A0A0A;}
+.t16  {background:#D4883C;color:#0A0A0A;}
+.t32  {background:#D46830;color:#fff;}
+.t64  {background:#C84828;color:#fff;}
+.t128 {background:#C9A84C;color:#0A0A0A;font-size:1.1rem;box-shadow:0 0 12px rgba(201,168,76,0.5);}
+.t256 {background:#D4B850;color:#0A0A0A;font-size:1rem;}
+.t512 {background:#E0C860;color:#0A0A0A;font-size:1rem;}
+.t1024{background:#E8D870;color:#0A0A0A;font-size:0.85rem;}
+.t2048{background:linear-gradient(135deg,#C9A84C,#F0C060);color:#0A0A0A;font-size:0.82rem;animation:pulse 1s infinite;}
+@keyframes pulse{0%,100%{transform:scale(1);}50%{transform:scale(1.06);}}
+
+.overlay{position:absolute;inset:0;background:rgba(0,0,0,0.82);border-radius:12px;display:none;flex-direction:column;align-items:center;justify-content:center;gap:12px;z-index:10;}
+.overlay.show{display:flex;}
+.ov-emoji{font-size:3rem;}
+.ov-title{font-family:'Cinzel',serif;font-size:1.4rem;color:var(--gold);}
+.ov-msg{color:var(--text-dim);font-size:0.85rem;}
+
+.hint-text{color:var(--text-dim);font-size:0.78rem;text-align:center;}
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="header-inner">
+    <div class="logo">
+      <svg width="32" height="32" viewBox="0 0 34 34"><polygon points="17,2 31,9.5 31,24.5 17,32 3,24.5 3,9.5" fill="#111" stroke="#C9A84C" stroke-width="1.5"/><text x="17" y="22" text-anchor="middle" font-family="Cinzel,serif" font-size="9" fill="#C9A84C">2048</text></svg>
+      <div><span class="logo-text">2048</span><span class="logo-sub">APPNEST</span></div>
+    </div>
+    <div class="header-btns">
+      <button class="icon-btn" onclick="openModal('howto')">❓</button>
+      <button class="icon-btn" onclick="toggleTheme()" id="themeBtn">🌙</button>
+      <button class="icon-btn" onclick="openModal('about')">ℹ️</button>
+      <div style="position:relative">
+        <button class="lang-btn" onclick="toggleLang()">🌐 <span id="lLabel">עב</span> ▾</button>
+        <div class="lang-dropdown" id="lDrop">
+          <div class="lang-opt" onclick="setLang('he')">🇮🇱 עברית</div>
+          <div class="lang-opt" onclick="setLang('en')">🇬🇧 English</div>
+          <div class="lang-opt" onclick="setLang('ru')">🇷🇺 Русский</div>
+          <div class="lang-opt" onclick="setLang('es')">🇪🇸 Español</div>
+          <div class="lang-opt" onclick="setLang('ar')">🇸🇦 العربية</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="howtoModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('howto')" data-i="close">Close</button>
+    <div class="modal-title" data-i="howtoTitle">❓ How to Play</div>
+    <div id="howtoContent"></div>
+  </div>
+</div>
+<div class="modal-bg" id="aboutModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('about')" data-i="close">Close</button>
+    <div style="text-align:center;margin-bottom:12px;">
+      <svg width="54" height="54" viewBox="0 0 34 34"><polygon points="17,2 31,9.5 31,24.5 17,32 3,24.5 3,9.5" fill="#111" stroke="#C9A84C" stroke-width="1.5"/><text x="17" y="22" text-anchor="middle" font-family="Cinzel,serif" font-size="9" fill="#C9A84C">2048</text></svg>
+    </div>
+    <div class="modal-title">2048 — AppNest</div>
+    <div id="aboutContent"></div>
+  </div>
+</div>
+
+<div class="game-wrap">
+  <div class="title">🧩 2048</div>
+  <div class="subtitle" data-i="sub">חבר אריחים זהים להגיע ל-2048!</div>
+
+  <div class="top-row">
+    <div class="scores">
+      <div class="stat-box"><div class="stat-label" data-i="score">ניקוד</div><div class="stat-val" id="scoreVal">0</div></div>
+      <div class="stat-box"><div class="stat-label" data-i="best">שיא</div><div class="stat-val" id="bestVal">0</div></div>
+    </div>
+    <div class="top-btns">
+      <button class="gold-btn" onclick="newGame()" data-i="new">חדש</button>
+      <button class="outline-btn" onclick="undo()" data-i="undo">↩ בטל</button>
+    </div>
+  </div>
+
+  <div class="board-wrap">
+    <div class="grid" id="grid"></div>
+    <div class="overlay" id="winOv">
+      <div class="ov-emoji">🏆</div>
+      <div class="ov-title" data-i="win2048">הגעת ל-2048!</div>
+      <div class="ov-msg" data-i="winMsg">מדהים!</div>
+      <div style="display:flex;gap:8px;">
+        <button class="gold-btn" onclick="keepGoing()" data-i="keep">המשך</button>
+        <button class="outline-btn" onclick="newGame()" data-i="new">חדש</button>
+      </div>
+    </div>
+    <div class="overlay" id="overOv">
+      <div class="ov-emoji">😔</div>
+      <div class="ov-title" data-i="over">משחק נגמר!</div>
+      <div class="ov-msg" id="overScore"></div>
+      <button class="gold-btn" onclick="newGame()" data-i="new">חדש</button>
+    </div>
+  </div>
+
+  <div class="hint-text" data-i="hint">← → ↑ ↓ או החלק עם האצבע</div>
+</div>
+
+<script>
+// ============ I18N ============
+const T={
+  he:{sub:'חבר אריחים זהים להגיע ל-2048!',score:'ניקוד',best:'שיא',new:'חדש',undo:'↩ בטל',
+    win2048:'הגעת ל-2048!',winMsg:'מדהים! תמשיך או התחל מחדש',keep:'המשך',over:'משחק נגמר!',
+    hint:'← → ↑ ↓ או החלק עם האצבע',scoreIs:'ניקוד: ',close:'סגור',howtoTitle:'❓ איך משחקים',
+    howto:`<p class="section-title">🎯 מטרה</p>
+      <p>הזז את האריחים עם החצים. כשאריחים זהים נפגשים הם מתחברים. הגע לאריח 2048!</p>
+      <p class="section-title">🕹️ שליטה</p>
+      <ul><li>מקשי <span class="key-badge">← → ↑ ↓</span> להזזה</li><li>החלקה עם האצבע</li></ul>
+      <p class="section-title">💡 טיפים</p>
+      <ul><li>שמור את האריח הגבוה בפינה</li><li>השתמש ב"בטל" לתיקון טעויות</li></ul>`,
+    about:`<p>© 2025 AppNest — כל הזכויות שמורות</p>
+      <p style="margin-top:8px">🌐 <a class="about-link" href="https://barakaflalo.github.io/appnest" target="_blank">barakaflalo.github.io/appnest</a></p>`
+  },
+  en:{sub:'Combine tiles to reach 2048!',score:'Score',best:'Best',new:'New',undo:'↩ Undo',
+    win2048:'You reached 2048!',winMsg:'Amazing! Keep going or restart',keep:'Keep Going',over:'Game Over!',
+    hint:'Arrow keys or swipe',scoreIs:'Score: ',close:'Close',howtoTitle:'❓ How to Play',
+    howto:`<p class="section-title">🎯 GOAL</p>
+      <p>Slide tiles with arrow keys. When two identical tiles meet, they merge. Reach 2048!</p>
+      <p class="section-title">🕹️ CONTROLS</p>
+      <ul><li><span class="key-badge">← → ↑ ↓</span> arrow keys</li><li>Swipe on mobile</li></ul>
+      <p class="section-title">💡 TIPS</p>
+      <ul><li>Keep your highest tile in a corner</li><li>Use Undo to fix mistakes</li></ul>`,
+    about:`<p>© 2025 AppNest — All rights reserved</p>
+      <p style="margin-top:8px">🌐 <a class="about-link" href="https://barakaflalo.github.io/appnest" target="_blank">barakaflalo.github.io/appnest</a></p>`
+  },
+  ru:{sub:'Объединяй плитки до 2048!',score:'Счёт',best:'Рекорд',new:'Новая',undo:'↩ Отменить',
+    win2048:'Ты достиг 2048!',winMsg:'Отлично!',keep:'Продолжить',over:'Игра окончена!',
+    hint:'Стрелки или свайп',scoreIs:'Счёт: ',close:'Закрыть',howtoTitle:'❓ Как играть',
+    howto:`<p class="section-title">🎯 ЦЕЛЬ</p><p>Двигай плитки стрелками. Одинаковые плитки сливаются. Достигни 2048!</p>
+      <p class="section-title">🕹️ УПРАВЛЕНИЕ</p><ul><li>Клавиши <span class="key-badge">← → ↑ ↓</span></li><li>Свайп</li></ul>`,
+    about:`<p>© 2025 AppNest — Все права защищены</p>
+      <p style="margin-top:8px">🌐 <a class="about-link" href="https://barakaflalo.github.io/appnest" target="_blank">barakaflalo.github.io/appnest</a></p>`
+  },
+  es:{sub:'¡Combina fichas para llegar a 2048!',score:'Puntos',best:'Récord',new:'Nueva',undo:'↩ Deshacer',
+    win2048:'¡Llegaste a 2048!',winMsg:'¡Increíble!',keep:'Continuar',over:'¡Juego terminado!',
+    hint:'Flechas o desliza',scoreIs:'Puntos: ',close:'Cerrar',howtoTitle:'❓ Cómo jugar',
+    howto:`<p class="section-title">🎯 OBJETIVO</p><p>Desliza fichas con las flechas. Las fichas iguales se fusionan. ¡Llega a 2048!</p>
+      <p class="section-title">🕹️ CONTROLES</p><ul><li>Teclas <span class="key-badge">← → ↑ ↓</span></li><li>Desliza en móvil</li></ul>`,
+    about:`<p>© 2025 AppNest — Todos los derechos reservados</p>
+      <p style="margin-top:8px">🌐 <a class="about-link" href="https://barakaflalo.github.io/appnest" target="_blank">barakaflalo.github.io/appnest</a></p>`
+  },
+  ar:{sub:'ادمج البلاط للوصول إلى 2048!',score:'النقاط',best:'أفضل',new:'جديد',undo:'↩ تراجع',
+    win2048:'وصلت إلى 2048!',winMsg:'رائع!',keep:'تابع',over:'انتهت اللعبة!',
+    hint:'مفاتيح الأسهم أو اسحب',scoreIs:'النقاط: ',close:'إغلاق',howtoTitle:'❓ كيف تلعب',
+    howto:`<p class="section-title">🎯 الهدف</p><p>حرّك البلاط بالأسهم. البلاطتان المتماثلتان تندمجان. اصل إلى 2048!</p>
+      <p class="section-title">🕹️ التحكم</p><ul><li>مفاتيح <span class="key-badge">← → ↑ ↓</span></li><li>اسحب على الهاتف</li></ul>`,
+    about:`<p>© 2025 AppNest — جميع الحقوق محفوظة</p>
+      <p style="margin-top:8px">🌐 <a class="about-link" href="https://barakaflalo.github.io/appnest" target="_blank">barakaflalo.github.io/appnest</a></p>`
+  },
+};
+
+let lang='he', isDark=true;
+function t(k){return(T[lang]||T.en)[k]||k;}
+
+function setLang(l){
+  lang=l;
+  document.getElementById('lLabel').textContent={he:'עב',en:'EN',ru:'РУ',es:'ES',ar:'عر'}[l];
+  document.getElementById('lDrop').classList.remove('open');
+  // Only flip UI text direction, NOT the grid
+  const isRTL=['he','ar'].includes(l);
+  document.body.classList.toggle('rtl', isRTL);
+  applyT();
+}
+function toggleLang(){document.getElementById('lDrop').classList.toggle('open');}
+document.addEventListener('click',e=>{
+  if(!e.target.closest('.lang-btn')&&!e.target.closest('.lang-dropdown'))
+    document.getElementById('lDrop').classList.remove('open');
+});
+function applyT(){
+  document.querySelectorAll('[data-i]').forEach(el=>el.textContent=t(el.dataset.i));
+  document.getElementById('howtoContent').innerHTML=t('howto');
+  document.getElementById('aboutContent').innerHTML=t('about');
+}
+function toggleTheme(){
+  isDark=!isDark;
+  document.body.classList.toggle('day',!isDark);
+  document.getElementById('themeBtn').textContent=isDark?'🌙':'☀️';
+}
+function openModal(type){
+  document.getElementById('howtoContent').innerHTML=t('howto');
+  document.getElementById('aboutContent').innerHTML=t('about');
+  document.getElementById(type+'Modal').classList.add('open');
+}
+function closeModal(type){document.getElementById(type+'Modal').classList.remove('open');}
+document.querySelectorAll('.modal-bg').forEach(m=>
+  m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');})
+);
+
+// ============ GAME LOGIC ============
+// board[row][col] where row=0 is TOP, col=0 is LEFT — always, regardless of UI language
+let board, score=0, best=0, prevBoard=null, prevScore=0, wonAlready=false;
+
+function newGame(){
+  // 4x4 grid, row 0=top, col 0=left
+  board = [
+    [0,0,0,0],
+    [0,0,0,0],
+    [0,0,0,0],
+    [0,0,0,0]
+  ];
+  score=0; wonAlready=false; prevBoard=null; prevScore=0;
+  document.getElementById('winOv').classList.remove('show');
+  document.getElementById('overOv').classList.remove('show');
+  addTile(); addTile();
+  render();
+}
+
+function addTile(){
+  const empty=[];
+  for(let r=0;r<4;r++) for(let c=0;c<4;c++) if(!board[r][c]) empty.push([r,c]);
+  if(!empty.length) return;
+  const [r,c] = empty[Math.floor(Math.random()*empty.length)];
+  board[r][c] = Math.random()<0.9 ? 2 : 4;
+}
+
+function render(){
+  document.getElementById('scoreVal').textContent = score;
+  document.getElementById('bestVal').textContent = best;
+  const g = document.getElementById('grid');
+  g.innerHTML = '';
+  // Render row by row, left to right — grid is always LTR
+  for(let r=0;r<4;r++){
+    for(let c=0;c<4;c++){
+      const v = board[r][c];
+      const el = document.createElement('div');
+      el.className = 'cell' + (v ? ' t'+v : '');
+      el.textContent = v || '';
+      g.appendChild(el);
+    }
+  }
+}
+
+// Slide and merge a single row to the LEFT
+// Example: [0,2,2,4] → [4,4,0,0]
+function slideLeft(row){
+  // Step 1: remove zeros
+  let tiles = row.filter(v => v > 0);
+  // Step 2: merge adjacent equal tiles
+  for(let i=0; i<tiles.length-1; i++){
+    if(tiles[i] === tiles[i+1]){
+      tiles[i] *= 2;
+      score += tiles[i];
+      if(score > best) best = score;
+      tiles.splice(i+1, 1); // remove merged tile
+    }
+  }
+  // Step 3: pad with zeros on the right
+  while(tiles.length < 4) tiles.push(0);
+  return tiles;
+}
+
+function move(dir){
+  // Save state for undo
+  prevBoard = board.map(r=>[...r]);
+  prevScore = score;
+
+  let moved = false;
+  const b = board.map(r=>[...r]);
+
+  if(dir === 'left'){
+    // Slide each row to the left
+    for(let r=0;r<4;r++){
+      const orig = [...b[r]];
+      const result = slideLeft(b[r]);
+      if(result.join(',') !== orig.join(',')) moved = true;
+      b[r] = result;
+    }
+  }
+  else if(dir === 'right'){
+    // Slide each row to the right = reverse, slideLeft, reverse
+    for(let r=0;r<4;r++){
+      const orig = [...b[r]];
+      const result = slideLeft([...b[r]].reverse()).reverse();
+      if(result.join(',') !== orig.join(',')) moved = true;
+      b[r] = result;
+    }
+  }
+  else if(dir === 'up'){
+    // Slide each column upward = treat column as row, slideLeft
+    for(let c=0;c<4;c++){
+      const col = [b[0][c], b[1][c], b[2][c], b[3][c]];
+      const orig = [...col];
+      const result = slideLeft(col);
+      if(result.join(',') !== orig.join(',')) moved = true;
+      for(let r=0;r<4;r++) b[r][c] = result[r];
+    }
+  }
+  else if(dir === 'down'){
+    // Slide each column downward = reverse column, slideLeft, reverse
+    for(let c=0;c<4;c++){
+      const col = [b[0][c], b[1][c], b[2][c], b[3][c]];
+      const orig = [...col];
+      const result = slideLeft([...col].reverse()).reverse();
+      if(result.join(',') !== orig.join(',')) moved = true;
+      for(let r=0;r<4;r++) b[r][c] = result[r];
+    }
+  }
+
+  if(!moved) return; // nothing changed, don't add tile
+
+  board = b;
+  addTile();
+  render();
+
+  // Check win
+  if(!wonAlready && board.some(r=>r.some(v=>v===2048))){
+    wonAlready = true;
+    document.getElementById('winOv').classList.add('show');
+    return;
+  }
+  // Check game over
+  if(!canMove()){
+    document.getElementById('overOv').classList.add('show');
+    document.getElementById('overScore').textContent = t('scoreIs') + score;
+  }
+}
+
+function canMove(){
+  for(let r=0;r<4;r++) for(let c=0;c<4;c++){
+    if(!board[r][c]) return true; // empty cell
+    if(c<3 && board[r][c]===board[r][c+1]) return true; // can merge right
+    if(r<3 && board[r][c]===board[r+1][c]) return true; // can merge down
+  }
+  return false;
+}
+
+function undo(){
+  if(!prevBoard) return;
+  board = prevBoard; score = prevScore;
+  prevBoard = null;
+  document.getElementById('winOv').classList.remove('show');
+  document.getElementById('overOv').classList.remove('show');
+  render();
+}
+
+function keepGoing(){
+  document.getElementById('winOv').classList.remove('show');
+}
+
+// ============ INPUT ============
+document.addEventListener('keydown', e=>{
+  // Physical arrow keys — always map to physical direction
+  if(e.key==='ArrowLeft')  { e.preventDefault(); move('left');  }
+  if(e.key==='ArrowRight') { e.preventDefault(); move('right'); }
+  if(e.key==='ArrowUp')    { e.preventDefault(); move('up');    }
+  if(e.key==='ArrowDown')  { e.preventDefault(); move('down');  }
+});
+
+// Touch swipe
+let touchStartX=0, touchStartY=0;
+const grid = document.getElementById('grid');
+grid.addEventListener('touchstart', e=>{
+  touchStartX = e.touches[0].clientX;
+  touchStartY = e.touches[0].clientY;
+}, {passive:true});
+grid.addEventListener('touchend', e=>{
+  const dx = e.changedTouches[0].clientX - touchStartX;
+  const dy = e.changedTouches[0].clientY - touchStartY;
+  const absDx = Math.abs(dx), absDy = Math.abs(dy);
+  if(Math.max(absDx,absDy) < 20) return; // too small
+  if(absDx > absDy){
+    move(dx > 0 ? 'right' : 'left');
+  } else {
+    move(dy > 0 ? 'down' : 'up');
+  }
+}, {passive:true});
+
+// ============ INIT ============
+newGame();
+applyT();
+</script>
+</body>
+</html>

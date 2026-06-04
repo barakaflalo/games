@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="he">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>סודוקו — AppNest</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Heebo:wght@300;400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --gold:#C9A84C;--gold-dim:#6A4E1A;
+  --bg:#0A0A0A;--header:#111;--dark2:#1A1A1A;--dark3:#222;
+  --text:#E8E0D0;--text-dim:#777;--border:#333;
+  --green:#4CAF7A;--red:#E05050;--blue:#4A8FD4;
+}
+body.day{
+  --bg:#F0EDE6;--header:#E8E2D8;--dark2:#FFFFFF;--dark3:#F0EDE6;
+  --text:#1A1A1A;--text-dim:#888;--border:#DDD;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'Heebo',sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center;transition:background 0.3s,color 0.3s;direction:ltr;}
+body.ltr{direction:ltr;}
+.header{width:100%;background:var(--header);border-bottom:1px solid var(--gold-dim);padding:10px 16px;display:flex;align-items:center;justify-content:space-between;gap:8px;direction:rtl;}
+.logo-text{font-family:'Cinzel',serif;color:var(--gold);font-size:1rem;}
+.logo-sub{font-size:0.55rem;color:var(--gold-dim);letter-spacing:3px;display:block;}
+.header-btns{display:flex;gap:6px;align-items:center;}
+.icon-btn{background:var(--dark3);border:1px solid var(--gold-dim);color:var(--gold);width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:0.9rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.lang-btn{background:var(--dark3);border:1px solid var(--gold-dim);color:var(--gold);padding:5px 9px;border-radius:16px;cursor:pointer;font-size:0.75rem;font-family:'Heebo',sans-serif;position:relative;white-space:nowrap;}
+.lang-dropdown{position:absolute;top:110%;left:0;background:var(--dark2);border:1px solid var(--gold-dim);border-radius:10px;display:none;min-width:130px;z-index:200;box-shadow:0 4px 20px rgba(0,0,0,0.5);}
+.lang-dropdown.open{display:block;}
+.lang-opt{padding:9px 12px;cursor:pointer;font-size:0.82rem;display:flex;align-items:center;gap:7px;color:var(--text);}
+.lang-opt:hover{background:var(--dark3);color:var(--gold);}
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:300;display:none;align-items:center;justify-content:center;padding:16px;}
+.modal-bg.open{display:flex;}
+.modal{background:var(--dark2);border:1px solid var(--gold-dim);border-radius:18px;padding:24px 20px;max-width:360px;width:100%;max-height:90vh;overflow-y:auto;}
+.modal-title{font-family:'Cinzel',serif;color:var(--gold);font-size:1.2rem;margin-bottom:14px;text-align:center;}
+.modal-close{float:left;background:none;border:1px solid var(--gold-dim);color:var(--gold);padding:4px 12px;border-radius:10px;cursor:pointer;font-family:'Heebo',sans-serif;font-size:0.8rem;}
+body.ltr .modal-close{float:right;}
+.modal p,.modal li{color:var(--text-dim);font-size:0.88rem;line-height:1.7;margin-bottom:6px;}
+.modal ul{padding-right:18px;}
+body.ltr .modal ul{padding-left:18px;padding-right:0;}
+.key-badge{display:inline-block;background:var(--dark3);border:1px solid var(--gold-dim);color:var(--gold);padding:2px 8px;border-radius:6px;font-size:0.8rem;margin:0 2px;}
+.about-link{color:var(--gold);text-decoration:none;font-weight:700;}
+.section-title{color:var(--gold);font-size:0.8rem;font-weight:700;margin-top:12px;margin-bottom:4px;letter-spacing:1px;}
+.game-wrap{width:100%;max-width:400px;padding:12px 14px;display:flex;flex-direction:column;align-items:center;gap:10px;direction:rtl;}
+.title{font-family:'Cinzel',serif;font-size:1.7rem;color:var(--gold);}
+.stats-row{display:flex;gap:8px;justify-content:center;width:100%;}
+.stat-box{background:var(--dark2);border:1px solid var(--border);border-radius:10px;padding:7px 10px;text-align:center;flex:1;}
+.stat-label{font-size:0.65rem;color:var(--text-dim);}
+.stat-val{font-size:1.05rem;font-weight:700;color:var(--gold);}
+.diff-row{display:flex;gap:6px;}
+.diff-btn{background:var(--dark3);border:1px solid var(--border);color:var(--text-dim);padding:5px 13px;border-radius:12px;cursor:pointer;font-size:0.8rem;font-family:'Heebo',sans-serif;transition:all 0.15s;}
+.diff-btn.active{border-color:var(--gold);color:var(--gold);}
+.board{display:grid;grid-template-columns:repeat(9,1fr);background:var(--gold-dim);border:2px solid var(--gold-dim);border-radius:8px;overflow:hidden;width:100%;direction:ltr;}
+.cell{aspect-ratio:1;background:var(--dark2);display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;font-size:0.95rem;cursor:pointer;transition:background 0.12s;border:0.5px solid var(--border);-webkit-tap-highlight-color:transparent;}
+.cell.box-right{border-right:2px solid var(--gold-dim);}
+.cell.box-bottom{border-bottom:2px solid var(--gold-dim);}
+.cell.given{color:var(--gold);font-weight:700;}
+.cell.user{color:var(--blue);}
+.cell.selected{background:#2A2A1A!important;}
+.cell.highlight{background:#1C1C14;}
+.cell.error{color:var(--red)!important;background:#2A1010!important;}
+body.day .cell{background:#FAFAF8;border-color:#DDD;}
+body.day .cell.highlight{background:#F5F0E8;}
+body.day .cell.selected{background:#FFF8E0!important;}
+.numpad{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;width:100%;direction:ltr;}
+.num-btn{background:var(--dark2);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:11px 0;font-family:'Cinzel',serif;font-size:1.05rem;cursor:pointer;transition:all 0.15s;text-align:center;}
+.num-btn:hover{border-color:var(--gold-dim);color:var(--gold);}
+.num-btn.erase{font-family:'Heebo',sans-serif;font-size:0.8rem;color:var(--text-dim);}
+.action-row{display:flex;gap:7px;width:100%;}
+.gold-btn{background:linear-gradient(135deg,var(--gold-dim),var(--gold));color:#0A0A0A;border:none;padding:9px 0;border-radius:20px;font-family:'Heebo',sans-serif;font-size:0.85rem;font-weight:700;cursor:pointer;flex:1;transition:all 0.2s;}
+.gold-btn:hover{transform:scale(1.03);}
+.outline-btn{background:transparent;color:var(--gold);border:1px solid var(--gold-dim);padding:9px 0;border-radius:20px;font-family:'Heebo',sans-serif;font-size:0.82rem;cursor:pointer;flex:1;}
+.outline-btn:hover{background:var(--dark3);}
+.msg-bar{min-height:20px;text-align:center;font-size:0.82rem;color:var(--text-dim);}
+.msg-bar.win{color:var(--green);font-weight:700;}
+.msg-bar.err{color:var(--red);}
+</style>
+</head>
+<body>
+<div class="header">
+  <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+    <svg width="32" height="32" viewBox="0 0 34 34"><polygon points="17,2 31,9.5 31,24.5 17,32 3,24.5 3,9.5" fill="#111" stroke="#C9A84C" stroke-width="1.5"/><text x="17" y="22" text-anchor="middle" font-family="Cinzel,serif" font-size="10" fill="#C9A84C">S</text></svg>
+    <div><span class="logo-text" data-i="titleShort">סודוקו</span><span class="logo-sub">APPNEST</span></div>
+  </div>
+  <div class="header-btns">
+    <button class="icon-btn" onclick="openModal('howto')">❓</button>
+    <button class="icon-btn" onclick="toggleTheme()" id="themeBtn">🌙</button>
+    <button class="icon-btn" onclick="openModal('about')">ℹ️</button>
+    <div style="position:relative">
+      <button class="lang-btn" onclick="toggleLang()">🌐 <span id="lLabel">עב</span> ▾</button>
+      <div class="lang-dropdown" id="lDrop">
+        <div class="lang-opt" onclick="setLang('he')">🇮🇱 עברית</div>
+        <div class="lang-opt" onclick="setLang('en')">🇬🇧 English</div>
+        <div class="lang-opt" onclick="setLang('ru')">🇷🇺 Русский</div>
+        <div class="lang-opt" onclick="setLang('es')">🇪🇸 Español</div>
+        <div class="lang-opt" onclick="setLang('ar')">🇸🇦 العربية</div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal-bg" id="howtoModal"><div class="modal"><button class="modal-close" onclick="closeModal('howto')" data-i="close">סגור</button><div class="modal-title" data-i="howtoTitle">❓ איך משחקים</div><div id="howtoContent"></div></div></div>
+<div class="modal-bg" id="aboutModal"><div class="modal"><button class="modal-close" onclick="closeModal('about')" data-i="close">סגור</button><div style="text-align:center;margin-bottom:10px;"><svg width="50" height="50" viewBox="0 0 34 34"><polygon points="17,2 31,9.5 31,24.5 17,32 3,24.5 3,9.5" fill="#111" stroke="#C9A84C" stroke-width="1.5"/><text x="17" y="22" text-anchor="middle" font-family="Cinzel,serif" font-size="10" fill="#C9A84C">S</text></svg></div><div class="modal-title" data-i="title">🔢 סודוקו — AppNest</div><div id="aboutContent"></div></div></div>
+<div class="game-wrap">
+  <div class="title" data-i="title">🔢 סודוקו</div>
+  <div class="stats-row">
+    <div class="stat-box"><div class="stat-label" data-i="time">זמן</div><div class="stat-val" id="timeVal">0:00</div></div>
+    <div class="stat-box"><div class="stat-label" data-i="errors">שגיאות</div><div class="stat-val" id="errVal">0/3</div></div>
+    <div class="stat-box"><div class="stat-label" data-i="hints">רמזים</div><div class="stat-val" id="hintsVal">3</div></div>
+  </div>
+  <div class="diff-row">
+    <button class="diff-btn active" onclick="setDiff('easy')" id="dEasy" data-i="easy">קל</button>
+    <button class="diff-btn" onclick="setDiff('medium')" id="dMedium" data-i="medium">בינוני</button>
+    <button class="diff-btn" onclick="setDiff('hard')" id="dHard" data-i="hard">קשה</button>
+  </div>
+  <div class="board" id="board"></div>
+  <div class="numpad" id="numpad"></div>
+  <div class="action-row">
+    <button class="gold-btn" onclick="newGame()" data-i="new">משחק חדש</button>
+    <button class="outline-btn" onclick="useHint()" data-i="hintBtn">💡 רמז</button>
+    <button class="outline-btn" onclick="checkAll()" data-i="check">✓ בדוק</button>
+  </div>
+  <div class="msg-bar" id="msgBar"></div>
+</div>
+<script>
+const T={
+  he:{title:'🔢 סודוקו',titleShort:'סודוקו',time:'זמן',errors:'שגיאות',hints:'רמזים',easy:'קל',medium:'בינוני',hard:'קשה',new:'משחק חדש',hintBtn:'💡 רמז',check:'✓ בדוק',erase:'מחק',win:'🎉 כל הכבוד! פתרת!',err3:'3 שגיאות — משחק נגמר!',hintUsed:'רמז שומש!',noHints:'אין יותר רמזים',checkOk:'הכל נכון! 👍',checkErr:'יש שגיאות ✗',close:'סגור',howtoTitle:'❓ איך משחקים',
+    howto:`<p class="section-title">🎯 מטרה</p><p>מלא את הלוח 9×9 כך שכל שורה, טור ומשבצת 3×3 יכילו את המספרים 1 עד 9 פעם אחת בלבד.</p><p class="section-title">🕹️ שליטה</p><ul><li>לחץ על תא ריק כדי לבחור אותו</li><li>לחץ על מספר בלוח המספרים להזנה</li><li>מקשי <span class="key-badge">1-9</span> במקלדת</li><li>מקשי חצים למעבר בין תאים</li></ul><p class="section-title">💡 טיפים</p><ul><li>השתמש עד 3 רמזים בכל משחק</li><li>יותר מ-3 שגיאות — המשחק נגמר</li><li>"בדוק" מסמן שגיאות באדום</li></ul>`,
+    about:`<p>© 2025 AppNest — כל הזכויות שמורות</p><p style="margin-top:8px">חלק מאוסף המשחקים החינמיים של AppNest.</p><p style="margin-top:8px">🌐 <a class="about-link" href="https://barakaflalo.github.io/appnest" target="_blank">barakaflalo.github.io/appnest</a></p>`,
+  },
+  en:{title:'🔢 Sudoku',titleShort:'Sudoku',time:'Time',errors:'Errors',hints:'Hints',easy:'Easy',medium:'Medium',hard:'Hard',new:'New Game',hintBtn:'💡 Hint',check:'✓ Check',erase:'Erase',win:'🎉 Congratulations! Solved!',err3:'3 errors — Game Over!',hintUsed:'Hint used!',noHints:'No more hints',checkOk:'All correct! 👍',checkErr:'There are errors ✗',close:'Close',howtoTitle:'❓ How to Play',
+    howto:`<p class="section-title">🎯 GOAL</p><p>Fill the 9×9 grid so every row, column, and 3×3 box contains the digits 1–9 exactly once.</p><p class="section-title">🕹️ CONTROLS</p><ul><li>Tap an empty cell to select it</li><li>Tap a number on the numpad to enter it</li><li>Keyboard <span class="key-badge">1–9</span> to enter digits</li><li>Arrow keys to navigate cells</li></ul><p class="section-title">💡 TIPS</p><ul><li>You have 3 hints per game</li><li>More than 3 errors = Game Over</li><li>"Check" highlights errors in red</li></ul>`,
+    about:`<p>© 2025 AppNest — All rights reserved</p><p style="margin-top:8px">Part of the free AppNest games collection.</p><p style="margin-top:8px">🌐 <a class="about-link" href="https://barakaflalo.github.io/appnest" target="_blank">barakaflalo.github.io/appnest</a></p>`,
+  },
+  ru:{title:'🔢 Судоку',titleShort:'Судоку',time:'Время',errors:'Ошибки',hints:'Подсказки',easy:'Легко',medium:'Средне',hard:'Сложно',new:'Новая игра',hintBtn:'💡 Подсказка',check:'✓ Проверить',erase:'Стереть',win:'🎉 Поздравляем! Решено!',err3:'3 ошибки — игра окончена!',hintUsed:'Подсказка использована!',noHints:'Подсказок больше нет',checkOk:'Всё верно! 👍',checkErr:'Есть ошибки ✗',close:'Закрыть',howtoTitle:'❓ Как играть',
+    howto:`<p class="section-title">🎯 ЦЕЛЬ</p><p>Заполни сетку 9×9 так, чтобы каждая строка, столбец и блок 3×3 содержали цифры 1–9 ровно по одному разу.</p><p class="section-title">🕹️ УПРАВЛЕНИЕ</p><ul><li>Нажми на пустую клетку для выбора</li><li>Нажми цифру на клавиатуре или цифровой панели</li><li>Стрелки для перемещения между клетками</li></ul><p class="section-title">💡 СОВЕТЫ</p><ul><li>3 подсказки на игру</li><li>Более 3 ошибок — игра окончена</li></ul>`,
+    about:`<p>© 2025 AppNest — Все права защищены</p><p style="margin-top:8px">🌐 <a class="about-link" href="https://barakaflalo.github.io/appnest" target="_blank">barakaflalo.github.io/appnest</a></p>`,
+  },
+  es:{title:'🔢 Sudoku',titleShort:'Sudoku',time:'Tiempo',errors:'Errores',hints:'Pistas',easy:'Fácil',medium:'Medio',hard:'Difícil',new:'Nueva partida',hintBtn:'💡 Pista',check:'✓ Verificar',erase:'Borrar',win:'🎉 ¡Felicidades! ¡Resuelto!',err3:'3 errores — ¡Juego terminado!',hintUsed:'¡Pista usada!',noHints:'Sin más pistas',checkOk:'¡Todo correcto! 👍',checkErr:'Hay errores ✗',close:'Cerrar',howtoTitle:'❓ Cómo jugar',
+    howto:`<p class="section-title">🎯 OBJETIVO</p><p>Rellena la cuadrícula 9×9 de modo que cada fila, columna y caja 3×3 contenga los dígitos 1–9 exactamente una vez.</p><p class="section-title">🕹️ CONTROLES</p><ul><li>Toca una celda vacía para seleccionarla</li><li>Toca un número en el teclado numérico</li><li>Teclas <span class="key-badge">1–9</span> y flechas</li></ul><p class="section-title">💡 CONSEJOS</p><ul><li>Tienes 3 pistas por partida</li><li>Más de 3 errores = Fin del juego</li></ul>`,
+    about:`<p>© 2025 AppNest — Todos los derechos reservados</p><p style="margin-top:8px">🌐 <a class="about-link" href="https://barakaflalo.github.io/appnest" target="_blank">barakaflalo.github.io/appnest</a></p>`,
+  },
+  ar:{title:'🔢 سودوكو',titleShort:'سودوكو',time:'الوقت',errors:'أخطاء',hints:'تلميحات',easy:'سهل',medium:'متوسط',hard:'صعب',new:'لعبة جديدة',hintBtn:'💡 تلميح',check:'✓ تحقق',erase:'امسح',win:'🎉 تهانينا! حللت!',err3:'3 أخطاء — انتهت اللعبة!',hintUsed:'تم استخدام التلميح!',noHints:'لا مزيد من التلميحات',checkOk:'كل شيء صحيح! 👍',checkErr:'توجد أخطاء ✗',close:'إغلاق',howtoTitle:'❓ كيف تلعب',
+    howto:`<p class="section-title">🎯 الهدف</p><p>املأ الشبكة 9×9 بحيث تحتوي كل صف وعمود ومربع 3×3 على الأرقام من 1 إلى 9 مرة واحدة فقط.</p><p class="section-title">🕹️ التحكم</p><ul><li>انقر على خلية فارغة لاختيارها</li><li>انقر على رقم في لوحة الأرقام</li><li>مفاتيح <span class="key-badge">1-9</span> ومفاتيح الأسهم</li></ul><p class="section-title">💡 نصائح</p><ul><li>لديك 3 تلميحات لكل لعبة</li><li>أكثر من 3 أخطاء = انتهت اللعبة</li></ul>`,
+    about:`<p>© 2025 AppNest — جميع الحقوق محفوظة</p><p style="margin-top:8px">🌐 <a class="about-link" href="https://barakaflalo.github.io/appnest" target="_blank">barakaflalo.github.io/appnest</a></p>`,
+  },
+};
+let lang='he',isDark=true;
+function t(k){return(T[lang]||T.en)[k]||k;}
+function setLang(l){
+  lang=l;
+  document.getElementById('lLabel').textContent={he:'עב',en:'EN',ru:'РУ',es:'ES',ar:'عر'}[l];
+  document.getElementById('lDrop').classList.remove('open');
+  // Body stays LTR always — only flip UI text elements
+  const isRTL=['he','ar'].includes(l);
+  document.querySelectorAll('.game-wrap,.header,.modal').forEach(el=>{
+    el.style.direction = isRTL ? 'rtl' : 'ltr';
+  });
+  applyT();
+}
+function toggleLang(){document.getElementById('lDrop').classList.toggle('open');}
+document.addEventListener('click',e=>{if(!e.target.closest('.lang-btn')&&!e.target.closest('.lang-dropdown'))document.getElementById('lDrop').classList.remove('open');});
+function applyT(){document.querySelectorAll('[data-i]').forEach(el=>el.textContent=t(el.dataset.i));document.getElementById('howtoContent').innerHTML=t('howto');document.getElementById('aboutContent').innerHTML=t('about');renderNumpad();}
+function toggleTheme(){isDark=!isDark;document.body.classList.toggle('day',!isDark);document.getElementById('themeBtn').textContent=isDark?'🌙':'☀️';}
+function openModal(type){document.getElementById('howtoContent').innerHTML=t('howto');document.getElementById('aboutContent').innerHTML=t('about');document.getElementById(type+'Modal').classList.add('open');}
+function closeModal(type){document.getElementById(type+'Modal').classList.remove('open');}
+document.querySelectorAll('.modal-bg').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');}));
+
+// SUDOKU ENGINE
+function generateFull(){const g=Array(9).fill(null).map(()=>Array(9).fill(0));solve(g);return g;}
+function solve(g){const e=findEmpty(g);if(!e)return true;const[r,c]=e;const nums=[1,2,3,4,5,6,7,8,9].sort(()=>Math.random()-0.5);for(const n of nums){if(valid(g,r,c,n)){g[r][c]=n;if(solve(g))return true;g[r][c]=0;}}return false;}
+function findEmpty(g){for(let r=0;r<9;r++)for(let c=0;c<9;c++)if(!g[r][c])return[r,c];return null;}
+function valid(g,r,c,n){if(g[r].includes(n))return false;if(g.some(row=>row[c]===n))return false;const br=Math.floor(r/3)*3,bc=Math.floor(c/3)*3;for(let i=0;i<3;i++)for(let j=0;j<3;j++)if(g[br+i][bc+j]===n)return false;return true;}
+function removeCells(full,count){const p=full.map(r=>[...r]);let removed=0,attempts=0;while(removed<count&&attempts<200){const r=Math.floor(Math.random()*9),c=Math.floor(Math.random()*9);if(!p[r][c]){attempts++;continue;}const bk=p[r][c];p[r][c]=0;const cp=p.map(x=>[...x]);if(countSol(cp)===1)removed++;else p[r][c]=bk;attempts++;}return p;}
+function countSol(g,count=0){if(count>1)return count;const e=findEmpty(g);if(!e)return count+1;const[r,c]=e;for(let n=1;n<=9;n++){if(valid(g,r,c,n)){g[r][c]=n;count=countSol(g,count);g[r][c]=0;}if(count>1)return count;}return count;}
+
+const REMOVES={easy:35,medium:45,hard:52};
+let solution,puzzle,userGrid,selected=null,errors=0,hintsLeft=3,diff='easy',timer=null,seconds=0,gameOver=false;
+
+function setDiff(d){diff=d;['easy','medium','hard'].forEach(x=>document.getElementById('d'+x.charAt(0).toUpperCase()+x.slice(1)).classList.toggle('active',x===d));newGame();}
+function newGame(){
+  clearInterval(timer);seconds=0;errors=0;hintsLeft=3;selected=null;gameOver=false;
+  document.getElementById('errVal').textContent='0/3';
+  document.getElementById('hintsVal').textContent='3';
+  document.getElementById('timeVal').textContent='0:00';
+  document.getElementById('msgBar').textContent='';
+  document.getElementById('msgBar').className='msg-bar';
+  solution=generateFull();puzzle=removeCells(solution,REMOVES[diff]);
+  userGrid=puzzle.map(r=>r.map(v=>v?v:0));
+  renderBoard();
+  timer=setInterval(()=>{seconds++;const m=Math.floor(seconds/60),s=seconds%60;document.getElementById('timeVal').textContent=m+':'+(s<10?'0':'')+s;},1000);
+}
+function renderBoard(){
+  const b=document.getElementById('board');b.innerHTML='';
+  for(let r=0;r<9;r++)for(let c=0;c<9;c++){
+    const el=document.createElement('div');el.className='cell';
+    if(c===2||c===5)el.classList.add('box-right');
+    if(r===2||r===5)el.classList.add('box-bottom');
+    const given=puzzle[r][c]!==0,val=userGrid[r][c];
+    if(given){el.classList.add('given');el.textContent=val;}
+    else if(val){el.classList.add('user');el.textContent=val;if(val!==solution[r][c])el.classList.add('error');}
+    if(selected){const[sr,sc]=selected;if(r===sr&&c===sc)el.classList.add('selected');else if(r===sr||c===sc||(Math.floor(r/3)===Math.floor(sr/3)&&Math.floor(c/3)===Math.floor(sc/3)))el.classList.add('highlight');}
+    if(!given&&!gameOver)el.addEventListener('click',()=>selectCell(r,c));
+    b.appendChild(el);
+  }
+}
+function renderNumpad(){
+  const np=document.getElementById('numpad');np.innerHTML='';
+  for(let n=1;n<=9;n++){const btn=document.createElement('button');btn.className='num-btn';btn.textContent=n;btn.onclick=()=>enterNum(n);np.appendChild(btn);}
+  const er=document.createElement('button');er.className='num-btn erase';er.textContent=t('erase');er.onclick=()=>enterNum(0);np.appendChild(er);
+}
+function selectCell(r,c){if(gameOver)return;selected=[r,c];renderBoard();}
+function enterNum(n){
+  if(!selected||gameOver)return;const[r,c]=selected;if(puzzle[r][c])return;
+  userGrid[r][c]=n;
+  if(n&&n!==solution[r][c]){errors++;document.getElementById('errVal').textContent=errors+'/3';if(errors>=3){gameOver=true;clearInterval(timer);showMsg(t('err3'),'err');}}
+  renderBoard();
+  if(!gameOver&&isSolved()){clearInterval(timer);gameOver=true;showMsg(t('win'),'win');}
+}
+function isSolved(){for(let r=0;r<9;r++)for(let c=0;c<9;c++)if(userGrid[r][c]!==solution[r][c])return false;return true;}
+function useHint(){
+  if(gameOver)return;if(hintsLeft<=0){showMsg(t('noHints'),'err');return;}
+  let found=false;
+  for(let r=0;r<9&&!found;r++)for(let c=0;c<9&&!found;c++){if(!puzzle[r][c]&&userGrid[r][c]!==solution[r][c]){userGrid[r][c]=solution[r][c];selected=[r,c];found=true;}}
+  if(found){hintsLeft--;document.getElementById('hintsVal').textContent=hintsLeft;showMsg(t('hintUsed'),'');renderBoard();if(isSolved()){clearInterval(timer);gameOver=true;showMsg(t('win'),'win');}}
+}
+function checkAll(){let hasErr=false;for(let r=0;r<9;r++)for(let c=0;c<9;c++)if(userGrid[r][c]&&!puzzle[r][c]&&userGrid[r][c]!==solution[r][c])hasErr=true;showMsg(hasErr?t('checkErr'):t('checkOk'),hasErr?'err':'win');}
+function showMsg(msg,cls){const el=document.getElementById('msgBar');el.textContent=msg;el.className='msg-bar'+(cls?' '+cls:'');}
+document.addEventListener('keydown',e=>{
+  if(!selected||gameOver)return;
+  if(e.key>='1'&&e.key<='9')enterNum(parseInt(e.key));
+  if(e.key==='Backspace'||e.key==='Delete'||e.key==='0')enterNum(0);
+  const[r,c]=selected;
+  if(e.key==='ArrowUp'&&r>0)selectCell(r-1,c);
+  if(e.key==='ArrowDown'&&r<8)selectCell(r+1,c);
+  if(e.key==='ArrowLeft'&&c>0)selectCell(r,c-1);
+  if(e.key==='ArrowRight'&&c<8)selectCell(r,c+1);
+});
+newGame();applyT();
+</script>
+</body>
+</html>

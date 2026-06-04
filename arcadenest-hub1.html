@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<html lang="he">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ArcadeNest Hub — AppNest</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Heebo:wght@300;400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --gold:#C9A84C;--gold-light:#F0C060;--gold-dim:#8A6A2A;
+  --bg:#0A0A0A;--dark:#111;--dark2:#1A1A1A;--dark3:#222;
+  --text:#E8E0D0;--text-dim:#888;
+  --green:#4CAF7A;--red:#E05050;--blue:#4A8FD4;--purple:#9B59B6;
+}
+body.day{--bg:#F0EDE6;--dark:#E8E2D8;--dark2:#FFF;--dark3:#F0EDE6;--text:#1A1A1A;--text-dim:#888;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'Heebo',sans-serif;min-height:100vh;direction:rtl;transition:background 0.3s,color 0.3s;}
+body.ltr{direction:ltr;}
+
+.header{background:var(--dark);border-bottom:2px solid var(--gold-dim);padding:10px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+.logo{display:flex;align-items:center;gap:10px;}
+.logo-text{font-family:'Cinzel',serif;color:var(--gold);font-size:1.1rem;letter-spacing:1px;}
+.logo-sub{font-size:0.55rem;color:var(--gold-dim);letter-spacing:3px;display:block;}
+.hbtns{display:flex;gap:6px;align-items:center;}
+.icon-btn{background:var(--dark3);border:1px solid var(--gold-dim);color:var(--gold);width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:0.9rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background 0.2s;}
+.icon-btn:hover{background:var(--dark2);}
+.lang-btn{background:var(--dark3);border:1px solid var(--gold-dim);color:var(--gold);padding:5px 9px;border-radius:16px;cursor:pointer;font-size:0.75rem;font-family:'Heebo',sans-serif;white-space:nowrap;}
+.lang-drop{position:absolute;top:110%;left:0;background:var(--dark2);border:1px solid var(--gold-dim);border-radius:10px;display:none;min-width:130px;z-index:200;box-shadow:0 4px 20px rgba(0,0,0,0.5);}
+.lang-drop.open{display:block;}
+.lang-opt{padding:9px 12px;cursor:pointer;font-size:0.82rem;display:flex;align-items:center;gap:7px;color:var(--text);}
+.lang-opt:hover{background:var(--dark3);color:var(--gold);}
+
+/* MODAL */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.82);z-index:400;display:none;align-items:center;justify-content:center;padding:16px;}
+.modal-bg.open{display:flex;}
+.modal{background:var(--dark2);border:1px solid var(--gold-dim);border-radius:18px;padding:22px 18px;max-width:350px;width:100%;max-height:88vh;overflow-y:auto;}
+.modal-title{font-family:'Cinzel',serif;color:var(--gold);font-size:1.1rem;margin-bottom:12px;text-align:center;}
+.modal-close{float:left;background:none;border:1px solid var(--gold-dim);color:var(--gold);padding:3px 10px;border-radius:8px;cursor:pointer;font-family:'Heebo',sans-serif;font-size:0.78rem;}
+body.ltr .modal-close{float:right;}
+.modal p,.modal li{color:var(--text-dim);font-size:0.85rem;line-height:1.7;margin-bottom:5px;}
+.modal ul{padding-right:16px;}body.ltr .modal ul{padding-left:16px;padding-right:0;}
+.key-b{display:inline-block;background:var(--dark3);border:1px solid var(--gold-dim);color:var(--gold);padding:1px 7px;border-radius:5px;font-size:0.78rem;}
+.stitle{color:var(--gold);font-size:0.78rem;font-weight:700;margin-top:10px;margin-bottom:3px;letter-spacing:1px;}
+.about-link{color:var(--gold);text-decoration:none;font-weight:700;}
+
+/* SCREENS */
+.screen{display:none;}.screen.active{display:block;}
+
+/* MENU */
+.menu-wrap{max-width:480px;margin:0 auto;padding:24px 14px;}
+.menu-title{font-family:'Cinzel',serif;font-size:2rem;color:var(--gold);text-align:center;margin-bottom:4px;}
+.menu-sub{text-align:center;color:var(--text-dim);font-size:0.85rem;margin-bottom:24px;}
+.games-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.game-card{background:var(--dark2);border:1px solid var(--dark3);border-radius:14px;padding:20px 14px;text-align:center;cursor:pointer;transition:all 0.22s;position:relative;overflow:hidden;}
+.game-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent);opacity:0;transition:opacity 0.3s;}
+.game-card:hover{border-color:var(--gold-dim);transform:translateY(-3px);box-shadow:0 8px 24px rgba(201,168,76,0.15);}
+.game-card:hover::before{opacity:1;}
+.game-card.wide{grid-column:span 2;}
+.game-icon{font-size:2.2rem;margin-bottom:8px;display:block;}
+.game-name{font-size:0.98rem;font-weight:700;color:var(--gold);margin-bottom:3px;}
+.game-desc{font-size:0.72rem;color:var(--text-dim);line-height:1.4;}
+
+/* GAME SCREEN */
+.game-screen{max-width:480px;margin:0 auto;padding:14px;}
+.game-hdr{display:flex;align-items:center;gap:10px;margin-bottom:16px;}
+.back-btn{background:var(--dark2);border:1px solid var(--gold-dim);color:var(--gold);width:36px;height:36px;border-radius:9px;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.game-title{font-family:'Cinzel',serif;font-size:1.2rem;color:var(--gold);}
+.score-badge{margin-right:auto;background:var(--dark3);border:1px solid var(--gold-dim);color:var(--gold);padding:4px 12px;border-radius:16px;font-size:0.82rem;font-weight:700;}
+body.ltr .score-badge{margin-right:0;margin-left:auto;}
+.card{background:var(--dark2);border:1px solid var(--dark3);border-radius:14px;padding:16px;margin-bottom:12px;}
+.gold-btn{background:linear-gradient(135deg,var(--gold-dim),var(--gold));color:#0A0A0A;border:none;padding:10px 24px;border-radius:22px;font-family:'Heebo',sans-serif;font-size:0.9rem;font-weight:700;cursor:pointer;transition:all 0.2s;}
+.gold-btn:hover{transform:scale(1.04);}
+.outline-btn{background:transparent;color:var(--gold);border:1px solid var(--gold-dim);padding:9px 20px;border-radius:22px;font-family:'Heebo',sans-serif;font-size:0.86rem;cursor:pointer;}
+.outline-btn:hover{background:var(--dark3);}
+
+/* RESULT OVERLAY */
+.result-ov{position:fixed;inset:0;background:rgba(0,0,0,0.86);display:none;align-items:center;justify-content:center;z-index:300;padding:20px;}
+.result-ov.show{display:flex;}
+.result-box{background:var(--dark2);border:1px solid var(--gold-dim);border-radius:18px;padding:28px 22px;text-align:center;max-width:300px;width:100%;}
+.r-emoji{font-size:3rem;margin-bottom:10px;}
+.r-title{font-family:'Cinzel',serif;font-size:1.4rem;color:var(--gold);margin-bottom:6px;}
+.r-msg{color:var(--text-dim);font-size:0.87rem;margin-bottom:18px;}
+.r-btns{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;}
+
+/* ===== TETRIS ===== */
+#tetCanvas{display:block;margin:0 auto;border:2px solid var(--gold-dim);border-radius:8px;}
+.tet-side{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+.tet-info{display:flex;gap:10px;}
+.tet-stat{background:var(--dark3);border:1px solid var(--gold-dim);border-radius:8px;padding:6px 12px;text-align:center;}
+.tet-stat-l{font-size:0.65rem;color:var(--text-dim);}
+.tet-stat-v{font-size:1.1rem;font-weight:700;color:var(--gold);}
+.tet-btns{display:flex;gap:6px;}
+.tet-ctrl{display:grid;grid-template-columns:repeat(3,52px);grid-template-rows:repeat(2,52px);gap:6px;justify-content:center;margin-top:10px;}
+.ctrl-btn{background:var(--dark2);border:1px solid var(--gold-dim);color:var(--gold);border-radius:10px;font-size:1.2rem;cursor:pointer;display:flex;align-items:center;justify-content:center;user-select:none;-webkit-tap-highlight-color:transparent;}
+.ctrl-btn:active{background:var(--dark3);}
+
+/* ===== CHESS ===== */
+.chess-wrap{display:flex;flex-direction:column;align-items:center;gap:10px;}
+.chess-board{display:grid;grid-template-columns:repeat(8,1fr);border:2px solid var(--gold-dim);border-radius:6px;overflow:hidden;width:100%;max-width:320px;direction:ltr;}
+.chess-cell{aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:1.4rem;cursor:pointer;user-select:none;transition:background 0.15s;}
+.chess-cell.light{background:#2A2010;}
+.chess-cell.dark-sq{background:#1A1208;}
+.chess-cell.selected{background:#4A4020!important;}
+.chess-cell.possible{background:#2A3A20!important;}
+.chess-cell.white-piece { color: #F0C060; text-shadow: 0 0 4px rgba(240,192,96,0.6); }
+.chess-cell.black-piece { color: #E8E8E8; text-shadow: 0 1px 3px rgba(0,0,0,0.9); }
+body.day .chess-cell.white-piece { color: #8B4513; text-shadow: none; }
+body.day .chess-cell.black-piece { color: #1A1A1A; text-shadow: none; }
+
+body.day .chess-cell.light{background:#F0D9A8;}
+body.day .chess-cell.dark-sq{background:#B8864A;}
+body.day .chess-cell.selected{background:#F6F669!important;}
+body.day .chess-cell.possible{background:#CDD16F!important;}
+.chess-info{display:flex;gap:10px;justify-content:center;}
+.chess-stat{background:var(--dark3);border:1px solid var(--gold-dim);border-radius:8px;padding:6px 14px;text-align:center;}
+.chess-stat-l{font-size:0.65rem;color:var(--text-dim);}
+.chess-stat-v{font-size:0.95rem;font-weight:700;color:var(--gold);}
+.chess-msg{text-align:center;color:var(--text-dim);font-size:0.82rem;min-height:20px;}
+
+/* ===== PING PONG ===== */
+#pongCanvas{display:block;margin:0 auto;border:2px solid var(--gold-dim);border-radius:8px;}
+.pong-btns{display:flex;justify-content:space-around;margin-top:10px;}
+.pong-ctrl{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;}
+.pong-btn{background:var(--dark2);border:1px solid var(--gold-dim);color:var(--gold);padding:14px 0;border-radius:12px;font-size:1.2rem;cursor:pointer;text-align:center;user-select:none;-webkit-tap-highlight-color:transparent;}
+.pong-btn:active{background:var(--dark3);}
+.pong-hint{text-align:center;color:var(--text-dim);font-size:0.78rem;margin-top:6px;}
+
+/* ===== MINESWEEPER ===== */
+.ms-grid{display:inline-grid;border:2px solid var(--gold-dim);border-radius:6px;overflow:hidden;direction:ltr;}
+.ms-wrap{display:flex;justify-content:center;margin-bottom:8px;}
+.ms-cell{width:32px;height:32px;background:var(--dark3);border:1px solid #333;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:0.82rem;font-weight:700;user-select:none;transition:background 0.1s;-webkit-tap-highlight-color:transparent;}
+.ms-cell:hover:not(.revealed){background:var(--dark2);}
+.ms-cell.revealed{background:var(--dark2);cursor:default;}
+.ms-cell.flagged{background:var(--dark3);}
+.ms-cell.mine-hit{background:#3A1010!important;}
+.ms-n1{color:#4A8FD4;}.ms-n2{color:#4CAF7A;}.ms-n3{color:#E05050;}
+.ms-n4{color:#7B68EE;}.ms-n5{color:#C84828;}.ms-n6{color:#20B2AA;}
+.ms-n7{color:#C9A84C;}.ms-n8{color:var(--text-dim);}
+.ms-info{display:flex;gap:10px;justify-content:center;margin-bottom:8px;}
+.ms-diff{display:flex;gap:6px;justify-content:center;margin-bottom:8px;}
+.ms-diff-btn{background:var(--dark3);border:1px solid #444;color:var(--text-dim);padding:5px 12px;border-radius:10px;cursor:pointer;font-size:0.78rem;font-family:'Heebo',sans-serif;}
+.ms-diff-btn.active{border-color:var(--gold);color:var(--gold);}
+
+/* ===== BREAKOUT ===== */
+#brkCanvas{display:block;margin:0 auto;border:2px solid var(--gold-dim);border-radius:8px;}
+.brk-ctrl{display:flex;gap:10px;justify-content:center;margin-top:10px;}
+.brk-btn{background:var(--dark2);border:1px solid var(--gold-dim);color:var(--gold);padding:14px 28px;border-radius:12px;font-size:1.2rem;cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent;}
+.brk-btn:active{background:var(--dark3);}
+
+@media(max-width:380px){
+  .games-grid{grid-template-columns:1fr;}
+  .game-card.wide{grid-column:span 1;}
+}
+</style>
+</head>
+<body>
+<!-- MODALS -->
+<div class="modal-bg" id="howtoModal"><div class="modal">
+  <button class="modal-close" onclick="closeModal('howto')" data-i="close">סגור</button>
+  <div class="modal-title" id="howtoTitle">❓ איך משחקים</div>
+  <div id="howtoContent"></div>
+</div></div>
+<div class="modal-bg" id="aboutModal"><div class="modal">
+  <button class="modal-close" onclick="closeModal('about')" data-i="close">סגור</button>
+  <div style="text-align:center;margin-bottom:10px;">
+    <svg width="46" height="46" viewBox="0 0 38 38"><polygon points="19,2 35,10.5 35,27.5 19,36 3,27.5 3,10.5" fill="#111" stroke="#C9A84C" stroke-width="1.5"/><text x="19" y="24" text-anchor="middle" font-family="Cinzel,serif" font-size="11" fill="#C9A84C">A</text></svg>
+  </div>
+  <div class="modal-title">ArcadeNest Hub</div>
+  <div id="aboutContent"></div>
+</div></div>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="logo">
+    <svg width="34" height="34" viewBox="0 0 38 38"><polygon points="19,2 35,10.5 35,27.5 19,36 3,27.5 3,10.5" fill="#111" stroke="#C9A84C" stroke-width="1.5"/><text x="19" y="24" text-anchor="middle" font-family="Cinzel,serif" font-size="11" fill="#C9A84C">A</text></svg>
+    <div><span class="logo-text">ArcadeNest</span><span class="logo-sub">APPNEST</span></div>
+  </div>
+  <div class="hbtns">
+    <button class="icon-btn" onclick="openModal('howto')">❓</button>
+    <button class="icon-btn" onclick="toggleTheme()" id="themeBtn">🌙</button>
+    <button class="icon-btn" onclick="openModal('about')">ℹ️</button>
+    <div style="position:relative;">
+      <button class="lang-btn" onclick="toggleLang()">🌐 <span id="lLabel">עב</span> ▾</button>
+      <div class="lang-drop" id="lDrop">
+        <div class="lang-opt" onclick="setLang('he')">🇮🇱 עברית</div>
+        <div class="lang-opt" onclick="setLang('en')">🇬🇧 English</div>
+        <div class="lang-opt" onclick="setLang('ru')">🇷🇺 Русский</div>
+        <div class="lang-opt" onclick="setLang('es')">🇪🇸 Español</div>
+        <div class="lang-opt" onclick="setLang('ar')">🇸🇦 العربية</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MENU -->
+<div class="screen active" id="menuScreen">
+  <div class="menu-wrap">
+    <div class="menu-title" data-i="menuTitle">🕹️ ArcadeNest</div>
+    <div class="menu-sub" data-i="menuSub">בחר משחק קלאסי וצא לדרך</div>
+    <div class="games-grid">
+      <div class="game-card" onclick="startGame('tetris')">
+        <span class="game-icon">🧩</span>
+        <div class="game-name" data-i="tetName">טטריס</div>
+        <div class="game-desc" data-i="tetDesc">הרכב שורות וצבור נקודות</div>
+      </div>
+      <div class="game-card" onclick="startGame('chess')">
+        <span class="game-icon">♟️</span>
+        <div class="game-name" data-i="chessName">שחמט</div>
+        <div class="game-desc" data-i="chessDesc">שחק מול המחשב</div>
+      </div>
+      <div class="game-card" onclick="startGame('pong')">
+        <span class="game-icon">🏓</span>
+        <div class="game-name" data-i="pongName">פינגפונג</div>
+        <div class="game-desc" data-i="pongDesc">מחבט מול המחשב</div>
+      </div>
+      <div class="game-card" onclick="startGame('mines')">
+        <span class="game-icon">💣</span>
+        <div class="game-name" data-i="minesName">חפור פצצות</div>
+        <div class="game-desc" data-i="minesDesc">מצא את כל הפצצות</div>
+      </div>
+      <div class="game-card wide" onclick="startGame('breakout')">
+        <span class="game-icon">🧱</span>
+        <div class="game-name" data-i="brkName">שבירת לבנים</div>
+        <div class="game-desc" data-i="brkDesc">שבור את כל הלבנים</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TETRIS -->
+<div class="screen" id="tetrisScreen">
+  <div class="game-screen">
+    <div class="game-hdr">
+      <button class="back-btn" onclick="goMenu()">←</button>
+      <div class="game-title" data-i="tetName">🧩 טטריס</div>
+      <div class="score-badge">⭐ <span id="tetScore">0</span></div>
+    </div>
+    <div class="tet-side">
+      <div class="tet-info">
+        <div class="tet-stat"><div class="tet-stat-l" data-i="lines">שורות</div><div class="tet-stat-v" id="tetLines">0</div></div>
+        <div class="tet-stat"><div class="tet-stat-l" data-i="level">שלב</div><div class="tet-stat-v" id="tetLevel">1</div></div>
+      </div>
+      <div class="tet-btns">
+        <button class="outline-btn" onclick="tetPause()" id="tetPauseBtn" data-i="pause">הפסק</button>
+        <button class="gold-btn" onclick="tetStart()" data-i="start">התחל</button>
+      </div>
+    </div>
+    <canvas id="tetCanvas" width="200" height="400"></canvas>
+    <div class="tet-ctrl" style="direction:ltr;">
+      <div></div>
+      <button class="ctrl-btn" ontouchstart="tetMove(0,-1)" onclick="tetMove(0,-1)">▲</button>
+      <div></div>
+      <button class="ctrl-btn" ontouchstart="tetMove(-1,0)" onclick="tetMove(-1,0)">◄</button>
+      <button class="ctrl-btn" ontouchstart="tetDrop()" onclick="tetDrop()">▼</button>
+      <button class="ctrl-btn" ontouchstart="tetMove(1,0)" onclick="tetMove(1,0)">►</button>
+    </div>
+  </div>
+</div>
+
+<!-- CHESS -->
+<div class="screen" id="chessScreen">
+  <div class="game-screen">
+    <div class="game-hdr">
+      <button class="back-btn" onclick="goMenu()">←</button>
+      <div class="game-title" data-i="chessName">♟️ שחמט</div>
+    </div>
+    <div class="chess-wrap">
+      <div class="chess-info">
+        <div class="chess-stat"><div class="chess-stat-l" data-i="turn">תור</div><div class="chess-stat-v" id="chessTurn">⚪</div></div>
+        <div class="chess-stat"><div class="chess-stat-l" data-i="status">סטטוס</div><div class="chess-stat-v" id="chessStatus" data-i="playing">משחק</div></div>
+      </div>
+      <div class="chess-board" id="chessBoard"></div>
+      <div class="chess-msg" id="chessMsg"></div>
+      <div style="display:flex;gap:8px;">
+        <button class="gold-btn" onclick="chessNewGame()" data-i="newGame">משחק חדש</button>
+        <button class="outline-btn" onclick="chessUndo()" data-i="undo">↩ בטל</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PING PONG -->
+<div class="screen" id="pongScreen">
+  <div class="game-screen">
+    <div class="game-hdr">
+      <button class="back-btn" onclick="goMenu()">←</button>
+      <div class="game-title" data-i="pongName">🏓 פינגפונג</div>
+    </div>
+    <canvas id="pongCanvas" width="320" height="240"></canvas>
+    <div class="pong-hint" data-i="pongHint">גרור את המחבט עם האצבע או לחץ על הכפתורים</div>
+    <div class="pong-ctrl" style="direction:ltr;">
+      <button class="pong-btn" id="pongUp" data-i="pongUp">▲ למעלה</button>
+      <button class="pong-btn" id="pongDown" data-i="pongDown">▼ למטה</button>
+    </div>
+    <div style="text-align:center;margin-top:8px;">
+      <button class="gold-btn" onclick="pongStart()" id="pongStartBtn" data-i="start">התחל</button>
+    </div>
+  </div>
+</div>
+
+<!-- MINESWEEPER -->
+<div class="screen" id="minesScreen">
+  <div class="game-screen">
+    <div class="game-hdr">
+      <button class="back-btn" onclick="goMenu()">←</button>
+      <div class="game-title" data-i="minesName">💣 חפור פצצות</div>
+      <div class="score-badge">⏱ <span id="msTimer">0</span></div>
+    </div>
+    <div class="ms-info">
+      <div class="tet-stat"><div class="tet-stat-l" data-i="bombs">פצצות</div><div class="tet-stat-v" id="msBombs">10</div></div>
+      <div class="tet-stat"><div class="tet-stat-l" data-i="flags">דגלים</div><div class="tet-stat-v" id="msFlags">0</div></div>
+    </div>
+    <div class="ms-diff">
+      <button class="ms-diff-btn active" onclick="msSetDiff('easy')" id="msEasy" data-i="easy">קל</button>
+      <button class="ms-diff-btn" onclick="msSetDiff('medium')" id="msMed" data-i="medium">בינוני</button>
+      <button class="ms-diff-btn" onclick="msSetDiff('hard')" id="msHard" data-i="hard">קשה</button>
+    </div>
+    <div class="ms-wrap"><div class="ms-grid" id="msGrid"></div></div>
+    <div style="text-align:center;"><button class="gold-btn" onclick="msNewGame()" data-i="newGame">משחק חדש</button></div>
+    <div style="text-align:center;margin-top:6px;color:var(--text-dim);font-size:0.75rem;" data-i="msHint">לחיצה ארוכה = דגל</div>
+  </div>
+</div>
+
+<!-- BREAKOUT -->
+<div class="screen" id="breakoutScreen">
+  <div class="game-screen">
+    <div class="game-hdr">
+      <button class="back-btn" onclick="goMenu()">←</button>
+      <div class="game-title" data-i="brkName">🧱 שבירת לבנים</div>
+      <div class="score-badge">⭐ <span id="brkScore">0</span></div>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:center;margin-bottom:8px;">
+      <div class="tet-stat"><div class="tet-stat-l" data-i="lives">חיים</div><div class="tet-stat-v" id="brkLives">3</div></div>
+      <div class="tet-stat"><div class="tet-stat-l" data-i="level">שלב</div><div class="tet-stat-v" id="brkLevel">1</div></div>
+    </div>
+    <canvas id="brkCanvas" width="320" height="320"></canvas>
+    <div class="brk-ctrl" style="direction:ltr;">
+      <button class="brk-btn" id="brkLeft">◄</button>
+      <button class="brk-btn" id="brkRight">►</button>
+    </div>
+    <div style="text-align:center;margin-top:8px;">
+      <button class="gold-btn" onclick="brkStart()" id="brkStartBtn" data-i="start">התחל</button>
+    </div>
+  </div>
+</div>
+
+<!-- RESULT OVERLAY -->
+<div class="result-ov" id="resultOv">
+  <div class="result-box">
+    <div class="r-emoji" id="rEmoji">🎉</div>
+    <div class="r-title" id="rTitle"></div>
+    <div class="r-msg" id="rMsg"></div>
+    <div class="r-btns">
+      <button class="gold-btn" id="rReplay" onclick="replayGame()" data-i="playAgain">שחק שוב</button>
+      <button class="outline-btn" onclick="goMenu()" data-i="menu">תפריט</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============ I18N ============
+const T={
+  he:{menuTitle:'🕹️ ArcadeNest',menuSub:'בחר משחק קלאסי וצא לדרך',
+    tetName:'🧩 טטריס',tetDesc:'הרכב שורות וצבור נקודות',
+    chessName:'♟️ שחמט',chessDesc:'שחק מול המחשב',
+    pongName:'🏓 פינגפונג',pongDesc:'מחבט מול המחשב',
+    minesName:'💣 חפור פצצות',minesDesc:'מצא את כל הפצצות',
+    brkName:'🧱 שבירת לבנים',brkDesc:'שבור את כל הלבנים',
+    start:'התחל',pause:'הפסקה',resume:'המשך',newGame:'משחק חדש',undo:'↩ בטל',
+    playAgain:'שחק שוב',menu:'תפריט',close:'סגור',
+    lines:'שורות',level:'שלב',lives:'חיים',bombs:'פצצות',flags:'דגלים',
+    turn:'תור',status:'סטטוס',playing:'משחק',
+    easy:'קל',medium:'בינוני',hard:'קשה',
+    pongHint:'גרור עם האצבע או השתמש בכפתורים',pongUp:'▲ למעלה',pongDown:'▼ למטה',
+    msHint:'לחיצה ארוכה = דגל 🚩',
+    win:'ניצחת! 🎉',lose:'הפסדת 😔',
+    checkmate:'שח מט! 🏆',stalemate:'פט — תיקו!',check:'שח! ⚠️',
+    youWin:'ניצחת את המחשב!',cpuWin:'המחשב ניצח',
+    gameover:'משחק נגמר!',levelClear:'שלב הושלם! 🎉',
+    score:'ניקוד',
+  },
+  en:{menuTitle:'🕹️ ArcadeNest',menuSub:'Choose a classic game and play',
+    tetName:'🧩 Tetris',tetDesc:'Complete rows to score points',
+    chessName:'♟️ Chess',chessDesc:'Play against the computer',
+    pongName:'🏓 Ping Pong',pongDesc:'Paddle against the computer',
+    minesName:'💣 Minesweeper',minesDesc:'Find all the bombs',
+    brkName:'🧱 Breakout',brkDesc:'Break all the bricks',
+    start:'Start',pause:'Pause',resume:'Resume',newGame:'New Game',undo:'↩ Undo',
+    playAgain:'Play Again',menu:'Menu',close:'Close',
+    lines:'Lines',level:'Level',lives:'Lives',bombs:'Bombs',flags:'Flags',
+    turn:'Turn',status:'Status',playing:'Playing',
+    easy:'Easy',medium:'Medium',hard:'Hard',
+    pongHint:'Drag with finger or use buttons',pongUp:'▲ Up',pongDown:'▼ Down',
+    msHint:'Long press = flag 🚩',
+    win:'You Win! 🎉',lose:'You Lose 😔',
+    checkmate:'Checkmate! 🏆',stalemate:'Stalemate — Draw!',check:'Check! ⚠️',
+    youWin:'You beat the computer!',cpuWin:'Computer wins',
+    gameover:'Game Over!',levelClear:'Level Clear! 🎉',
+    score:'Score',
+  },
+  ru:{menuTitle:'🕹️ ArcadeNest',menuSub:'Выбери классическую игру',
+    tetName:'🧩 Тетрис',tetDesc:'Заполняй ряды и набирай очки',
+    chessName:'♟️ Шахматы',chessDesc:'Играй против компьютера',
+    pongName:'🏓 Пинг-понг',pongDesc:'Ракетка против компьютера',
+    minesName:'💣 Сапёр',minesDesc:'Найди все мины',
+    brkName:'🧱 Арканоид',brkDesc:'Разбей все кирпичи',
+    start:'Старт',pause:'Пауза',resume:'Продолжить',newGame:'Новая игра',undo:'↩ Отменить',
+    playAgain:'Играть снова',menu:'Меню',close:'Закрыть',
+    lines:'Линии',level:'Уровень',lives:'Жизни',bombs:'Мины',flags:'Флаги',
+    turn:'Ход',status:'Статус',playing:'Игра',
+    easy:'Легко',medium:'Средне',hard:'Сложно',
+    pongHint:'Свайп или кнопки',pongUp:'▲ Вверх',pongDown:'▼ Вниз',
+    msHint:'Долгое нажатие = флаг 🚩',
+    win:'Победа! 🎉',lose:'Поражение 😔',
+    checkmate:'Мат! 🏆',stalemate:'Пат — Ничья!',check:'Шах! ⚠️',
+    youWin:'Ты победил компьютер!',cpuWin:'Компьютер победил',
+    gameover:'Игра окончена!',levelClear:'Уровень пройден! 🎉',
+    score:'Счёт',
+  },
+  es:{menuTitle:'🕹️ ArcadeNest',menuSub:'Elige un juego clásico y juega',
+    tetName:'🧩 Tetris',tetDesc:'Completa filas para puntuar',
+    chessName:'♟️ Ajedrez',chessDesc:'Juega contra el ordenador',
+    pongName:'🏓 Ping Pong',pongDesc:'Pala contra el ordenador',
+    minesName:'💣 Buscaminas',minesDesc:'Encuentra todas las bombas',
+    brkName:'🧱 Breakout',brkDesc:'Rompe todos los ladrillos',
+    start:'Iniciar',pause:'Pausar',resume:'Continuar',newGame:'Nueva partida',undo:'↩ Deshacer',
+    playAgain:'Jugar de nuevo',menu:'Menú',close:'Cerrar',
+    lines:'Líneas',level:'Nivel',lives:'Vidas',bombs:'Bombas',flags:'Banderas',
+    turn:'Turno',status:'Estado',playing:'Jugando',
+    easy:'Fácil',medium:'Medio',hard:'Difícil',
+    pongHint:'Desliza o usa los botones',pongUp:'▲ Arriba',pongDown:'▼ Abajo',
+    msHint:'Pulsación larga = bandera 🚩',
+    win:'¡Ganaste! 🎉',lose:'Perdiste 😔',
+    checkmate:'¡Jaque mate! 🏆',stalemate:'Tablas por ahogado',check:'¡Jaque! ⚠️',
+    youWin:'¡Venciste al ordenador!',cpuWin:'El ordenador gana',
+    gameover:'¡Juego terminado!',levelClear:'¡Nivel superado! 🎉',
+    score:'Puntos',
+  },
+  ar:{menuTitle:'🕹️ ArcadeNest',menuSub:'اختر لعبة كلاسيكية وابدأ',
+    tetName:'🧩 تيتريس',tetDesc:'أكمل الصفوف لتجميع النقاط',
+    chessName:'♟️ شطرنج',chessDesc:'العب ضد الكمبيوتر',
+    pongName:'🏓 بينغ بونغ',pongDesc:'مضرب ضد الكمبيوتر',
+    minesName:'💣 كاسح الألغام',minesDesc:'ابحث عن كل القنابل',
+    brkName:'🧱 كسر الطوب',brkDesc:'اكسر كل الطوب',
+    start:'ابدأ',pause:'إيقاف',resume:'استمر',newGame:'لعبة جديدة',undo:'↩ تراجع',
+    playAgain:'العب مجدداً',menu:'القائمة',close:'إغلاق',
+    lines:'صفوف',level:'المستوى',lives:'حياة',bombs:'قنابل',flags:'أعلام',
+    turn:'دور',status:'حالة',playing:'جارٍ',
+    easy:'سهل',medium:'متوسط',hard:'صعب',
+    pongHint:'اسحب بإصبعك أو استخدم الأزرار',pongUp:'▲ أعلى',pongDown:'▼ أسفل',
+    msHint:'ضغط طويل = علم 🚩',
+    win:'فزت! 🎉',lose:'خسرت 😔',
+    checkmate:'كش مات! 🏆',stalemate:'تعادل!',check:'كش! ⚠️',
+    youWin:'تغلبت على الكمبيوتر!',cpuWin:'الكمبيوتر يفوز',
+    gameover:'انتهت اللعبة!',levelClear:'اجتزت المستوى! 🎉',
+    score:'النقاط',
+  },
+};
+
+const HOWTO={
+  he:{
+    menu:`<p class="stitle">🕹️ ArcadeNest Hub</p><p>5 משחקים קלאסיים במקום אחד. בחר משחק מהתפריט.</p>`,
+    tetris:`<p class="stitle">🧩 טטריס</p><p>צורות נופלות — הרכב שורות אופקיות שלמות כדי לנקות אותן.</p><ul><li><span class="key-b">◄ ►</span> הזזה שמאל/ימין</li><li><span class="key-b">▲</span> סיבוב</li><li><span class="key-b">▼</span> נפילה מהירה</li></ul>`,
+    chess:`<p class="stitle">♟️ שחמט</p><p>לחץ על כלי כדי לבחור אותו, ואז לחץ על המשבצת היעד.</p><ul><li>עיגולים ירוקים = מהלכים אפשריים</li><li>אתה משחק בלבן, המחשב בשחור</li><li>"ביטול" מחזיר מהלך אחד</li></ul>`,
+    pong:`<p class="stitle">🏓 פינגפונג</p><p>הנע את המחבט שלך כדי להחזיר את הכדור.</p><ul><li>כפתורי ▲▼ או גרירה על הקנבס</li><li>מי שמגיע ל-7 נקודות ראשון מנצח</li></ul>`,
+    mines:`<p class="stitle">💣 חפור פצצות</p><p>גלה את כל המשבצות הבטוחות בלי להיפגע מפצצה!</p><ul><li>לחיצה = חשוף משבצת</li><li>לחיצה ארוכה = סמן דגל</li><li>המספר = כמות פצצות שכנות</li></ul>`,
+    breakout:`<p class="stitle">🧱 שבירת לבנים</p><p>נהל את המחבט כדי לפגוע בכדור ולשבור את כל הלבנים.</p><ul><li>לחצ ◄ ► להזזת המחבט</li><li>אל תתן לכדור ליפול!</li><li>3 חיים לכל שלב</li></ul>`,
+  },
+  en:{
+    menu:`<p class="stitle">🕹️ ArcadeNest Hub</p><p>5 classic games in one place. Choose a game from the menu.</p>`,
+    tetris:`<p class="stitle">🧩 Tetris</p><p>Falling shapes — complete full horizontal rows to clear them.</p><ul><li><span class="key-b">◄ ►</span> Move left/right</li><li><span class="key-b">▲</span> Rotate</li><li><span class="key-b">▼</span> Drop faster</li></ul>`,
+    chess:`<p class="stitle">♟️ Chess</p><p>Click a piece to select it, then click the target square.</p><ul><li>Green circles = possible moves</li><li>You play White, computer plays Black</li><li>"Undo" reverts one move</li></ul>`,
+    pong:`<p class="stitle">🏓 Ping Pong</p><p>Move your paddle to return the ball.</p><ul><li>▲▼ buttons or drag on canvas</li><li>First to 7 points wins</li></ul>`,
+    mines:`<p class="stitle">💣 Minesweeper</p><p>Reveal all safe squares without hitting a mine!</p><ul><li>Click = reveal cell</li><li>Long press = place flag</li><li>Number = adjacent mines count</li></ul>`,
+    breakout:`<p class="stitle">🧱 Breakout</p><p>Control the paddle to hit the ball and break all bricks.</p><ul><li>◄ ► buttons to move paddle</li><li>Don't let the ball fall!</li><li>3 lives per level</li></ul>`,
+  },
+  ru:{
+    menu:`<p class="stitle">🕹️ ArcadeNest Hub</p><p>5 классических игр в одном месте.</p>`,
+    tetris:`<p class="stitle">🧩 Тетрис</p><p>Заполняй горизонтальные ряды целиком.</p><ul><li><span class="key-b">◄ ►</span> Движение</li><li><span class="key-b">▲</span> Поворот</li><li><span class="key-b">▼</span> Быстрое падение</li></ul>`,
+    chess:`<p class="stitle">♟️ Шахматы</p><p>Нажми фигуру, затем целевую клетку.</p><ul><li>Зелёные кружки = возможные ходы</li><li>Ты играешь белыми</li></ul>`,
+    pong:`<p class="stitle">🏓 Пинг-понг</p><p>Двигай ракетку, чтобы отбить мяч.</p><ul><li>Кнопки ▲▼ или свайп</li><li>Первый до 7 очков побеждает</li></ul>`,
+    mines:`<p class="stitle">💣 Сапёр</p><p>Открой все безопасные клетки.</p><ul><li>Клик = открыть клетку</li><li>Долгое нажатие = флаг</li></ul>`,
+    breakout:`<p class="stitle">🧱 Арканоид</p><p>Управляй ракеткой, разбивай кирпичи.</p><ul><li>Кнопки ◄ ► для движения</li><li>3 жизни на уровень</li></ul>`,
+  },
+  es:{
+    menu:`<p class="stitle">🕹️ ArcadeNest Hub</p><p>5 juegos clásicos en un solo lugar.</p>`,
+    tetris:`<p class="stitle">🧩 Tetris</p><p>Completa filas horizontales enteras.</p><ul><li><span class="key-b">◄ ►</span> Mover</li><li><span class="key-b">▲</span> Rotar</li><li><span class="key-b">▼</span> Caída rápida</li></ul>`,
+    chess:`<p class="stitle">♟️ Ajedrez</p><p>Haz clic en una pieza y luego en el destino.</p><ul><li>Círculos verdes = movimientos posibles</li><li>Juegas con blancas</li></ul>`,
+    pong:`<p class="stitle">🏓 Ping Pong</p><p>Mueve la pala para devolver la pelota.</p><ul><li>Botones ▲▼ o desliza</li><li>Primero en llegar a 7 gana</li></ul>`,
+    mines:`<p class="stitle">💣 Buscaminas</p><p>Descubre todas las casillas seguras.</p><ul><li>Clic = revelar casilla</li><li>Pulsación larga = bandera</li></ul>`,
+    breakout:`<p class="stitle">🧱 Breakout</p><p>Controla la pala para romper todos los ladrillos.</p><ul><li>Botones ◄ ► para mover</li><li>3 vidas por nivel</li></ul>`,
+  },
+  ar:{
+    menu:`<p class="stitle">🕹️ ArcadeNest Hub</p><p>5 ألعاب كلاسيكية في مكان واحد.</p>`,
+    tetris:`<p class="stitle">🧩 تيتريس</p><p>أكمل الصفوف الأفقية بالكامل.</p><ul><li><span class="key-b">◄ ►</span> تحريك</li><li><span class="key-b">▲</span> دوران</li><li><span class="key-b">▼</span> سقوط سريع</li></ul>`,
+    chess:`<p class="stitle">♟️ شطرنج</p><p>انقر قطعة ثم المربع الهدف.</p><ul><li>الدوائر الخضراء = التحركات الممكنة</li><li>تلعب بالأبيض</li></ul>`,
+    pong:`<p class="stitle">🏓 بينغ بونغ</p><p>حرّك المضرب لإعادة الكرة.</p><ul><li>أزرار ▲▼ أو اسحب</li><li>أول من يصل لـ 7 نقاط يفوز</li></ul>`,
+    mines:`<p class="stitle">💣 كاسح الألغام</p><p>اكشف كل المربعات الآمنة.</p><ul><li>نقر = كشف مربع</li><li>ضغط طويل = علم</li></ul>`,
+    breakout:`<p class="stitle">🧱 كسر الطوب</p><p>تحكم في المضرب لكسر كل الطوب.</p><ul><li>أزرار ◄ ► للتحريك</li><li>3 أرواح لكل مستوى</li></ul>`,
+  },
+};
+
+const ABOUT={
+  he:`<p>© 2025 AppNest — כל הזכויות שמורות</p><p style="margin-top:8px">ArcadeNest Hub — 5 משחקים קלאסיים מבית AppNest.</p><p style="margin-top:8px">🌐 <a class="about-link" href="https://barakaflalo.github.io/appnest" target="_blank">barakaflalo.github.io/appnest</a></p>`,
+  en:`<p>© 2025 AppNest — All rights reserved</p><p style="margin-top:8px">ArcadeNest Hub — 5 classic games by AppNest.</p><p style="margin-top:8px">🌐 <a class="about-link" href="https://barakaflalo.github.io/appnest" target="_blank">barakaflalo.github.io/appnest</a></p>`,
+  ru:`<p>© 2025 AppNest — Все права защищены</p><p style="margin-top:8px">🌐 <a class="about-link" href="https://barakaflalo.github.io/appnest" target="_blank">barakaflalo.github.io/appnest</a></p>`,
+  es:`<p>© 2025 AppNest — Todos los derechos reservados</p><p style="margin-top:8px">🌐 <a class="about-link" href="https://barakaflalo.github.io/appnest" target="_blank">barakaflalo.github.io/appnest</a></p>`,
+  ar:`<p>© 2025 AppNest — جميع الحقوق محفوظة</p><p style="margin-top:8px">🌐 <a class="about-link" href="https://barakaflalo.github.io/appnest" target="_blank">barakaflalo.github.io/appnest</a></p>`,
+};
+
+let lang='he', isDark=true, currentGame='';
+function t(k){return(T[lang]||T.en)[k]||k;}
+function setLang(l){lang=l;document.getElementById('lLabel').textContent={he:'עב',en:'EN',ru:'РУ',es:'ES',ar:'عر'}[l];document.getElementById('lDrop').classList.remove('open');const rtl=['he','ar'].includes(l);document.body.dir=rtl?'rtl':'ltr';document.body.classList.toggle('ltr',!rtl);applyT();}
+function toggleLang(){document.getElementById('lDrop').classList.toggle('open');}
+document.addEventListener('click',e=>{if(!e.target.closest('.lang-btn')&&!e.target.closest('.lang-drop'))document.getElementById('lDrop').classList.remove('open');});
+function applyT(){document.querySelectorAll('[data-i]').forEach(el=>el.textContent=t(el.dataset.i));updateModals();}
+function toggleTheme(){isDark=!isDark;document.body.classList.toggle('day',!isDark);document.getElementById('themeBtn').textContent=isDark?'🌙':'☀️';}
+function openModal(type){updateModals();document.getElementById(type+'Modal').classList.add('open');}
+function closeModal(type){document.getElementById(type+'Modal').classList.remove('open');}
+document.querySelectorAll('.modal-bg').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');}));
+function updateModals(){
+  const hw=HOWTO[lang]||HOWTO.en;
+  document.getElementById('howtoContent').innerHTML=hw[currentGame]||hw.menu;
+  document.getElementById('aboutContent').innerHTML=ABOUT[lang]||ABOUT.en;
+}
+
+function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');}
+function goMenu(){tetStop();pongStop();brkStop();clearInterval(msTimerInt);hideResult();showScreen('menuScreen');currentGame='';}
+function showResult(emoji,title,msg){document.getElementById('rEmoji').textContent=emoji;document.getElementById('rTitle').textContent=title;document.getElementById('rMsg').textContent=msg;document.getElementById('resultOv').classList.add('show');}
+function hideResult(){document.getElementById('resultOv').classList.remove('show');}
+function replayGame(){hideResult();startGame(currentGame);}
+function startGame(g){
+  currentGame=g;tetStop();pongStop();brkStop();clearInterval(msTimerInt);hideResult();
+  if(g==='tetris'){showScreen('tetrisScreen');tetInit();}
+  if(g==='chess'){showScreen('chessScreen');chessNewGame();}
+  if(g==='pong'){showScreen('pongScreen');pongInit();}
+  if(g==='mines'){showScreen('minesScreen');msNewGame();}
+  if(g==='breakout'){showScreen('breakoutScreen');brkInit();}
+}
+
+// ========== TETRIS ==========
+const SHAPES=[
+  [[1,1,1,1]],
+  [[1,1],[1,1]],
+  [[0,1,0],[1,1,1]],
+  [[1,0,0],[1,1,1]],
+  [[0,0,1],[1,1,1]],
+  [[0,1,1],[1,1,0]],
+  [[1,1,0],[0,1,1]],
+];
+const COLORS=['#C9A84C','#4A8FD4','#9B59B6','#E05050','#4CAF7A','#E8804C','#58D0E0'];
+const TW=10,TH=20,CS=20;
+let tetBoard,tetPiece,tetScore_v=0,tetLines_v=0,tetLevel_v=1,tetLoop=null,tetRunning=false,tetPaused=false;
+
+function tetInit(){
+  tetBoard=Array(TH).fill(null).map(()=>Array(TW).fill(0));
+  tetScore_v=0;tetLines_v=0;tetLevel_v=1;
+  document.getElementById('tetScore').textContent=0;
+  document.getElementById('tetLines').textContent=0;
+  document.getElementById('tetLevel').textContent=1;
+  const c=document.getElementById('tetCanvas');
+  c.width=TW*CS;c.height=TH*CS;
+  tetDraw();
+}
+function tetStart(){
+  tetStop();
+  tetInit();
+  tetRunning=true;tetPaused=false;
+  document.getElementById('tetPauseBtn').textContent=t('pause');
+  tetSpawn();
+  tetLoop=setInterval(tetTick,Math.max(100,500-tetLevel_v*40));
+}
+function tetStop(){clearInterval(tetLoop);tetRunning=false;}
+function tetPause(){
+  if(!tetRunning)return;
+  if(tetPaused){tetPaused=false;document.getElementById('tetPauseBtn').textContent=t('pause');tetLoop=setInterval(tetTick,Math.max(100,500-tetLevel_v*40));}
+  else{tetPaused=true;document.getElementById('tetPauseBtn').textContent=t('resume');clearInterval(tetLoop);}
+}
+function tetSpawn(){
+  const idx=Math.floor(Math.random()*SHAPES.length);
+  tetPiece={shape:SHAPES[idx].map(r=>[...r]),color:COLORS[idx],x:Math.floor(TW/2)-1,y:0};
+  if(tetCollide()){tetStop();showResult('💀',t('gameover'),t('score')+': '+tetScore_v);}
+}
+function tetCollide(dx=0,dy=0,shape=tetPiece.shape){
+  for(let r=0;r<shape.length;r++)for(let c=0;c<shape[r].length;c++){
+    if(!shape[r][c])continue;
+    const nx=tetPiece.x+c+dx,ny=tetPiece.y+r+dy;
+    if(nx<0||nx>=TW||ny>=TH||ny>=0&&tetBoard[ny][nx])return true;
+  }
+  return false;
+}
+function tetTick(){if(tetPaused)return;if(tetCollide(0,1)){tetLock();}else{tetPiece.y++;tetDraw();}}
+function tetLock(){
+  tetPiece.shape.forEach((row,r)=>row.forEach((v,c)=>{if(v&&tetPiece.y+r>=0)tetBoard[tetPiece.y+r][tetPiece.x+c]=tetPiece.color;}));
+  let cleared=0;
+  for(let r=TH-1;r>=0;){if(tetBoard[r].every(c=>c)){tetBoard.splice(r,1);tetBoard.unshift(Array(TW).fill(0));cleared++;}else r--;}
+  if(cleared){tetLines_v+=cleared;tetScore_v+=cleared*100*tetLevel_v;const nl=Math.floor(tetLines_v/10)+1;if(nl>tetLevel_v){tetLevel_v=nl;clearInterval(tetLoop);tetLoop=setInterval(tetTick,Math.max(100,500-tetLevel_v*40));document.getElementById('tetLevel').textContent=tetLevel_v;}document.getElementById('tetLines').textContent=tetLines_v;document.getElementById('tetScore').textContent=tetScore_v;}
+  tetSpawn();tetDraw();
+}
+function tetDraw(){
+  const c=document.getElementById('tetCanvas');if(!c)return;
+  const ctx=c.getContext('2d');
+  const bg=isDark?'#1A1A1A':'#FAF8F4';
+  ctx.fillStyle=bg;ctx.fillRect(0,0,c.width,c.height);
+  ctx.strokeStyle=isDark?'#222':'#E8E4DC';ctx.lineWidth=0.5;
+  for(let i=0;i<=TW;i++){ctx.beginPath();ctx.moveTo(i*CS,0);ctx.lineTo(i*CS,c.height);ctx.stroke();}
+  for(let i=0;i<=TH;i++){ctx.beginPath();ctx.moveTo(0,i*CS);ctx.lineTo(c.width,i*CS);ctx.stroke();}
+  tetBoard.forEach((row,r)=>row.forEach((col,c2)=>{if(col){ctx.fillStyle=col;ctx.fillRect(c2*CS+1,r*CS+1,CS-2,CS-2);}}));
+  if(tetPiece){tetPiece.shape.forEach((row,r)=>row.forEach((v,c2)=>{if(v){ctx.fillStyle=tetPiece.color;ctx.fillRect((tetPiece.x+c2)*CS+1,(tetPiece.y+r)*CS+1,CS-2,CS-2);}}));}
+}
+function tetMove(dx,dy){
+  if(!tetRunning||tetPaused)return;
+  if(dy===-1){const s=tetPiece.shape[0].map((_,i)=>tetPiece.shape.map(r=>r[r.length-1-i]));if(!tetCollide(0,0,s)){tetPiece.shape=s;tetDraw();}}
+  else if(!tetCollide(dx,0)){tetPiece.x+=dx;tetDraw();}
+}
+function tetDrop(){if(!tetRunning||tetPaused)return;while(!tetCollide(0,1))tetPiece.y++;tetLock();tetDraw();}
+document.addEventListener('keydown',e=>{
+  if(currentGame!=='tetris')return;
+  if(e.key==='ArrowLeft')tetMove(-1,0);
+  if(e.key==='ArrowRight')tetMove(1,0);
+  if(e.key==='ArrowUp')tetMove(0,-1);
+  if(e.key==='ArrowDown')tetDrop();
+  if(e.key===' ')tetPause();
+});
+
+// ========== CHESS (simplified) ==========
+const INIT_BOARD=[
+  ['r','n','b','q','k','b','n','r'],
+  ['p','p','p','p','p','p','p','p'],
+  ['.','.','.','.','.','.','.','.'],['.','.','.','.','.','.','.','.'],['.','.','.','.','.','.','.','.'],['.','.','.','.','.','.','.','.',],
+  ['P','P','P','P','P','P','P','P'],
+  ['R','N','B','Q','K','B','N','R'],
+];
+const PIECE_MAP={k:'♚',q:'♛',r:'♜',b:'♝',n:'♞',p:'♟',K:'♔',Q:'♕',R:'♖',B:'♗',N:'♘',P:'♙'};
+let cBoard,cSel=null,cTurn='white',cHistory=[];
+function chessNewGame(){cBoard=INIT_BOARD.map(r=>[...r]);cSel=null;cTurn='white';cHistory=[];document.getElementById('chessTurn').textContent='⚪';document.getElementById('chessStatus').textContent=t('playing');document.getElementById('chessMsg').textContent='';renderChess();}
+function isWhite(p){return p>='A'&&p<='Z'&&p!=='.';}
+function isBlack(p){return p>='a'&&p<='z';}
+function isEmpty(p){return p==='.';}
+function getMoves(b,r,c){
+  const p=b[r][c];if(p==='.')return[];
+  const moves=[];const white=isWhite(p);const pt=p.toLowerCase();
+  const add=(nr,nc)=>{if(nr<0||nr>7||nc<0||nc>7)return false;const t2=b[nr][nc];if(t2==='.'||(white&&isBlack(t2))||(!white&&isWhite(t2))){moves.push([nr,nc]);return t2==='.';}return false;};
+  if(pt==='p'){const dir=white?-1:1;const start=white?6:1;if(b[r+dir]&&b[r+dir][c]==='.')moves.push([r+dir,c]);if(r===start&&b[r+dir]&&b[r+dir][c]==='.'&&b[r+2*dir]&&b[r+2*dir][c]==='.')moves.push([r+2*dir,c]);[-1,1].forEach(dc=>{if(b[r+dir]&&b[r+dir][c+dc]&&b[r+dir][c+dc]!=='.'&&(white?isBlack(b[r+dir][c+dc]):isWhite(b[r+dir][c+dc])))moves.push([r+dir,c+dc]);});}
+  if(pt==='r'||pt==='q'){[[0,1],[0,-1],[1,0],[-1,0]].forEach(([dr,dc])=>{let nr=r+dr,nc=c+dc;while(nr>=0&&nr<8&&nc>=0&&nc<8){const t2=b[nr][nc];if(t2!=='.'&&((white&&isWhite(t2))||(!white&&isBlack(t2))))break;moves.push([nr,nc]);if(t2!=='.')break;nr+=dr;nc+=dc;};});}
+  if(pt==='b'||pt==='q'){[[1,1],[1,-1],[-1,1],[-1,-1]].forEach(([dr,dc])=>{let nr=r+dr,nc=c+dc;while(nr>=0&&nr<8&&nc>=0&&nc<8){const t2=b[nr][nc];if(t2!=='.'&&((white&&isWhite(t2))||(!white&&isBlack(t2))))break;moves.push([nr,nc]);if(t2!=='.')break;nr+=dr;nc+=dc;};});}
+  if(pt==='n'){[[-2,-1],[-2,1],[-1,-2],[-1,2],[1,-2],[1,2],[2,-1],[2,1]].forEach(([dr,dc])=>add(r+dr,c+dc));}
+  if(pt==='k'){[[-1,-1],[-1,0],[-1,1],[0,-1],[0,1],[1,-1],[1,0],[1,1]].forEach(([dr,dc])=>add(r+dr,c+dc));}
+  return moves;
+}
+function chessClick(r,c){
+  if(cTurn!=='white')return;
+  const p=cBoard[r][c];
+  if(cSel){
+    const moves=getMoves(cBoard,cSel[0],cSel[1]);
+    const valid=moves.find(m=>m[0]===r&&m[1]===c);
+    if(valid){
+      cHistory.push(cBoard.map(row=>[...row]));
+      cBoard[r][c]=cBoard[cSel[0]][cSel[1]];
+      cBoard[cSel[0]][cSel[1]]='.';
+      if(cBoard[r][c]==='P'&&r===0)cBoard[r][c]='Q';
+      if(cBoard[r][c]==='p'&&r===7)cBoard[r][c]='q';
+      cSel=null;cTurn='black';
+      document.getElementById('chessTurn').textContent='⚫';
+      renderChess();
+      if(checkGameEnd())return;
+      setTimeout(cpuMove,400);
+    } else if(isWhite(p)){cSel=[r,c];renderChess();}
+    else{cSel=null;renderChess();}
+  } else if(isWhite(p)){cSel=[r,c];renderChess();}
+}
+function cpuMove(){
+  const moves=[];
+  for(let r=0;r<8;r++)for(let c=0;c<8;c++){if(isBlack(cBoard[r][c])){getMoves(cBoard,r,c).forEach(m=>moves.push({fr:r,fc:c,tr:m[0],tc:m[1],cap:cBoard[m[0]][m[1]]}));}}
+  if(!moves.length){showResult('🏆',t('checkmate'),t('youWin'));return;}
+  // Prefer captures
+  const caps=moves.filter(m=>m.cap!=='.');
+  const chosen=caps.length?caps[Math.floor(Math.random()*caps.length)]:moves[Math.floor(Math.random()*moves.length)];
+  cHistory.push(cBoard.map(row=>[...row]));
+  cBoard[chosen.tr][chosen.tc]=cBoard[chosen.fr][chosen.fc];
+  cBoard[chosen.fr][chosen.fc]='.';
+  if(cBoard[chosen.tr][chosen.tc]==='p'&&chosen.tr===7)cBoard[chosen.tr][chosen.tc]='q';
+  cTurn='white';document.getElementById('chessTurn').textContent='⚪';
+  renderChess();checkGameEnd();
+}
+function checkGameEnd(){
+  let wk=false,bk=false;
+  cBoard.forEach(row=>row.forEach(p=>{if(p==='K')wk=true;if(p==='k')bk=true;}));
+  if(!wk){showResult('😔',t('gameover'),t('cpuWin'));return true;}
+  if(!bk){showResult('🏆',t('checkmate'),t('youWin'));return true;}
+  return false;
+}
+function chessUndo(){if(cHistory.length<2)return;cHistory.pop();cBoard=cHistory.pop().map(r=>[...r]);cTurn='white';document.getElementById('chessTurn').textContent='⚪';renderChess();}
+function renderChess(){
+  const bd=document.getElementById('chessBoard');bd.innerHTML='';
+  for(let r=0;r<8;r++)for(let c=0;c<8;c++){
+    const cell=document.createElement('div');
+    cell.className='chess-cell '+((r+c)%2===0?'light':'dark-sq');
+    const p=cBoard[r][c];if(p!=='.'){cell.textContent=PIECE_MAP[p]||p;cell.classList.add(isWhite(p)?'white-piece':'black-piece');}
+    if(cSel&&cSel[0]===r&&cSel[1]===c)cell.classList.add('selected');
+    if(cSel){const moves=getMoves(cBoard,cSel[0],cSel[1]);if(moves.find(m=>m[0]===r&&m[1]===c))cell.classList.add('possible');}
+    cell.addEventListener('click',()=>chessClick(r,c));
+    bd.appendChild(cell);
+  }
+}
+
+// ========== PING PONG ==========
+const PC=document.getElementById('pongCanvas');
+let pCtx,pRunning=false,pLoop=null;
+let pBall,pPlayer,pCpu,pScoreP=0,pScoreC=0;
+const PW=320,PH=240,PAD_H=50,PAD_W=8;
+function pongInit(){
+  pCtx=PC.getContext('2d');
+  pBall={x:PW/2,y:PH/2,vx:3,vy:2,r:7};
+  pPlayer={y:PH/2-PAD_H/2};pCpu={y:PH/2-PAD_H/2};
+  pScoreP=0;pScoreC=0;
+  pDraw();
+}
+function pongStart(){
+  pongInit();pRunning=true;
+  document.getElementById('pongStartBtn').style.display='none';
+  clearInterval(pLoop);pLoop=setInterval(pongTick,16);
+}
+function pongStop(){clearInterval(pLoop);pRunning=false;document.getElementById('pongStartBtn').style.display='';}
+function pongTick(){
+  pBall.x+=pBall.vx;pBall.y+=pBall.vy;
+  if(pBall.y-pBall.r<0){pBall.y=pBall.r;pBall.vy*=-1;}
+  if(pBall.y+pBall.r>PH){pBall.y=PH-pBall.r;pBall.vy*=-1;}
+  // Player paddle (right)
+  if(pBall.vx>0&&pBall.x+pBall.r>PW-PAD_W-10&&pBall.x-pBall.r<PW-10&&pBall.y>pPlayer.y&&pBall.y<pPlayer.y+PAD_H){pBall.vx*=-1.05;pBall.vy+=(pBall.y-(pPlayer.y+PAD_H/2))*0.1;}
+  // CPU paddle (left)
+  if(pBall.vx<0&&pBall.x-pBall.r<PAD_W+10&&pBall.x+pBall.r>10&&pBall.y>pCpu.y&&pBall.y<pCpu.y+PAD_H){pBall.vx*=-1.05;}
+  // CPU AI
+  const cpuCenter=pCpu.y+PAD_H/2;if(cpuCenter<pBall.y-4)pCpu.y=Math.min(PH-PAD_H,pCpu.y+3);else if(cpuCenter>pBall.y+4)pCpu.y=Math.max(0,pCpu.y-3);
+  // Score
+  if(pBall.x<0){pScoreP++;resetBall(1);}
+  if(pBall.x>PW){pScoreC++;resetBall(-1);}
+  if(pScoreP>=7){pongStop();showResult('🏆',t('win'),t('youWin'));return;}
+  if(pScoreC>=7){pongStop();showResult('😔',t('lose'),t('cpuWin'));return;}
+  pDraw();
+}
+function resetBall(dir){pBall={x:PW/2,y:PH/2,vx:3*dir,vy:(Math.random()-0.5)*4,r:7};}
+function pDraw(){
+  const bg=isDark?'#1A1A1A':'#F5F0E8';
+  pCtx.fillStyle=bg;pCtx.fillRect(0,0,PW,PH);
+  pCtx.setLineDash([6,6]);pCtx.strokeStyle=isDark?'#333':'#CCC';pCtx.beginPath();pCtx.moveTo(PW/2,0);pCtx.lineTo(PW/2,PH);pCtx.stroke();pCtx.setLineDash([]);
+  // Scores
+  pCtx.fillStyle='#C9A84C';pCtx.font='bold 28px Cinzel,serif';pCtx.textAlign='center';
+  pCtx.fillText(pScoreC,PW/4,36);pCtx.fillText(pScoreP,3*PW/4,36);
+  // Paddles
+  pCtx.fillStyle='#C9A84C';
+  pCtx.fillRect(10,pCpu.y,PAD_W,PAD_H);
+  pCtx.fillRect(PW-PAD_W-10,pPlayer.y,PAD_W,PAD_H);
+  // Ball
+  pCtx.beginPath();pCtx.arc(pBall.x,pBall.y,pBall.r,0,Math.PI*2);pCtx.fillStyle='#F0C060';pCtx.fill();
+}
+// Pong controls
+document.getElementById('pongUp').addEventListener('mousedown',()=>{pPaddleDir=-1;});
+document.getElementById('pongDown').addEventListener('mousedown',()=>{pPaddleDir=1;});
+document.addEventListener('mouseup',()=>{pPaddleDir=0;});
+document.getElementById('pongUp').addEventListener('touchstart',e=>{e.preventDefault();pPaddleDir=-1;},{passive:false});
+document.getElementById('pongDown').addEventListener('touchstart',e=>{e.preventDefault();pPaddleDir=1;},{passive:false});
+document.addEventListener('touchend',()=>{pPaddleDir=0;});
+let pPaddleDir=0;
+setInterval(()=>{if(pRunning&&pPaddleDir){pPlayer.y=Math.max(0,Math.min(PH-PAD_H,pPlayer.y+pPaddleDir*5));}},16);
+PC.addEventListener('touchmove',e=>{e.preventDefault();const rect=PC.getBoundingClientRect();const y=(e.touches[0].clientY-rect.top)*(PH/rect.height);pPlayer.y=Math.max(0,Math.min(PH-PAD_H,y-PAD_H/2));},{passive:false});
+
+// ========== MINESWEEPER ==========
+const MS_DIFFS={easy:{r:8,c:8,m:10},medium:{r:10,c:10,m:20},hard:{r:12,c:12,m:30}};
+let msDiff='easy',msGrid_d=[],msRows=8,msCols=8,msMines=10,msRevealed=0,msFlagsUsed=0,msGameOver=false,msTimerInt=null,msTime=0,msFirstClick=true;
+function msSetDiff(d){msDiff=d;['easy','medium','hard'].forEach(x=>document.getElementById('ms'+x.charAt(0).toUpperCase()+x.slice(1)).classList.toggle('active',x===d));msNewGame();}
+function msNewGame(){
+  clearInterval(msTimerInt);msTime=0;msFirstClick=true;msGameOver=false;
+  const {r,c,m}=MS_DIFFS[msDiff];msRows=r;msCols=c;msMines=m;
+  msGrid_d=Array(r).fill(null).map(()=>Array(c).fill(null).map(()=>({mine:false,revealed:false,flagged:false,count:0})));
+  msRevealed=0;msFlagsUsed=0;
+  document.getElementById('msBombs').textContent=m;document.getElementById('msFlags').textContent=0;document.getElementById('msTimer').textContent=0;
+  renderMS();
+}
+function msPlaceMines(sr,sc){
+  let placed=0;
+  while(placed<msMines){const r=Math.floor(Math.random()*msRows),c=Math.floor(Math.random()*msCols);if(!msGrid_d[r][c].mine&&!(Math.abs(r-sr)<=1&&Math.abs(c-sc)<=1)){msGrid_d[r][c].mine=true;placed++;}}
+  for(let r=0;r<msRows;r++)for(let c=0;c<msCols;c++){if(!msGrid_d[r][c].mine){let cnt=0;for(let dr=-1;dr<=1;dr++)for(let dc=-1;dc<=1;dc++){if(msGrid_d[r+dr]&&msGrid_d[r+dr][c+dc]&&msGrid_d[r+dr][c+dc].mine)cnt++;}msGrid_d[r][c].count=cnt;}}
+}
+function msReveal(r,c){
+  if(r<0||r>=msRows||c<0||c>=msCols)return;
+  const cell=msGrid_d[r][c];
+  if(cell.revealed||cell.flagged)return;
+  if(msFirstClick){msFirstClick=false;msPlaceMines(r,c);msTimerInt=setInterval(()=>{msTime++;document.getElementById('msTimer').textContent=msTime;},1000);}
+  cell.revealed=true;msRevealed++;
+  if(cell.mine){msGameOver=true;clearInterval(msTimerInt);revealAllMines();renderMS();showResult('💥',t('gameover'),'💣 💣 💣');return;}
+  if(cell.count===0){for(let dr=-1;dr<=1;dr++)for(let dc=-1;dc<=1;dc++)msReveal(r+dr,c+dc);}
+  if(msRevealed===msRows*msCols-msMines){clearInterval(msTimerInt);showResult('🎉',t('win'),msTime+'s');}
+  renderMS();
+}
+function revealAllMines(){for(let r=0;r<msRows;r++)for(let c=0;c<msCols;c++)if(msGrid_d[r][c].mine)msGrid_d[r][c].revealed=true;}
+function msFlag(r,c){
+  if(msGameOver)return;const cell=msGrid_d[r][c];if(cell.revealed)return;
+  cell.flagged=!cell.flagged;msFlagsUsed+=cell.flagged?1:-1;
+  document.getElementById('msFlags').textContent=msFlagsUsed;renderMS();
+}
+function renderMS(){
+  const g=document.getElementById('msGrid');
+  g.style.gridTemplateColumns=`repeat(${msCols},32px)`;g.innerHTML='';
+  for(let r=0;r<msRows;r++)for(let c=0;c<msCols;c++){
+    const cell=msGrid_d[r][c];const el=document.createElement('div');el.className='ms-cell';
+    if(cell.revealed){el.classList.add('revealed');if(cell.mine){el.textContent='💣';if(msGameOver)el.classList.add('mine-hit');}else if(cell.count>0){el.textContent=cell.count;el.classList.add('ms-n'+cell.count);}}
+    else if(cell.flagged){el.textContent='🚩';el.classList.add('flagged');}
+    if(!cell.revealed&&!msGameOver){
+      el.addEventListener('click',()=>msReveal(r,c));
+      let pressTimer;
+      el.addEventListener('touchstart',e=>{e.preventDefault();pressTimer=setTimeout(()=>msFlag(r,c),500);},{passive:false});
+      el.addEventListener('touchend',()=>clearTimeout(pressTimer));
+      el.addEventListener('contextmenu',e=>{e.preventDefault();msFlag(r,c);});
+    }
+    g.appendChild(el);
+  }
+}
+
+// ========== BREAKOUT ==========
+const BC=document.getElementById('brkCanvas');
+let bCtx,bRunning=false,bLoop2=null;
+let bBall,bPaddle,bBricks=[],bScore_v=0,bLives_v=3,bLevel_v=1,bPaddleDir2=0,bStarted=false;
+const BW=320,BH=320,BRKT_ROWS=5,BRKT_COLS=8;
+const BRK_COLORS=['#E05050','#D4883C','#C9A84C','#4CAF7A','#4A8FD4'];
+function brkInit(){
+  bCtx=BC.getContext('2d');bScore_v=0;bLives_v=3;bLevel_v=1;bStarted=false;
+  document.getElementById('brkScore').textContent=0;document.getElementById('brkLives').textContent=3;document.getElementById('brkLevel').textContent=1;
+  document.getElementById('brkStartBtn').style.display='';
+  brkSetup();brkDraw();
+}
+function brkSetup(){
+  const pw=70,py=BH-20;
+  bPaddle={x:BW/2-pw/2,y:py,w:pw,h:10};
+  bBall={x:BW/2,y:py-14,vx:(2+bLevel_v*0.3)*(Math.random()>0.5?1:-1),vy:-(3+bLevel_v*0.3),r:7};
+  bBricks=[];
+  for(let r=0;r<BRKT_ROWS;r++)for(let c=0;c<BRKT_COLS;c++){
+    const bw=(BW-20)/BRKT_COLS-4,bh=16;
+    bBricks.push({x:10+c*(bw+4),y:40+r*(bh+4),w:bw,h:bh,alive:true,color:BRK_COLORS[r%5]});
+  }
+  brkDraw();
+}
+function brkStart(){
+  brkSetup();bStarted=true;bRunning=true;
+  document.getElementById('brkStartBtn').style.display='none';
+  clearInterval(bLoop2);bLoop2=setInterval(brkTick,16);
+}
+function brkStop(){clearInterval(bLoop2);bRunning=false;}
+function brkTick(){
+  if(bPaddleDir2){bPaddle.x=Math.max(0,Math.min(BW-bPaddle.w,bPaddle.x+bPaddleDir2*5));}
+  bBall.x+=bBall.vx;bBall.y+=bBall.vy;
+  if(bBall.x-bBall.r<0){bBall.x=bBall.r;bBall.vx*=-1;}
+  if(bBall.x+bBall.r>BW){bBall.x=BW-bBall.r;bBall.vx*=-1;}
+  if(bBall.y-bBall.r<0){bBall.y=bBall.r;bBall.vy*=-1;}
+  // Paddle
+  if(bBall.vy>0&&bBall.y+bBall.r>bPaddle.y&&bBall.y-bBall.r<bPaddle.y+bPaddle.h&&bBall.x>bPaddle.x&&bBall.x<bPaddle.x+bPaddle.w){bBall.vy*=-1;bBall.vx+=(bBall.x-(bPaddle.x+bPaddle.w/2))*0.05;}
+  // Bricks
+  bBricks.forEach(b=>{
+    if(!b.alive)return;
+    if(bBall.x+bBall.r>b.x&&bBall.x-bBall.r<b.x+b.w&&bBall.y+bBall.r>b.y&&bBall.y-bBall.r<b.y+b.h){
+      b.alive=false;bBall.vy*=-1;bScore_v+=10*bLevel_v;document.getElementById('brkScore').textContent=bScore_v;
+    }
+  });
+  // Ball lost
+  if(bBall.y>BH+20){bLives_v--;document.getElementById('brkLives').textContent=bLives_v;if(bLives_v<=0){brkStop();showResult('😔',t('gameover'),t('score')+': '+bScore_v);return;}bBall={x:BW/2,y:bPaddle.y-14,vx:(2+bLevel_v*0.3)*(Math.random()>0.5?1:-1),vy:-(3+bLevel_v*0.3),r:7};}
+  // Level clear
+  if(bBricks.every(b=>!b.alive)){brkStop();bLevel_v++;document.getElementById('brkLevel').textContent=bLevel_v;showResult('🎉',t('levelClear'),t('score')+': '+bScore_v);return;}
+  brkDraw();
+}
+function brkDraw(){
+  const bg=isDark?'#1A1A1A':'#FAF8F4';
+  bCtx.fillStyle=bg;bCtx.fillRect(0,0,BW,BH);
+  bBricks.forEach(b=>{if(b.alive){bCtx.fillStyle=b.color;bCtx.beginPath();bCtx.roundRect(b.x,b.y,b.w,b.h,4);bCtx.fill();}});
+  bCtx.fillStyle='#C9A84C';bCtx.beginPath();bCtx.roundRect(bPaddle.x,bPaddle.y,bPaddle.w,bPaddle.h,4);bCtx.fill();
+  bCtx.fillStyle='#F0C060';bCtx.beginPath();bCtx.arc(bBall.x,bBall.y,bBall.r,0,Math.PI*2);bCtx.fill();
+}
+// Breakout controls
+document.getElementById('brkLeft').addEventListener('mousedown',()=>bPaddleDir2=-1);
+document.getElementById('brkRight').addEventListener('mousedown',()=>bPaddleDir2=1);
+document.addEventListener('mouseup',()=>bPaddleDir2=0);
+document.getElementById('brkLeft').addEventListener('touchstart',e=>{e.preventDefault();bPaddleDir2=-1;},{passive:false});
+document.getElementById('brkRight').addEventListener('touchstart',e=>{e.preventDefault();bPaddleDir2=1;},{passive:false});
+document.addEventListener('touchend',e=>{if(!e.target.closest('#brkLeft')&&!e.target.closest('#brkRight'))bPaddleDir2=0;});
+BC.addEventListener('touchmove',e=>{e.preventDefault();const rect=BC.getBoundingClientRect();bPaddle.x=Math.max(0,Math.min(BW-bPaddle.w,(e.touches[0].clientX-rect.left)*(BW/rect.width)-bPaddle.w/2));},{passive:false});
+document.addEventListener('keydown',e=>{
+  if(currentGame==='breakout'){if(e.key==='ArrowLeft')bPaddleDir2=-1;if(e.key==='ArrowRight')bPaddleDir2=1;}
+});
+document.addEventListener('keyup',e=>{if(e.key==='ArrowLeft'||e.key==='ArrowRight')bPaddleDir2=0;});
+
+// INIT
+applyT();tetInit();pongInit();
+</script>
+</body>
+</html>

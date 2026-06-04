@@ -1,0 +1,2010 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GameNest Hub</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;800&family=Heebo:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --gold: #C9A84C;
+  --gold-light: #F0C060;
+  --gold-dim: #8A6A2A;
+  --black: #0A0A0A;
+  --dark: #111111;
+  --dark2: #1A1A1A;
+  --dark3: #222222;
+  --text: #E8E0D0;
+  --text-dim: #888880;
+  --green: #4CAF7A;
+  --red: #E05050;
+  --blue: #4A8FD4;
+}
+
+body.day {
+  --black: #F0EDE6;
+  --dark: #E8E2D8;
+  --dark2: #FFFFFF;
+  --dark3: #F0EDE6;
+  --text: #1A1A1A;
+  --text-dim: #888;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  background: var(--black);
+  color: var(--text);
+  font-family: 'Heebo', sans-serif;
+  min-height: 100vh;
+  direction: rtl;
+}
+
+body.ltr { direction: ltr; }
+
+/* HEADER */
+.header {
+  background: linear-gradient(180deg, #0A0A0A 0%, #111111 100%);
+  border-bottom: 1px solid var(--gold-dim);
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.logo-hex {
+  width: 38px;
+  height: 38px;
+}
+
+.logo-text {
+  font-family: 'Cinzel', serif;
+  font-size: 1.2rem;
+  color: var(--gold);
+  letter-spacing: 1px;
+}
+
+.logo-sub {
+  font-size: 0.65rem;
+  color: var(--gold-dim);
+  letter-spacing: 3px;
+  display: block;
+  margin-top: -2px;
+}
+
+.lang-btn {
+  background: var(--dark3);
+  border: 1px solid var(--gold-dim);
+  color: var(--gold);
+  padding: 6px 12px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-family: 'Heebo', sans-serif;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  position: relative;
+}
+
+.lang-dropdown {
+  position: absolute;
+  top: 110%;
+  left: 0;
+  background: var(--dark2);
+  border: 1px solid var(--gold-dim);
+  border-radius: 10px;
+  overflow: hidden;
+  display: none;
+  min-width: 140px;
+  z-index: 200;
+}
+
+.lang-dropdown.open { display: block; }
+
+.lang-option {
+  padding: 10px 14px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: background 0.2s;
+}
+
+.lang-option:hover { background: var(--dark3); color: var(--gold); }
+
+/* MENU SCREEN */
+.screen { display: none; }
+.screen.active { display: block; }
+
+.menu-screen {
+  padding: 30px 16px;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.menu-title {
+  font-family: 'Cinzel', serif;
+  font-size: 2rem;
+  color: var(--gold);
+  text-align: center;
+  margin-bottom: 6px;
+}
+
+.menu-subtitle {
+  text-align: center;
+  color: var(--text-dim);
+  font-size: 0.9rem;
+  margin-bottom: 30px;
+}
+
+.games-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.game-card {
+  background: var(--dark2);
+  border: 1px solid var(--dark3);
+  border-radius: 16px;
+  padding: 22px 16px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.25s;
+  position: relative;
+  overflow: hidden;
+}
+
+.game-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.game-card:hover {
+  border-color: var(--gold-dim);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(201,168,76,0.15);
+}
+
+.game-card:hover::before { opacity: 1; }
+
+.game-icon {
+  font-size: 2.4rem;
+  margin-bottom: 10px;
+  display: block;
+}
+
+.game-name {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--gold);
+  margin-bottom: 4px;
+}
+
+.game-desc {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  line-height: 1.4;
+}
+
+.game-card.wide {
+  grid-column: span 2;
+}
+
+/* GAME SCREEN */
+.game-screen {
+  max-width: 500px;
+  margin: 0 auto;
+  padding: 20px 16px;
+}
+
+.game-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.back-btn {
+  background: var(--dark2);
+  border: 1px solid var(--gold-dim);
+  color: var(--gold);
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.2s;
+}
+
+.back-btn:hover { background: var(--dark3); }
+
+.game-title {
+  font-family: 'Cinzel', serif;
+  font-size: 1.3rem;
+  color: var(--gold);
+}
+
+.score-badge {
+  margin-right: auto;
+  background: var(--dark3);
+  border: 1px solid var(--gold-dim);
+  color: var(--gold);
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+body.ltr .score-badge { margin-right: 0; margin-left: auto; }
+
+/* CARD GENERIC */
+.card {
+  background: var(--dark2);
+  border: 1px solid var(--dark3);
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 16px;
+}
+
+.gold-btn {
+  background: linear-gradient(135deg, var(--gold-dim), var(--gold));
+  color: var(--black);
+  border: none;
+  padding: 12px 28px;
+  border-radius: 25px;
+  font-family: 'Heebo', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: inline-block;
+}
+
+.gold-btn:hover {
+  transform: scale(1.04);
+  box-shadow: 0 4px 15px rgba(201,168,76,0.4);
+}
+
+.outline-btn {
+  background: transparent;
+  color: var(--gold);
+  border: 1px solid var(--gold-dim);
+  padding: 10px 24px;
+  border-radius: 25px;
+  font-family: 'Heebo', sans-serif;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.outline-btn:hover { background: var(--dark3); }
+
+/* ========== TRIVIA ========== */
+.trivia-question {
+  font-size: 1.1rem;
+  font-weight: 600;
+  line-height: 1.6;
+  margin-bottom: 20px;
+  color: var(--text);
+  text-align: center;
+}
+
+.trivia-options {
+  display: grid;
+  gap: 10px;
+}
+
+.trivia-opt {
+  background: var(--dark3);
+  border: 1px solid #333;
+  color: var(--text);
+  padding: 13px 16px;
+  border-radius: 12px;
+  cursor: pointer;
+  text-align: right;
+  font-family: 'Heebo', sans-serif;
+  font-size: 0.95rem;
+  transition: all 0.2s;
+}
+
+body.ltr .trivia-opt { text-align: left; }
+
+.trivia-opt:hover:not(:disabled) {
+  border-color: var(--gold-dim);
+  background: #2A2A2A;
+}
+
+.trivia-opt.correct { background: #1A3A2A; border-color: var(--green); color: var(--green); }
+.trivia-opt.wrong   { background: #3A1A1A; border-color: var(--red); color: var(--red); }
+
+.trivia-progress {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  margin-bottom: 20px;
+}
+
+.trivia-dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: var(--dark3);
+  border: 1px solid var(--gold-dim);
+}
+
+.trivia-dot.done { background: var(--gold); }
+
+/* ========== MEMORY ========== */
+.memory-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.mem-card {
+  aspect-ratio: 1;
+  border-radius: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.8rem;
+  background: linear-gradient(135deg, var(--dark3), var(--dark2));
+  border: 2px solid var(--gold-dim);
+  transition: transform 0.15s, border-color 0.2s;
+  user-select: none;
+}
+
+.mem-card:active { transform: scale(0.93); }
+.mem-card.flipped { border-color: var(--gold); background: #1e1e1e; }
+.mem-card.matched { border-color: var(--green); background: #1A3A2A; opacity: 0.6; cursor: default; }
+
+.memory-stats {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  margin-bottom: 16px;
+  font-size: 0.9rem;
+  color: var(--text-dim);
+}
+
+.memory-stats span { color: var(--gold); font-weight: 700; }
+
+/* ========== HANGMAN ========== */
+.hangman-svg {
+  display: block;
+  margin: 0 auto 16px;
+}
+
+.word-display {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.word-letter {
+  width: 30px;
+  height: 36px;
+  border-bottom: 2px solid var(--gold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--gold);
+}
+
+.keyboard {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.key-btn {
+  width: 32px;
+  height: 32px;
+  background: var(--dark3);
+  border: 1px solid #444;
+  color: var(--text);
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: 'Heebo', sans-serif;
+  font-size: 0.85rem;
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.key-btn:hover:not(:disabled) { border-color: var(--gold); color: var(--gold); }
+.key-btn:disabled { opacity: 0.3; cursor: default; }
+.key-btn.correct { background: #1A3A2A; border-color: var(--green); color: var(--green); }
+.key-btn.wrong   { background: #2A1A1A; border-color: var(--red); color: var(--red); }
+
+.hint-text {
+  text-align: center;
+  color: var(--text-dim);
+  font-size: 0.85rem;
+  margin-bottom: 12px;
+}
+
+/* ========== 21 CARDS ========== */
+.cards-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-height: 80px;
+  margin-bottom: 10px;
+  justify-content: center;
+}
+
+.playing-card {
+  width: 52px;
+  height: 74px;
+  background: #FFF8F0;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #1A1A1A;
+  border: 1px solid #CCC;
+  position: relative;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+}
+
+.playing-card.red { color: var(--red); }
+
+.playing-card.back {
+  background: linear-gradient(135deg, #1A3A6A, #0A1A3A);
+  color: transparent;
+}
+
+.playing-card.back::after {
+  content: '🂠';
+  font-size: 2rem;
+  color: var(--gold-dim);
+}
+
+.card-label {
+  font-size: 0.8rem;
+  margin-bottom: 2px;
+}
+
+.card-suit {
+  font-size: 1.1rem;
+}
+
+.blackjack-info {
+  display: flex;
+  justify-content: space-around;
+  margin-bottom: 16px;
+}
+
+.bj-side {
+  text-align: center;
+}
+
+.bj-label {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  margin-bottom: 4px;
+}
+
+.bj-score {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--gold);
+}
+
+.bj-score.bust { color: var(--red); }
+
+.bj-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+/* ========== NUMBER GUESS ========== */
+.num-display {
+  text-align: center;
+  font-size: 5rem;
+  font-family: 'Cinzel', serif;
+  color: var(--gold);
+  margin: 10px 0 20px;
+  min-height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.num-input-row {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-bottom: 14px;
+}
+
+.num-input {
+  background: var(--dark3);
+  border: 1px solid var(--gold-dim);
+  color: var(--text);
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-family: 'Heebo', sans-serif;
+  font-size: 1.1rem;
+  width: 100px;
+  text-align: center;
+}
+
+.hint-bar {
+  text-align: center;
+  font-size: 1.1rem;
+  min-height: 32px;
+  margin-bottom: 14px;
+  font-weight: 600;
+}
+
+.hint-bar.high { color: var(--red); }
+.hint-bar.low  { color: var(--blue); }
+.hint-bar.win  { color: var(--green); }
+
+.num-attempts {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.attempt-chip {
+  background: var(--dark3);
+  border: 1px solid #444;
+  color: var(--text-dim);
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+}
+
+.attempt-chip.high { border-color: var(--red); color: var(--red); }
+.attempt-chip.low  { border-color: var(--blue); color: var(--blue); }
+
+/* RESULT OVERLAY */
+.result-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.85);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 300;
+  padding: 20px;
+}
+
+.result-overlay.show { display: flex; }
+
+.result-box {
+  background: var(--dark2);
+  border: 1px solid var(--gold-dim);
+  border-radius: 20px;
+  padding: 32px 28px;
+  text-align: center;
+  max-width: 320px;
+  width: 100%;
+}
+
+.result-emoji { font-size: 3.5rem; margin-bottom: 12px; }
+
+.result-title {
+  font-family: 'Cinzel', serif;
+  font-size: 1.5rem;
+  color: var(--gold);
+  margin-bottom: 8px;
+}
+
+.result-msg {
+  color: var(--text-dim);
+  font-size: 0.9rem;
+  margin-bottom: 22px;
+  line-height: 1.5;
+}
+
+.result-btns {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+/* ICON BUTTONS */
+.icon-btn {
+  background: var(--dark3);
+  border: 1px solid var(--gold-dim);
+  color: var(--gold);
+  width: 34px; height: 34px;
+  border-radius: 9px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.2s;
+}
+.icon-btn:hover { background: var(--dark2); }
+
+/* MODAL */
+.modal-bg {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.82);
+  z-index: 400;
+  display: none; align-items: center; justify-content: center;
+  padding: 16px;
+}
+.modal-bg.open { display: flex; }
+.modal {
+  background: var(--dark2);
+  border: 1px solid var(--gold-dim);
+  border-radius: 18px;
+  padding: 24px 20px;
+  max-width: 360px; width: 100%;
+  max-height: 88vh; overflow-y: auto;
+}
+.modal-title {
+  font-family: 'Cinzel', serif;
+  color: var(--gold);
+  font-size: 1.15rem;
+  margin-bottom: 14px;
+  text-align: center;
+}
+.modal-close {
+  float: left;
+  background: none;
+  border: 1px solid var(--gold-dim);
+  color: var(--gold);
+  padding: 4px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-family: 'Heebo', sans-serif;
+  font-size: 0.8rem;
+  margin-bottom: 8px;
+}
+body.ltr .modal-close { float: right; }
+.modal p, .modal li {
+  color: var(--text-dim);
+  font-size: 0.88rem;
+  line-height: 1.7;
+  margin-bottom: 6px;
+}
+.modal ul { padding-right: 18px; }
+body.ltr .modal ul { padding-left: 18px; padding-right: 0; }
+.modal .key-badge {
+  display: inline-block;
+  background: var(--dark3);
+  border: 1px solid var(--gold-dim);
+  color: var(--gold);
+  padding: 2px 8px; border-radius: 6px;
+  font-size: 0.8rem; margin: 0 2px;
+}
+.modal .section-title {
+  color: var(--gold);
+  font-size: 0.8rem; font-weight: 700;
+  margin-top: 12px; margin-bottom: 4px;
+  letter-spacing: 1px;
+}
+.about-link { color: var(--gold); text-decoration: none; font-weight: 700; }
+.about-link:hover { text-decoration: underline; }
+
+@media (max-width: 380px) {
+  .games-grid { grid-template-columns: 1fr; }
+  .game-card.wide { grid-column: span 1; }
+  .memory-grid { grid-template-columns: repeat(4, 1fr); gap: 6px; }
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<!-- MODALS -->
+<div class="modal-bg" id="howtoModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('howto')" data-i="close">סגור</button>
+    <div class="modal-title" id="howtoTitle">❓ איך משחקים</div>
+    <div id="howtoContent"></div>
+  </div>
+</div>
+<div class="modal-bg" id="aboutModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('about')" data-i="close">סגור</button>
+    <div style="text-align:center;margin-bottom:12px;">
+      <svg width="50" height="50" viewBox="0 0 38 38"><polygon points="19,2 35,10.5 35,27.5 19,36 3,27.5 3,10.5" fill="#111" stroke="#C9A84C" stroke-width="1.5"/><text x="19" y="24" text-anchor="middle" font-family="Cinzel,serif" font-size="14" fill="#C9A84C">G</text></svg>
+    </div>
+    <div class="modal-title">GameNest Hub — AppNest</div>
+    <div id="aboutContent"></div>
+  </div>
+</div>
+
+<div class="header">
+  <div class="logo">
+    <svg class="logo-hex" viewBox="0 0 38 38" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <polygon points="19,2 35,10.5 35,27.5 19,36 3,27.5 3,10.5" fill="#111" stroke="#C9A84C" stroke-width="1.5"/>
+      <text x="19" y="24" text-anchor="middle" font-family="Cinzel,serif" font-size="14" fill="#C9A84C">G</text>
+    </svg>
+    <div>
+      <span class="logo-text">GameNest</span>
+      <span class="logo-sub" data-i="logoSub">HUB</span>
+    </div>
+  </div>
+  <div style="display:flex;gap:6px;align-items:center;">
+    <button class="icon-btn" onclick="openModal('howto')" id="howtoBtn">❓</button>
+    <button class="icon-btn" onclick="toggleTheme()" id="themeBtn">🌙</button>
+    <button class="icon-btn" onclick="openModal('about')">ℹ️</button>
+    <div style="position:relative;">
+      <button class="lang-btn" onclick="toggleLangMenu()" id="langBtn">🌐 <span id="langLabel">עב</span> ▾</button>
+      <div class="lang-dropdown" id="langDropdown">
+        <div class="lang-option" onclick="setLang('he')">🇮🇱 עברית</div>
+        <div class="lang-option" onclick="setLang('en')">🇬🇧 English</div>
+        <div class="lang-option" onclick="setLang('ru')">🇷🇺 Русский</div>
+        <div class="lang-option" onclick="setLang('es')">🇪🇸 Español</div>
+        <div class="lang-option" onclick="setLang('ar')">🇸🇦 العربية</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MENU SCREEN -->
+<div class="screen active" id="menuScreen">
+  <div class="menu-screen">
+    <div class="menu-title" data-i="menuTitle">🎮 GameNest</div>
+    <div class="menu-subtitle" data-i="menuSub">בחר משחק וצא לדרך</div>
+    <div class="games-grid">
+      <div class="game-card" onclick="startGame('trivia')">
+        <span class="game-icon">🧠</span>
+        <div class="game-name" data-i="triviaName">טריוויה</div>
+        <div class="game-desc" data-i="triviaDesc">10 שאלות ידע כללי</div>
+      </div>
+      <div class="game-card" onclick="startGame('memory')">
+        <span class="game-icon">🃏</span>
+        <div class="game-name" data-i="memName">זיכרון</div>
+        <div class="game-desc" data-i="memDesc">מצא את הזוגות</div>
+      </div>
+      <div class="game-card" onclick="startGame('hangman')">
+        <span class="game-icon">🪝</span>
+        <div class="game-name" data-i="hangName">תלייה</div>
+        <div class="game-desc" data-i="hangDesc">נחש את המילה</div>
+      </div>
+      <div class="game-card" onclick="startGame('blackjack')">
+        <span class="game-icon">🎰</span>
+        <div class="game-name" data-i="bjName">21</div>
+        <div class="game-desc" data-i="bjDesc">קלפים מול המחשב</div>
+      </div>
+      <div class="game-card wide" onclick="startGame('numguess')">
+        <span class="game-icon">🔢</span>
+        <div class="game-name" data-i="numName">נחש מספר</div>
+        <div class="game-desc" data-i="numDesc">מצא את המספר הסודי</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TRIVIA SCREEN -->
+<div class="screen" id="triviaScreen">
+  <div class="game-screen">
+    <div class="game-header">
+      <button class="back-btn" onclick="goMenu()">←</button>
+      <div class="game-title" data-i="triviaName">🧠 טריוויה</div>
+      <div class="score-badge">⭐ <span id="triviaScore">0</span></div>
+    </div>
+    <div class="trivia-progress" id="triviaProgress"></div>
+    <div class="card">
+      <div class="trivia-question" id="triviaQ"></div>
+      <div class="trivia-options" id="triviaOpts"></div>
+    </div>
+    <div id="triviaNext" style="text-align:center;display:none;">
+      <button class="gold-btn" onclick="nextTrivia()" data-i="next">הבא ›</button>
+    </div>
+  </div>
+</div>
+
+<!-- MEMORY SCREEN -->
+<div class="screen" id="memoryScreen">
+  <div class="game-screen">
+    <div class="game-header">
+      <button class="back-btn" onclick="goMenu()">←</button>
+      <div class="game-title" data-i="memName">🃏 זיכרון</div>
+      <div class="score-badge">🔄 <span id="memMoves">0</span></div>
+    </div>
+    <div class="memory-stats">
+      <div><span data-i="pairs">זוגות:</span> <span id="memPairs">0</span>/8</div>
+      <div><span data-i="time">זמן:</span> <span id="memTime">0</span>s</div>
+    </div>
+    <div class="memory-grid" id="memoryGrid"></div>
+    <div style="text-align:center;margin-top:16px;">
+      <button class="outline-btn" onclick="initMemory()" data-i="restart">🔄 התחל מחדש</button>
+    </div>
+  </div>
+</div>
+
+<!-- HANGMAN SCREEN -->
+<div class="screen" id="hangmanScreen">
+  <div class="game-screen">
+    <div class="game-header">
+      <button class="back-btn" onclick="goMenu()">←</button>
+      <div class="game-title" data-i="hangName">🪝 תלייה</div>
+      <div class="score-badge">❤️ <span id="hangLives">6</span></div>
+    </div>
+    <svg class="hangman-svg" width="120" height="140" viewBox="0 0 120 140">
+      <line x1="10" y1="135" x2="110" y2="135" stroke="#555" stroke-width="3"/>
+      <line x1="30" y1="135" x2="30" y2="10"  stroke="#555" stroke-width="3"/>
+      <line x1="30" y1="10"  x2="75" y2="10"  stroke="#555" stroke-width="3"/>
+      <line x1="75" y1="10"  x2="75" y2="28"  stroke="#555" stroke-width="3"/>
+      <circle id="hHead"  cx="75" cy="37" r="9"  stroke="#C9A84C" stroke-width="2" fill="none" style="display:none"/>
+      <line id="hBody"  x1="75" y1="46" x2="75" y2="82"  stroke="#C9A84C" stroke-width="2" style="display:none"/>
+      <line id="hArmL" x1="75" y1="55" x2="55" y2="70"  stroke="#C9A84C" stroke-width="2" style="display:none"/>
+      <line id="hArmR" x1="75" y1="55" x2="95" y2="70"  stroke="#C9A84C" stroke-width="2" style="display:none"/>
+      <line id="hLegL" x1="75" y1="82" x2="58" y2="104" stroke="#C9A84C" stroke-width="2" style="display:none"/>
+      <line id="hLegR" x1="75" y1="82" x2="92" y2="104" stroke="#C9A84C" stroke-width="2" style="display:none"/>
+    </svg>
+    <div class="hint-text" id="hangHint"></div>
+    <div class="word-display" id="wordDisplay"></div>
+    <div class="keyboard" id="keyboard"></div>
+    <div style="text-align:center;">
+      <button class="outline-btn" onclick="initHangman()" data-i="restart">🔄 מילה חדשה</button>
+    </div>
+  </div>
+</div>
+
+<!-- BLACKJACK SCREEN -->
+<div class="screen" id="blackjackScreen">
+  <div class="game-screen">
+    <div class="game-header">
+      <button class="back-btn" onclick="goMenu()">←</button>
+      <div class="game-title" data-i="bjName">🎰 21</div>
+      <div class="score-badge">💰 <span id="bjBalance">100</span></div>
+    </div>
+    <div class="card">
+      <div class="bj-label" data-i="dealer">עוסק 🤖</div>
+      <div class="cards-row" id="dealerCards"></div>
+      <div class="blackjack-info">
+        <div class="bj-side">
+          <div class="bj-label" data-i="dealer">עוסק</div>
+          <div class="bj-score" id="dealerScore">0</div>
+        </div>
+        <div style="font-size:1.4rem;color:var(--gold-dim)">VS</div>
+        <div class="bj-side">
+          <div class="bj-label" data-i="you">אתה</div>
+          <div class="bj-score" id="playerScore">0</div>
+        </div>
+      </div>
+      <div class="cards-row" id="playerCards"></div>
+      <div class="bj-label" style="text-align:center;margin-bottom:8px;" data-i="you">אתה 🧑</div>
+    </div>
+    <div class="bj-actions" id="bjActions">
+      <button class="gold-btn" onclick="bjHit()" data-i="hit">קח קלף</button>
+      <button class="outline-btn" onclick="bjStand()" data-i="stand">עצור</button>
+      <button class="outline-btn" onclick="initBlackjack()" data-i="deal">חלק מחדש</button>
+    </div>
+    <div style="text-align:center;margin-top:12px;color:var(--text-dim);font-size:0.85rem;" id="bjMsg"></div>
+  </div>
+</div>
+
+<!-- NUMBER GUESS SCREEN -->
+<div class="screen" id="numguessScreen">
+  <div class="game-screen">
+    <div class="game-header">
+      <button class="back-btn" onclick="goMenu()">←</button>
+      <div class="game-title" data-i="numName">🔢 נחש מספר</div>
+      <div class="score-badge">🎯 <span id="numTries">0</span></div>
+    </div>
+    <div class="card" style="text-align:center;">
+      <div style="color:var(--text-dim);font-size:0.85rem;margin-bottom:6px;" data-i="numRange">נחש מספר בין 1 ל-100</div>
+      <div class="num-display" id="numDisplay">?</div>
+      <div class="hint-bar" id="numHint"></div>
+      <div class="num-input-row">
+        <input class="num-input" type="number" id="numInput" min="1" max="100" placeholder="1-100"
+          onkeydown="if(event.key==='Enter')numGuess()">
+        <button class="gold-btn" onclick="numGuess()" data-i="guess">נחש</button>
+      </div>
+      <div class="num-attempts" id="numAttempts"></div>
+      <button class="outline-btn" onclick="initNumGuess()" data-i="restart">🔄 משחק חדש</button>
+    </div>
+  </div>
+</div>
+
+<!-- RESULT OVERLAY -->
+<div class="result-overlay" id="resultOverlay">
+  <div class="result-box">
+    <div class="result-emoji" id="resultEmoji">🎉</div>
+    <div class="result-title" id="resultTitle"></div>
+    <div class="result-msg" id="resultMsg"></div>
+    <div class="result-btns">
+      <button class="gold-btn" id="resultReplay" onclick="replayGame()" data-i="playAgain">שחק שוב</button>
+      <button class="outline-btn" onclick="goMenu()" data-i="menu">תפריט</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============ I18N ============
+const T = {
+  he: {
+    logoSub:'HUB', menuTitle:'🎮 GameNest', menuSub:'בחר משחק וצא לדרך',
+    triviaName:'🧠 טריוויה', triviaDesc:'10 שאלות ידע כללי',
+    memName:'🃏 זיכרון', memDesc:'מצא את הזוגות',
+    hangName:'🪝 תלייה', hangDesc:'נחש את המילה',
+    bjName:'🎰 21', bjDesc:'קלפים מול המחשב',
+    numName:'🔢 נחש מספר', numDesc:'מצא את המספר הסודי',
+    next:'הבא ›', restart:'🔄 התחל מחדש', playAgain:'שחק שוב', menu:'תפריט',
+    pairs:'זוגות:', time:'זמן:', dealer:'עוסק 🤖', you:'אתה',
+    hit:'קח קלף', stand:'עצור', deal:'חלק מחדש',
+    numRange:'נחש מספר בין 1 ל-100', guess:'נחש',
+    win:'ניצחת! 🎉', lose:'הפסדת 😔', tryAgain:'נסה שוב',
+    bjWin:'ניצחת את הבנק!', bjLose:'הבנק ניצח', bjBust:'פרצת 21!', bjPush:'תיקו!',
+    bjBlackjack:'בלאקג\'ק! 🃏', bjDealerBust:'העוסק פרץ!',
+    hangWin:'כל הכבוד! ניחשת נכון!', hangLose:'הפסדת. המילה הייתה:',
+    numWin:'מצוין! ניחשת ב-', numTries:' ניסיונות',
+    higher:'גבוה יותר ⬆️', lower:'נמוך יותר ⬇️',
+    triviaWin:'סיימת! ניקוד:', triviaOf:' מתוך 10',
+    close:'סגור', howtoTitle:'❓ איך משחקים',
+  },
+  en: {
+    logoSub:'HUB', menuTitle:'🎮 GameNest', menuSub:'Choose a game and play',
+    triviaName:'🧠 Trivia', triviaDesc:'10 general knowledge questions',
+    memName:'🃏 Memory', memDesc:'Find the pairs',
+    hangName:'🪝 Hangman', hangDesc:'Guess the word',
+    bjName:'🎰 Blackjack', bjDesc:'Cards vs the dealer',
+    numName:'🔢 Number Guess', numDesc:'Find the secret number',
+    next:'Next ›', restart:'🔄 Restart', playAgain:'Play Again', menu:'Menu',
+    pairs:'Pairs:', time:'Time:', dealer:'Dealer 🤖', you:'You',
+    hit:'Hit', stand:'Stand', deal:'Deal Again',
+    numRange:'Guess a number between 1 and 100', guess:'Guess',
+    win:'You Win! 🎉', lose:'You Lose 😔', tryAgain:'Try Again',
+    bjWin:'You beat the dealer!', bjLose:'Dealer wins', bjBust:'Bust! Over 21!', bjPush:'Push!',
+    bjBlackjack:'Blackjack! 🃏', bjDealerBust:'Dealer busts!',
+    hangWin:'Well done! You guessed it!', hangLose:'You lost. The word was:',
+    numWin:'Excellent! Guessed in ', numTries:' tries',
+    higher:'Higher ⬆️', lower:'Lower ⬇️',
+    triviaWin:'Done! Score:', triviaOf:' out of 10',
+  },
+  ru: {
+    logoSub:'HUB', menuTitle:'🎮 GameNest', menuSub:'Выбери игру и играй',
+    triviaName:'🧠 Викторина', triviaDesc:'10 вопросов',
+    memName:'🃏 Память', memDesc:'Найди пары',
+    hangName:'🪝 Виселица', hangDesc:'Угадай слово',
+    bjName:'🎰 Блэкджек', bjDesc:'Карты против дилера',
+    numName:'🔢 Угадай число', numDesc:'Найди секретное число',
+    next:'Далее ›', restart:'🔄 Заново', playAgain:'Играть снова', menu:'Меню',
+    pairs:'Пары:', time:'Время:', dealer:'Дилер 🤖', you:'Вы',
+    hit:'Ещё', stand:'Стоп', deal:'Раздать снова',
+    numRange:'Угадайте число от 1 до 100', guess:'Угадать',
+    win:'Вы выиграли! 🎉', lose:'Вы проиграли 😔', tryAgain:'Попробовать снова',
+    bjWin:'Вы обыграли дилера!', bjLose:'Дилер выиграл', bjBust:'Перебор!', bjPush:'Ничья!',
+    bjBlackjack:'Блэкджек! 🃏', bjDealerBust:'Перебор у дилера!',
+    hangWin:'Отлично! Вы угадали!', hangLose:'Проигрыш. Слово было:',
+    numWin:'Отлично! Угадали за ', numTries:' попыток',
+    higher:'Выше ⬆️', lower:'Ниже ⬇️',
+    triviaWin:'Готово! Счёт:', triviaOf:' из 10',
+  },
+  es: {
+    logoSub:'HUB', menuTitle:'🎮 GameNest', menuSub:'Elige un juego y juega',
+    triviaName:'🧠 Trivia', triviaDesc:'10 preguntas',
+    memName:'🃏 Memoria', memDesc:'Encuentra los pares',
+    hangName:'🪝 Ahorcado', hangDesc:'Adivina la palabra',
+    bjName:'🎰 Blackjack', bjDesc:'Cartas contra el dealer',
+    numName:'🔢 Adivina el número', numDesc:'Encuentra el número secreto',
+    next:'Siguiente ›', restart:'🔄 Reiniciar', playAgain:'Jugar de nuevo', menu:'Menú',
+    pairs:'Pares:', time:'Tiempo:', dealer:'Dealer 🤖', you:'Tú',
+    hit:'Pedir', stand:'Plantarse', deal:'Repartir de nuevo',
+    numRange:'Adivina un número entre 1 y 100', guess:'Adivinar',
+    win:'¡Ganaste! 🎉', lose:'Perdiste 😔', tryAgain:'Intentar de nuevo',
+    bjWin:'¡Venciste al dealer!', bjLose:'El dealer gana', bjBust:'¡Te pasaste de 21!', bjPush:'¡Empate!',
+    bjBlackjack:'¡Blackjack! 🃏', bjDealerBust:'¡El dealer se pasó!',
+    hangWin:'¡Muy bien! ¡Lo adivinaste!', hangLose:'Perdiste. La palabra era:',
+    numWin:'¡Excelente! Adivinaste en ', numTries:' intentos',
+    higher:'Más alto ⬆️', lower:'Más bajo ⬇️',
+    triviaWin:'¡Terminado! Puntuación:', triviaOf:' de 10',
+  },
+  ar: {
+    logoSub:'HUB', menuTitle:'🎮 GameNest', menuSub:'اختر لعبة وابدأ',
+    triviaName:'🧠 ترويا', triviaDesc:'10 أسئلة معرفية',
+    memName:'🃏 الذاكرة', memDesc:'ابحث عن الأزواج',
+    hangName:'🪝 المشنقة', hangDesc:'خمّن الكلمة',
+    bjName:'🎰 بلاك جاك', bjDesc:'الأوراق ضد الكازينو',
+    numName:'🔢 خمّن الرقم', numDesc:'ابحث عن الرقم السري',
+    next:'التالي ›', restart:'🔄 إعادة', playAgain:'العب مرة أخرى', menu:'القائمة',
+    pairs:'أزواج:', time:'الوقت:', dealer:'الكازينو 🤖', you:'أنت',
+    hit:'اسحب', stand:'قف', deal:'وزّع مجدداً',
+    numRange:'خمّن رقماً بين 1 و 100', guess:'خمّن',
+    win:'فزت! 🎉', lose:'خسرت 😔', tryAgain:'حاول مجدداً',
+    bjWin:'تغلّبت على الكازينو!', bjLose:'الكازينو يفوز', bjBust:'تجاوزت 21!', bjPush:'تعادل!',
+    bjBlackjack:'بلاك جاك! 🃏', bjDealerBust:'الكازينو تجاوز 21!',
+    hangWin:'أحسنت! لقد خمّنت!', hangLose:'خسرت. الكلمة كانت:',
+    numWin:'ممتاز! خمّنت في ', numTries:' محاولات',
+    higher:'أعلى ⬆️', lower:'أقل ⬇️',
+    triviaWin:'انتهى! النتيجة:', triviaOf:' من 10',
+  }
+};
+
+let lang = 'he';
+let isDark = true;
+function t(k){ return (T[lang]||T.he)[k] || k; }
+
+// Howto content per game per language
+const HOWTO = {
+  he: {
+    menu: `<p class="section-title">🎮 ברוך הבא ל-GameNest Hub!</p><p>בחר משחק מהתפריט וצא לדרך. כל משחק מוסבר בנפרד — לחץ ❓ כשאתה בתוך המשחק.</p>`,
+    trivia: `<p class="section-title">🧠 טריוויה</p><p>10 שאלות אקראיות מתוך מאגר של 100 שאלות בשפה הנבחרת.</p><ul><li>בחר תשובה מתוך 4 אפשרויות</li><li>לחץ "הבא" לשאלה הבאה</li><li>בסוף מוצג הניקוד שלך</li></ul>`,
+    memory: `<p class="section-title">🃏 זיכרון</p><p>16 קלפים הפוכים — מצא את 8 הזוגות.</p><ul><li>לחץ על קלף לגלות אותו</li><li>מצא שני קלפים זהים — הם נשארים גלויים</li><li>נסה במינימום מהלכים ובזמן הקצר ביותר</li></ul>`,
+    hangman: `<p class="section-title">🪝 תלייה</p><p>נחש את המילה הסודית לפני שהאיש נתלה!</p><ul><li>לחץ אות — אם היא במילה היא מופיעה</li><li>6 ניחושים שגויים = הפסדת</li><li>יש לך רמז על הנושא של המילה</li></ul>`,
+    blackjack: `<p class="section-title">🎰 21 / בלאקג'ק</p><p>הגע ל-21 בלי לעבור — מנצח מי שקרוב יותר ל-21.</p><ul><li><strong>קח קלף</strong> — קבל קלף נוסף</li><li><strong>עצור</strong> — סיים את תורך, העוסק משחק</li><li>יותר מ-21 = "פרצת" = הפסדת</li><li>בלאקג'ק (A+10) = ניצחון מיידי</li></ul>`,
+    numguess: `<p class="section-title">🔢 נחש מספר</p><p>המחשב בחר מספר בין 1 ל-100 — מצא אותו!</p><ul><li>הזן ניחוש ולחץ "נחש"</li><li>תקבל רמז: גבוה יותר ⬆️ או נמוך יותר ⬇️</li><li>נסה למצוא בכמה שפחות ניסיונות</li></ul>`,
+  },
+  en: {
+    menu: `<p class="section-title">🎮 Welcome to GameNest Hub!</p><p>Choose a game from the menu. Each game has its own guide — press ❓ while inside a game.</p>`,
+    trivia: `<p class="section-title">🧠 Trivia</p><p>10 random questions from a pool of 100 in your chosen language.</p><ul><li>Pick one of 4 answers</li><li>Press Next to continue</li><li>Score shown at the end</li></ul>`,
+    memory: `<p class="section-title">🃏 Memory</p><p>16 face-down cards — find all 8 pairs.</p><ul><li>Click a card to flip it</li><li>Match two identical cards — they stay revealed</li><li>Aim for fewest moves and shortest time</li></ul>`,
+    hangman: `<p class="section-title">🪝 Hangman</p><p>Guess the secret word before the man is hanged!</p><ul><li>Click a letter — if it's in the word it appears</li><li>6 wrong guesses = you lose</li><li>You get a hint about the word's category</li></ul>`,
+    blackjack: `<p class="section-title">🎰 Blackjack / 21</p><p>Get as close to 21 as possible without going over.</p><ul><li><strong>Hit</strong> — take another card</li><li><strong>Stand</strong> — end your turn, dealer plays</li><li>Over 21 = bust = you lose</li><li>Blackjack (A+10) = instant win</li></ul>`,
+    numguess: `<p class="section-title">🔢 Number Guess</p><p>The computer picked a number 1–100 — find it!</p><ul><li>Enter a guess and press Guess</li><li>You get a hint: higher ⬆️ or lower ⬇️</li><li>Try to find it in as few attempts as possible</li></ul>`,
+  },
+  ru: {
+    menu: `<p class="section-title">🎮 Добро пожаловать в GameNest Hub!</p><p>Выбери игру из меню. Нажми ❓ внутри игры для инструкции.</p>`,
+    trivia: `<p class="section-title">🧠 Викторина</p><p>10 случайных вопросов из базы 100 вопросов.</p><ul><li>Выбери один из 4 вариантов</li><li>Нажми "Далее" для продолжения</li><li>Результат показывается в конце</li></ul>`,
+    memory: `<p class="section-title">🃏 Память</p><p>16 карточек рубашкой вверх — найди 8 пар.</p><ul><li>Нажми карточку, чтобы перевернуть её</li><li>Найди две одинаковые — они остаются открытыми</li></ul>`,
+    hangman: `<p class="section-title">🪝 Виселица</p><p>Угадай секретное слово до того, как человечка повесят!</p><ul><li>Нажми букву — если она в слове, она появится</li><li>6 неверных попыток = проигрыш</li></ul>`,
+    blackjack: `<p class="section-title">🎰 Блэкджек / 21</p><p>Набери как можно ближе к 21, не превышая это число.</p><ul><li><strong>Ещё</strong> — взять карту</li><li><strong>Стоп</strong> — закончить ход</li><li>Больше 21 = перебор = проигрыш</li></ul>`,
+    numguess: `<p class="section-title">🔢 Угадай число</p><p>Компьютер загадал число от 1 до 100 — найди его!</p><ul><li>Введи число и нажми "Угадать"</li><li>Подсказка: выше ⬆️ или ниже ⬇️</li></ul>`,
+  },
+  es: {
+    menu: `<p class="section-title">🎮 ¡Bienvenido a GameNest Hub!</p><p>Elige un juego del menú. Pulsa ❓ dentro del juego para ver las instrucciones.</p>`,
+    trivia: `<p class="section-title">🧠 Trivia</p><p>10 preguntas aleatorias de un banco de 100.</p><ul><li>Elige una de 4 respuestas</li><li>Pulsa Siguiente para continuar</li></ul>`,
+    memory: `<p class="section-title">🃏 Memoria</p><p>16 cartas boca abajo — encuentra las 8 parejas.</p><ul><li>Toca una carta para voltearla</li><li>Encuentra dos iguales — se quedan reveladas</li></ul>`,
+    hangman: `<p class="section-title">🪝 Ahorcado</p><p>¡Adivina la palabra antes de que el hombre sea colgado!</p><ul><li>Toca una letra — si está en la palabra aparece</li><li>6 fallos = pierdes</li></ul>`,
+    blackjack: `<p class="section-title">🎰 Blackjack / 21</p><p>Acércate a 21 sin pasarte.</p><ul><li><strong>Pedir</strong> — tomar otra carta</li><li><strong>Plantarse</strong> — terminar el turno</li><li>Más de 21 = te pasas = pierdes</li></ul>`,
+    numguess: `<p class="section-title">🔢 Adivina el número</p><p>¡El ordenador eligió un número del 1 al 100!</p><ul><li>Escribe un número y pulsa "Adivinar"</li><li>Pista: más alto ⬆️ o más bajo ⬇️</li></ul>`,
+  },
+  ar: {
+    menu: `<p class="section-title">🎮 مرحباً في GameNest Hub!</p><p>اختر لعبة من القائمة. اضغط ❓ داخل اللعبة للتعليمات.</p>`,
+    trivia: `<p class="section-title">🧠 ترويا</p><p>10 أسئلة عشوائية من مجموعة 100 سؤال.</p><ul><li>اختر إجابة من 4 خيارات</li><li>اضغط "التالي" للمتابعة</li></ul>`,
+    memory: `<p class="section-title">🃏 الذاكرة</p><p>16 بطاقة مقلوبة — ابحث عن 8 أزواج.</p><ul><li>انقر بطاقة لكشفها</li><li>ابحث عن بطاقتين متطابقتين</li></ul>`,
+    hangman: `<p class="section-title">🪝 المشنقة</p><p>خمّن الكلمة السرية قبل أن يُشنق الرجل!</p><ul><li>انقر حرفاً — إن كان في الكلمة يظهر</li><li>6 أخطاء = خسرت</li></ul>`,
+    blackjack: `<p class="section-title">🎰 بلاك جاك / 21</p><p>اقترب من 21 دون تجاوزه.</p><ul><li><strong>اسحب</strong> — خذ ورقة أخرى</li><li><strong>قف</strong> — أنهِ دورك</li><li>أكثر من 21 = خسرت</li></ul>`,
+    numguess: `<p class="section-title">🔢 خمّن الرقم</p><p>اختار الكمبيوتر رقماً بين 1 و100!</p><ul><li>أدخل رقماً واضغط "خمّن"</li><li>تلميح: أعلى ⬆️ أو أقل ⬇️</li></ul>`,
+  },
+};
+
+const ABOUT = {
+  he: `<p>© 2025 AppNest — כל הזכויות שמורות</p><p style="margin-top:8px">GameNest Hub הוא אוסף משחקים חינמי מבית AppNest.</p><p style="margin-top:8px">🌐 <a class="about-link" href="https://barakaflalo.github.io/appnest" target="_blank">barakaflalo.github.io/appnest</a></p>`,
+  en: `<p>© 2025 AppNest — All rights reserved</p><p style="margin-top:8px">GameNest Hub is a free games collection by AppNest.</p><p style="margin-top:8px">🌐 <a class="about-link" href="https://barakaflalo.github.io/appnest" target="_blank">barakaflalo.github.io/appnest</a></p>`,
+  ru: `<p>© 2025 AppNest — Все права защищены</p><p style="margin-top:8px">GameNest Hub — бесплатная коллекция игр от AppNest.</p><p style="margin-top:8px">🌐 <a class="about-link" href="https://barakaflalo.github.io/appnest" target="_blank">barakaflalo.github.io/appnest</a></p>`,
+  es: `<p>© 2025 AppNest — Todos los derechos reservados</p><p style="margin-top:8px">GameNest Hub es una colección gratuita de juegos de AppNest.</p><p style="margin-top:8px">🌐 <a class="about-link" href="https://barakaflalo.github.io/appnest" target="_blank">barakaflalo.github.io/appnest</a></p>`,
+  ar: `<p>© 2025 AppNest — جميع الحقوق محفوظة</p><p style="margin-top:8px">GameNest Hub مجموعة ألعاب مجانية من AppNest.</p><p style="margin-top:8px">🌐 <a class="about-link" href="https://barakaflalo.github.io/appnest" target="_blank">barakaflalo.github.io/appnest</a></p>`,
+};
+
+function setLang(l){
+  lang = l;
+  document.getElementById('langLabel').textContent = ({he:'עב',en:'EN',ru:'РУ',es:'ES',ar:'عر'})[l];
+  document.getElementById('langDropdown').classList.remove('open');
+  const rtl = ['he','ar'].includes(l);
+  document.body.dir = rtl ? 'rtl' : 'ltr';
+  document.documentElement.lang = l;
+  document.body.classList.toggle('ltr', !rtl);
+  applyTranslations();
+}
+
+function toggleTheme(){
+  isDark = !isDark;
+  document.body.classList.toggle('day', !isDark);
+  document.getElementById('themeBtn').textContent = isDark ? '🌙' : '☀️';
+}
+
+function openModal(type){
+  updateModalContent();
+  document.getElementById(type+'Modal').classList.add('open');
+}
+function closeModal(type){ document.getElementById(type+'Modal').classList.remove('open'); }
+document.querySelectorAll('.modal-bg').forEach(m=>
+  m.addEventListener('click', e=>{ if(e.target===m) m.classList.remove('open'); })
+);
+
+function updateModalContent(){
+  const gameKey = currentGame || 'menu';
+  const hw = HOWTO[lang] || HOWTO.en;
+  document.getElementById('howtoContent').innerHTML = hw[gameKey] || hw.menu;
+  document.getElementById('howtoTitle').textContent = t('howtoTitle') || '❓ ' + (lang==='he'?'איך משחקים':'How to Play');
+  document.getElementById('aboutContent').innerHTML = ABOUT[lang] || ABOUT.en;
+}
+
+function toggleLangMenu(){
+  document.getElementById('langDropdown').classList.toggle('open');
+}
+document.addEventListener('click', e=>{
+  if(!e.target.closest('.lang-btn') && !e.target.closest('.lang-dropdown'))
+    document.getElementById('langDropdown').classList.remove('open');
+});
+
+function applyTranslations(){
+  document.querySelectorAll('[data-i]').forEach(el=>{
+    el.textContent = t(el.dataset.i);
+  });
+  updateModalContent();
+}
+
+// ============ SCREENS ============
+let currentGame = '';
+
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function goMenu(){
+  clearInterval(memTimer);
+  hideResult();
+  showScreen('menuScreen');
+}
+
+function startGame(g){
+  currentGame = g;
+  if(g==='trivia')  { initTrivia();     showScreen('triviaScreen'); }
+  if(g==='memory')  { initMemory();     showScreen('memoryScreen'); }
+  if(g==='hangman') { initHangman();    showScreen('hangmanScreen'); }
+  if(g==='blackjack'){ initBlackjack(); showScreen('blackjackScreen'); }
+  if(g==='numguess'){ initNumGuess();   showScreen('numguessScreen'); }
+}
+
+function replayGame(){ hideResult(); startGame(currentGame); }
+
+function showResult(emoji, title, msg){
+  document.getElementById('resultEmoji').textContent = emoji;
+  document.getElementById('resultTitle').textContent = title;
+  document.getElementById('resultMsg').textContent = msg;
+  document.getElementById('resultOverlay').classList.add('show');
+}
+
+function hideResult(){
+  document.getElementById('resultOverlay').classList.remove('show');
+}
+
+// ============ TRIVIA ============
+const triviaData = {
+  he: [
+    {q:"מה בירת צרפת?",o:["פריז","ברלין","מדריד","רומא"],a:0},
+    {q:"כמה יבשות יש בעולם?",o:["5","6","7","8"],a:2},
+    {q:"איזה כוכב לכת הוא הגדול ביותר במערכת השמש?",o:["שבתאי","צדק","נגה","מאדים"],a:1},
+    {q:"כמה שחקנים יש בכדורגל בכל קבוצה?",o:["9","10","11","12"],a:2},
+    {q:"מהי השפה הנדברת ביותר בעולם?",o:["ספרדית","אנגלית","מנדרינית","ערבית"],a:2},
+    {q:"כמה שניות יש בדקה?",o:["60","100","50","120"],a:0},
+    {q:"מה הצבע המתקבל ממיזוג אדום וצהוב?",o:["ירוק","כתום","סגול","חום"],a:1},
+    {q:"מי צייר את 'מונה ליזה'?",o:["מיכלאנג'לו","רפאל","לאונרדו דה וינצ'י","רמברנדט"],a:2},
+    {q:"מה הסמל הכימי של זהב?",o:["Ag","Fe","Au","Cu"],a:2},
+    {q:"כמה עצמות יש בגוף האדם?",o:["186","206","226","246"],a:1},
+    {q:"מה בירת ישראל?",o:["תל אביב","חיפה","ירושלים","באר שבע"],a:2},
+    {q:"מי כתב את 'הארי פוטר'?",o:["ג'ון טולקין","ג'יי קיי רולינג","סטיבן קינג","רואלד דאל"],a:1},
+    {q:"כמה חודשים יש בשנה?",o:["10","11","12","13"],a:2},
+    {q:"מהו כוכב הלכת הקרוב ביותר לשמש?",o:["ונוס","מאדים","כוכב חמה","כדור הארץ"],a:2},
+    {q:"מהו המתכת הקל ביותר?",o:["ברזל","אלומיניום","ליתיום","מגנזיום"],a:2},
+    {q:"כמה ימים יש בשנה רגילה?",o:["354","365","366","360"],a:1},
+    {q:"מהי עיר הבירה של יפן?",o:["אוסקה","קיוטו","טוקיו","הירושימה"],a:2},
+    {q:"מי אמר 'אני חושב, משמע אני קיים'?",o:["אפלטון","דקארט","קאנט","ניטשה"],a:1},
+    {q:"כמה צבעים יש בקשת?",o:["5","6","7","8"],a:2},
+    {q:"מה הנוסחה הכימית של מים?",o:["CO2","H2O","NaCl","O2"],a:1},
+    {q:"איזה חיה היא הגבוהה ביותר?",o:["פיל","זברה","ג'ירפה","קנגורו"],a:2},
+    {q:"כמה שחקנים יש בכדורסל בכל קבוצה?",o:["4","5","6","7"],a:1},
+    {q:"מה בירת ברזיל?",o:["ריו דה ז'נרו","סאו פאולו","ברזיליה","סלבדור"],a:2},
+    {q:"מי המציא את הטלפון?",o:["אדיסון","איינשטיין","גרהם בל","מרקוני"],a:2},
+    {q:"כמה גרם יש בקילוגרם?",o:["100","500","1000","10000"],a:2},
+    {q:"מה הצבע המתקבל ממיזוג כחול וצהוב?",o:["סגול","ירוק","כתום","חום"],a:1},
+    {q:"מי כתב את 'רומיאו ויוליה'?",o:["דיקנס","שייקספיר","המינגוויי","מולייר"],a:1},
+    {q:"כמה ימים יש בפברואר בשנה רגילה?",o:["27","28","29","30"],a:1},
+    {q:"מה בירת אוסטרליה?",o:["סידני","מלבורן","קנברה","פרת'"],a:2},
+    {q:"איזה אוקיינוס הוא הגדול ביותר?",o:["האטלנטי","ההודי","הארקטי","השקט"],a:3},
+    {q:"מה המספר הראשוני הראשון?",o:["0","1","2","3"],a:2},
+    {q:"כמה רגליים יש לעכביש?",o:["6","8","10","12"],a:1},
+    {q:"מי צייר את 'הלילה הזרוע כוכבים'?",o:["מונה","פיקאסו","ון גוך","דאלי"],a:2},
+    {q:"מה בירת רוסיה?",o:["סנט פטרסבורג","מוסקבה","קייב","מינסק"],a:1},
+    {q:"כמה מיתרים יש לגיטרה רגילה?",o:["4","5","6","7"],a:2},
+    {q:"מה הכוכב הקרוב ביותר לכדור הארץ?",o:["פרוקסימה קנטאורי","השמש","סיריוס","וגה"],a:1},
+    {q:"איזו מדינה גדולה ביותר בשטחה?",o:["קנדה","סין","ארה\"ב","רוסיה"],a:3},
+    {q:"כמה אצבעות יש ביד אחת?",o:["4","5","6","7"],a:1},
+    {q:"מה בירת גרמניה?",o:["מינכן","המבורג","ברלין","פרנקפורט"],a:2},
+    {q:"מהו מרכיב האוויר העיקרי?",o:["חמצן","פחמן דו-חמצני","חנקן","ארגון"],a:2},
+    {q:"כמה שחקנים יש בוולייבול בכל קבוצה?",o:["5","6","7","8"],a:1},
+    {q:"מי המציא את הנורה החשמלית?",o:["טסלה","גרהם בל","אדיסון","מרקוני"],a:2},
+    {q:"כמה מדינות יש בגוש האירו?",o:["15","17","19","21"],a:2},
+    {q:"מה בירת סין?",o:["שנגחאי","בייג'ינג","הונג קונג","גואנגג'ואו"],a:1},
+    {q:"מי כתב את 'מסע אל מרכז האדמה'?",o:["ה.ג. וולס","ז'ול ורן","אסימוב","ארתור קלארק"],a:1},
+    {q:"כמה צלעות יש למשולש?",o:["2","3","4","5"],a:1},
+    {q:"מה בירת קנדה?",o:["טורונטו","ונקובר","מונטריאול","אוטווה"],a:3},
+    {q:"כמה שניות יש בשעה?",o:["600","3600","36000","360"],a:1},
+    {q:"מהי הרכבת המהירה ביותר בעולם?",o:["TGV הצרפתי","ICE הגרמני","שינקנסן היפני","מגלב הסיני"],a:3},
+    {q:"מה הנוסחה הכימית של מלח?",o:["H2O","CO2","NaCl","HCl"],a:2},
+    {q:"כמה פסים יש לדגל ארה\"ב?",o:["11","12","13","14"],a:2},
+    {q:"מה גובהו של הר האוורסט?",o:["8488m","8848m","8284m","8448m"],a:1},
+    {q:"מהו מטבע יפן?",o:["יואן","וואן","ין","באט"],a:2},
+    {q:"איזה פרי מכיל את הויטמין C הכי הרבה?",o:["לימון","תפוז","קיווי","תות"],a:2},
+    {q:"כמה עיניים יש לרוב המשפ' מפרקי הרגליים?",o:["2","4","6","8"],a:3},
+    {q:"מה בירת ספרד?",o:["ברצלונה","מדריד","ולנסיה","סביליה"],a:1},
+    {q:"מי כתב את 'האיליאדה'?",o:["סופוקלס","אריסטו","הומרוס","אפלטון"],a:2},
+    {q:"כמה קילומטר הם מיל אחד?",o:["1.2","1.6","2.0","0.8"],a:1},
+    {q:"מה בירת הודו?",o:["מומבאי","קולקטה","בנגלור","ניו דלהי"],a:3},
+    {q:"כמה ימים יש בשבוע?",o:["5","6","7","8"],a:2},
+    {q:"מהו הכוח המושך גופים זה אל זה?",o:["חשמל","מגנטיות","כבידה","חיכוך"],a:2},
+    {q:"מה הצבע שמסמל את הסכנה ברמזור?",o:["צהוב","כתום","אדום","סגול"],a:2},
+    {q:"כמה מילימטר יש בסנטימטר?",o:["5","10","100","1000"],a:1},
+    {q:"מי גילה את אמריקה ב-1492?",o:["מגלן","ווסקו דה גמה","קולומבוס","קוק"],a:2},
+    {q:"מהו מטבע האיחוד האירופי?",o:["פאונד","פרנק","אירו","מארק"],a:2},
+    {q:"כמה אוקיינוסים יש בעולם?",o:["3","4","5","6"],a:2},
+    {q:"מה בירת איטליה?",o:["מילאנו","נאפולי","פירנצה","רומא"],a:3},
+    {q:"איזה חיה הכי גדולה ביבשה?",o:["היפופוטם","קרנף","פיל אפריקאי","ג'ירפה"],a:2},
+    {q:"מה ה-pH של מים נקיים?",o:["5","6","7","8"],a:2},
+    {q:"כמה שמונה כפול שמונה?",o:["56","64","72","48"],a:1},
+    {q:"מהו גז החממה הנפוץ ביותר שמייצר האדם?",o:["מתאן","אוזון","CO2","NO2"],a:2},
+    {q:"מה בירת מצרים?",o:["אלכסנדריה","קהיר","לוקסור","אסואן"],a:1},
+    {q:"כמה קילומטר בקירוב היא היקף כדור הארץ?",o:["20,000","40,000","60,000","80,000"],a:1},
+    {q:"מי כתב את 'לפיד הדמיון'?",o:["ביאליק","שלונסקי","רחל","אלתרמן"],a:0},
+    {q:"כמה שחקנים יש בבייסבול בקבוצה?",o:["7","8","9","10"],a:2},
+    {q:"מהו מוצאו של המין האנושי (Homo sapiens)?",o:["אסיה","אירופה","אפריקה","אוסטרליה"],a:2},
+    {q:"מה בירת ארגנטינה?",o:["בואנוס איירס","קורדובה","מנדוסה","רוסריו"],a:0},
+    {q:"כמה ריאות יש לאדם?",o:["1","2","3","4"],a:1},
+    {q:"מי חיבר את 'הסימפוניה התשיעית'?",o:["מוצרט","שופן","בטהובן","האידן"],a:2},
+    {q:"מה בירת דרום קוריאה?",o:["בוסאן","אינצ'ון","דאגו","סיאול"],a:3},
+    {q:"כמה שורות יש לסונטה קלאסית?",o:["10","12","14","16"],a:2},
+    {q:"מה הנוסחה הכימית של פחמן דו חמצני?",o:["CO","CO2","C2O","C2O2"],a:1},
+    {q:"איזה יסוד כימי מסומן ב-Fe?",o:["פלואור","ברזל","פוספור","פרנציום"],a:1},
+    {q:"כמה מדינות יש באיחוד האירופי?",o:["22","25","27","30"],a:2},
+    {q:"מי צייר את 'הצעקה'?",o:["קנדינסקי","מונק","מאטיס","קירכנר"],a:1},
+    {q:"מה בירת מקסיקו?",o:["גוודלחרה","מונטריי","קנקון","מקסיקו סיטי"],a:3},
+    {q:"כמה שניות יש ביממה?",o:["86400","8640","864000","8400"],a:0},
+    {q:"מה גובהה הממוצע של הגלי אוקיינוס?",o:["1-2m","2-3m","5-7m","10-15m"],a:1},
+    {q:"מי המציא את האינטרנט?",o:["ביל גייטס","טים ברנרס-לי","סטיב ג'ובס","מארק צוקרברג"],a:1},
+    {q:"כמה לבבות יש לתמנון?",o:["1","2","3","4"],a:2},
+    {q:"מה בירת פורטוגל?",o:["פורטו","קואימברה","ברגה","ליסבון"],a:3},
+    {q:"כמה קשתות יש בנבל?",o:["1","2","3","4"],a:0},
+    {q:"מי ניסח את תורת הגרביטציה?",o:["קפלר","גלילאו","איינשטיין","ניוטון"],a:3},
+    {q:"מה בירת שוויץ?",o:["ז'נבה","ציריך","לוזאן","ברן"],a:3},
+    {q:"כמה ביצים טורפת נחשת ביום בממוצע?",o:["0","1","3","7"],a:1},
+    {q:"מה הצבע המתקבל ממיזוג אדום וכחול?",o:["ירוק","כתום","סגול","חום"],a:2},
+    {q:"כמה חושים יש לאדם?",o:["4","5","6","7"],a:1},
+    {q:"מה בירת הולנד?",o:["רוטרדם","האג","אמסטרדם","אוטרכט"],a:2},
+    {q:"מי כתב את 'מסע בין כוכבים'?",o:["ג'ין רודנברי","ג'ורג' לוקאס","ריידלי סקוט","ג'יימס קמרון"],a:0},
+  ],
+  en: [
+    {q:"Capital of France?",o:["Paris","Berlin","Madrid","Rome"],a:0},
+    {q:"How many continents?",o:["5","6","7","8"],a:2},
+    {q:"Largest planet in the solar system?",o:["Saturn","Jupiter","Neptune","Uranus"],a:1},
+    {q:"Players per soccer team?",o:["9","10","11","12"],a:2},
+    {q:"Most spoken language in the world?",o:["Spanish","English","Mandarin","Arabic"],a:2},
+    {q:"Seconds in a minute?",o:["60","100","50","120"],a:0},
+    {q:"Red + yellow = ?",o:["Green","Orange","Purple","Brown"],a:1},
+    {q:"Who painted the Mona Lisa?",o:["Michelangelo","Raphael","Da Vinci","Rembrandt"],a:2},
+    {q:"Chemical symbol for gold?",o:["Ag","Fe","Au","Cu"],a:2},
+    {q:"Bones in the human body?",o:["186","206","226","246"],a:1},
+    {q:"Capital of Australia?",o:["Sydney","Melbourne","Canberra","Perth"],a:2},
+    {q:"Who wrote Harry Potter?",o:["Tolkien","J.K. Rowling","Stephen King","Roald Dahl"],a:1},
+    {q:"Closest star to Earth?",o:["Proxima Centauri","The Sun","Sirius","Vega"],a:1},
+    {q:"Largest ocean?",o:["Atlantic","Indian","Arctic","Pacific"],a:3},
+    {q:"Chemical formula for water?",o:["CO2","H2O","NaCl","O2"],a:1},
+    {q:"How many legs does a spider have?",o:["6","8","10","12"],a:1},
+    {q:"Capital of Japan?",o:["Osaka","Kyoto","Tokyo","Hiroshima"],a:2},
+    {q:"Who invented the telephone?",o:["Edison","Einstein","Graham Bell","Marconi"],a:2},
+    {q:"Grams in a kilogram?",o:["100","500","1000","10000"],a:2},
+    {q:"Blue + yellow = ?",o:["Purple","Green","Orange","Brown"],a:1},
+    {q:"Who wrote Romeo and Juliet?",o:["Dickens","Shakespeare","Hemingway","Molière"],a:1},
+    {q:"Days in February (non-leap year)?",o:["27","28","29","30"],a:1},
+    {q:"Capital of Russia?",o:["St. Petersburg","Moscow","Kyiv","Minsk"],a:1},
+    {q:"Strings on a standard guitar?",o:["4","5","6","7"],a:2},
+    {q:"Largest country by area?",o:["Canada","China","USA","Russia"],a:3},
+    {q:"Capital of Canada?",o:["Toronto","Vancouver","Montreal","Ottawa"],a:3},
+    {q:"Seconds in an hour?",o:["600","3600","36000","360"],a:1},
+    {q:"Chemical formula for salt?",o:["H2O","CO2","NaCl","HCl"],a:2},
+    {q:"Height of Mount Everest?",o:["8488m","8848m","8284m","8448m"],a:1},
+    {q:"Currency of Japan?",o:["Yuan","Won","Yen","Baht"],a:2},
+    {q:"pH of pure water?",o:["5","6","7","8"],a:2},
+    {q:"8 × 8 = ?",o:["56","64","72","48"],a:1},
+    {q:"Capital of Egypt?",o:["Alexandria","Cairo","Luxor","Aswan"],a:1},
+    {q:"Circumference of Earth (approx)?",o:["20,000km","40,000km","60,000km","80,000km"],a:1},
+    {q:"Players per baseball team?",o:["7","8","9","10"],a:2},
+    {q:"Capital of Argentina?",o:["Buenos Aires","Córdoba","Mendoza","Rosario"],a:0},
+    {q:"How many lungs does a human have?",o:["1","2","3","4"],a:1},
+    {q:"Who composed the 9th Symphony?",o:["Mozart","Chopin","Beethoven","Haydn"],a:2},
+    {q:"Chemical formula for CO2?",o:["Carbon monoxide","Carbon dioxide","Carbonic acid","Coal gas"],a:1},
+    {q:"Iron's chemical symbol?",o:["I","Ir","Fe","In"],a:2},
+    {q:"EU member states (2024)?",o:["22","25","27","30"],a:2},
+    {q:"Who painted 'The Scream'?",o:["Kandinsky","Munch","Matisse","Kirchner"],a:1},
+    {q:"Seconds in a day?",o:["86400","8640","864000","8400"],a:0},
+    {q:"How many hearts does an octopus have?",o:["1","2","3","4"],a:2},
+    {q:"Capital of Portugal?",o:["Porto","Coimbra","Braga","Lisbon"],a:3},
+    {q:"Who formulated the theory of gravity?",o:["Kepler","Galileo","Einstein","Newton"],a:3},
+    {q:"Capital of Switzerland?",o:["Geneva","Zurich","Lausanne","Bern"],a:3},
+    {q:"Red + blue = ?",o:["Green","Orange","Purple","Brown"],a:2},
+    {q:"Capital of Netherlands?",o:["Rotterdam","The Hague","Amsterdam","Utrecht"],a:2},
+    {q:"Who invented the light bulb?",o:["Tesla","Bell","Edison","Marconi"],a:2},
+    {q:"Capital of South Korea?",o:["Busan","Incheon","Daegu","Seoul"],a:3},
+    {q:"Lines in a classic sonnet?",o:["10","12","14","16"],a:2},
+    {q:"Who invented the internet (WWW)?",o:["Bill Gates","Tim Berners-Lee","Steve Jobs","Zuckerberg"],a:1},
+    {q:"Capital of Mexico?",o:["Guadalajara","Monterrey","Cancun","Mexico City"],a:3},
+    {q:"Largest land animal?",o:["Hippo","Rhino","African Elephant","Giraffe"],a:2},
+    {q:"Human senses (basic)?",o:["4","5","6","7"],a:1},
+    {q:"How many stars on the US flag?",o:["48","50","52","54"],a:1},
+    {q:"Capital of Brazil?",o:["Rio de Janeiro","São Paulo","Brasília","Salvador"],a:2},
+    {q:"Fastest land animal?",o:["Lion","Cheetah","Leopard","Horse"],a:1},
+    {q:"How many colors in a rainbow?",o:["5","6","7","8"],a:2},
+    {q:"Capital of India?",o:["Mumbai","Kolkata","Bangalore","New Delhi"],a:3},
+    {q:"First element on the periodic table?",o:["Helium","Hydrogen","Lithium","Carbon"],a:1},
+    {q:"Capital of China?",o:["Shanghai","Beijing","Hong Kong","Guangzhou"],a:1},
+    {q:"How many players per volleyball team?",o:["5","6","7","8"],a:1},
+    {q:"Who wrote '1984'?",o:["Huxley","Orwell","Kafka","Bradbury"],a:1},
+    {q:"Km in a mile?",o:["1.2","1.6","2.0","0.8"],a:1},
+    {q:"Speed of light (approx)?",o:["200,000 km/s","300,000 km/s","400,000 km/s","150,000 km/s"],a:1},
+    {q:"Capital of Germany?",o:["Munich","Hamburg","Berlin","Frankfurt"],a:2},
+    {q:"Main component of air?",o:["Oxygen","CO2","Nitrogen","Argon"],a:2},
+    {q:"Who wrote 'Don Quixote'?",o:["Lope de Vega","Cervantes","Quevedo","Góngora"],a:1},
+    {q:"Tallest animal on Earth?",o:["Elephant","Zebra","Giraffe","Kangaroo"],a:2},
+    {q:"Capital of Italy?",o:["Milan","Naples","Florence","Rome"],a:3},
+    {q:"Human chromosomes (diploid)?",o:["23","44","46","48"],a:2},
+    {q:"Who wrote 'The Odyssey'?",o:["Sophocles","Aristotle","Homer","Plato"],a:2},
+    {q:"Capital of Spain?",o:["Barcelona","Madrid","Valencia","Seville"],a:1},
+    {q:"Vitamin C richest fruit?",o:["Lemon","Orange","Kiwi","Strawberry"],a:2},
+    {q:"Most common greenhouse gas produced by humans?",o:["Methane","Ozone","CO2","NO2"],a:2},
+    {q:"Capital of Nigeria?",o:["Lagos","Kano","Ibadan","Abuja"],a:3},
+    {q:"I think therefore I am — who said it?",o:["Plato","Descartes","Kant","Nietzsche"],a:1},
+    {q:"How many strings on a violin?",o:["3","4","5","6"],a:1},
+    {q:"Symbol for iron on periodic table?",o:["I","Ir","Fe","Fr"],a:2},
+    {q:"Hottest planet in solar system?",o:["Mercury","Venus","Mars","Earth"],a:1},
+    {q:"Capital of Turkey?",o:["Istanbul","Izmir","Bursa","Ankara"],a:3},
+    {q:"Square root of 144?",o:["10","11","12","13"],a:2},
+    {q:"Who painted 'Starry Night'?",o:["Monet","Picasso","Van Gogh","Dalí"],a:2},
+    {q:"Water boiling point at sea level?",o:["90°C","95°C","100°C","105°C"],a:2},
+    {q:"Capital of South Africa (executive)?",o:["Cape Town","Johannesburg","Pretoria","Durban"],a:2},
+    {q:"How many teeth does an adult human have?",o:["28","30","32","34"],a:2},
+    {q:"Symbol for potassium?",o:["Po","K","P","Pt"],a:1},
+    {q:"How many keys on a standard piano?",o:["76","80","88","92"],a:2},
+    {q:"Who discovered penicillin?",o:["Pasteur","Curie","Fleming","Lister"],a:2},
+    {q:"Capital of Ukraine?",o:["Lviv","Kharkiv","Kyiv","Odesa"],a:2},
+    {q:"How many players in basketball per team?",o:["4","5","6","7"],a:1},
+    {q:"Largest desert in the world?",o:["Sahara","Gobi","Arabian","Antarctic"],a:3},
+    {q:"Who wrote 'Pride and Prejudice'?",o:["George Eliot","Jane Austen","Charlotte Brontë","Virginia Woolf"],a:1},
+    {q:"How many sides does a hexagon have?",o:["5","6","7","8"],a:1},
+    {q:"Symbol for silver?",o:["Si","Sv","Ag","Au"],a:2},
+    {q:"Longest river in the world?",o:["Amazon","Yangtze","Mississippi","Nile"],a:3},
+    {q:"Capital of Norway?",o:["Bergen","Stavanger","Trondheim","Oslo"],a:3},
+  ],
+  ru: [
+    {q:"Столица Франции?",o:["Париж","Берлин","Мадрид","Рим"],a:0},
+    {q:"Сколько континентов на Земле?",o:["5","6","7","8"],a:2},
+    {q:"Самая большая планета?",o:["Сатурн","Юпитер","Нептун","Уран"],a:1},
+    {q:"Игроков в футбольной команде?",o:["9","10","11","12"],a:2},
+    {q:"Самый распространённый язык?",o:["Испанский","Английский","Мандарин","Арабский"],a:2},
+    {q:"Секунд в минуте?",o:["60","100","50","120"],a:0},
+    {q:"Красный + жёлтый = ?",o:["Зелёный","Оранжевый","Фиолетовый","Коричневый"],a:1},
+    {q:"Кто написал Мону Лизу?",o:["Микеланджело","Рафаэль","Да Винчи","Рембрандт"],a:2},
+    {q:"Химический символ золота?",o:["Ag","Fe","Au","Cu"],a:2},
+    {q:"Костей в теле человека?",o:["186","206","226","246"],a:1},
+    {q:"Столица Австралии?",o:["Сидней","Мельбурн","Канберра","Перт"],a:2},
+    {q:"Кто написал Гарри Поттера?",o:["Толкин","Дж.К. Роулинг","Стивен Кинг","Роальд Даль"],a:1},
+    {q:"Ближайшая звезда к Земле?",o:["Проксима Центавра","Солнце","Сириус","Вега"],a:1},
+    {q:"Самый большой океан?",o:["Атлантический","Индийский","Северный Ледовитый","Тихий"],a:3},
+    {q:"Химическая формула воды?",o:["CO2","H2O","NaCl","O2"],a:1},
+    {q:"Сколько ног у паука?",o:["6","8","10","12"],a:1},
+    {q:"Столица Японии?",o:["Осака","Киото","Токио","Хиросима"],a:2},
+    {q:"Кто изобрёл телефон?",o:["Эдисон","Эйнштейн","Белл","Маркони"],a:2},
+    {q:"Граммов в килограмме?",o:["100","500","1000","10000"],a:2},
+    {q:"Синий + жёлтый = ?",o:["Фиолетовый","Зелёный","Оранжевый","Коричневый"],a:1},
+    {q:"Кто написал Ромео и Джульетту?",o:["Диккенс","Шекспир","Хемингуэй","Мольер"],a:1},
+    {q:"Дней в феврале (не високосный)?",o:["27","28","29","30"],a:1},
+    {q:"Столица России?",o:["Санкт-Петербург","Москва","Киев","Минск"],a:1},
+    {q:"Струн на стандартной гитаре?",o:["4","5","6","7"],a:2},
+    {q:"Самая большая страна по площади?",o:["Канада","Китай","США","Россия"],a:3},
+    {q:"Столица Канады?",o:["Торонто","Ванкувер","Монреаль","Оттава"],a:3},
+    {q:"Секунд в часе?",o:["600","3600","36000","360"],a:1},
+    {q:"Химическая формула соли?",o:["H2O","CO2","NaCl","HCl"],a:2},
+    {q:"Высота Эвереста?",o:["8488м","8848м","8284м","8448м"],a:1},
+    {q:"Валюта Японии?",o:["Юань","Вон","Иена","Бат"],a:2},
+    {q:"pH чистой воды?",o:["5","6","7","8"],a:2},
+    {q:"8 × 8 = ?",o:["56","64","72","48"],a:1},
+    {q:"Столица Египта?",o:["Александрия","Каир","Луксор","Асуан"],a:1},
+    {q:"Длина окружности Земли (прибл.)?",o:["20000км","40000км","60000км","80000км"],a:1},
+    {q:"Игроков в бейсбольной команде?",o:["7","8","9","10"],a:2},
+    {q:"Столица Аргентины?",o:["Буэнос-Айрес","Кордова","Мендоса","Росарио"],a:0},
+    {q:"Лёгких у человека?",o:["1","2","3","4"],a:1},
+    {q:"Кто написал 9-ю симфонию?",o:["Моцарт","Шопен","Бетховен","Гайдн"],a:2},
+    {q:"Символ железа?",o:["I","Ir","Fe","In"],a:2},
+    {q:"Стран в ЕС (2024)?",o:["22","25","27","30"],a:2},
+    {q:"Кто нарисовал 'Крик'?",o:["Кандинский","Мунк","Матисс","Кирхнер"],a:1},
+    {q:"Секунд в сутках?",o:["86400","8640","864000","8400"],a:0},
+    {q:"Сердец у осьминога?",o:["1","2","3","4"],a:2},
+    {q:"Столица Португалии?",o:["Порту","Коимбра","Брага","Лиссабон"],a:3},
+    {q:"Кто открыл гравитацию?",o:["Кеплер","Галилей","Эйнштейн","Ньютон"],a:3},
+    {q:"Столица Швейцарии?",o:["Женева","Цюрих","Лозанна","Берн"],a:3},
+    {q:"Красный + синий = ?",o:["Зелёный","Оранжевый","Фиолетовый","Коричневый"],a:2},
+    {q:"Столица Нидерландов?",o:["Роттердам","Гаага","Амстердам","Утрехт"],a:2},
+    {q:"Кто изобрёл лампочку?",o:["Тесла","Белл","Эдисон","Маркони"],a:2},
+    {q:"Столица Южной Кореи?",o:["Пусан","Инчхон","Тэгу","Сеул"],a:3},
+    {q:"Строк в классическом сонете?",o:["10","12","14","16"],a:2},
+    {q:"Столица Мексики?",o:["Гвадалахара","Монтеррей","Канкун","Мехико"],a:3},
+    {q:"Самое большое наземное животное?",o:["Бегемот","Носорог","Африканский слон","Жираф"],a:2},
+    {q:"Основных чувств у человека?",o:["4","5","6","7"],a:1},
+    {q:"Звёзд на флаге США?",o:["48","50","52","54"],a:1},
+    {q:"Столица Бразилии?",o:["Рио-де-Жанейро","Сан-Паулу","Бразилиа","Салвадор"],a:2},
+    {q:"Самое быстрое наземное животное?",o:["Лев","Гепард","Леопард","Лошадь"],a:1},
+    {q:"Цветов в радуге?",o:["5","6","7","8"],a:2},
+    {q:"Столица Индии?",o:["Мумбай","Колката","Бангалор","Нью-Дели"],a:3},
+    {q:"Первый элемент в таблице Менделеева?",o:["Гелий","Водород","Литий","Углерод"],a:1},
+    {q:"Столица Китая?",o:["Шанхай","Пекин","Гонконг","Гуанчжоу"],a:1},
+    {q:"Игроков в волейбольной команде?",o:["5","6","7","8"],a:1},
+    {q:"Кто написал '1984'?",o:["Хаксли","Оруэлл","Кафка","Брэдбери"],a:1},
+    {q:"Км в одной миле?",o:["1.2","1.6","2.0","0.8"],a:1},
+    {q:"Скорость света (прибл.)?",o:["200000 км/с","300000 км/с","400000 км/с","150000 км/с"],a:1},
+    {q:"Столица Германии?",o:["Мюнхен","Гамбург","Берлин","Франкфурт"],a:2},
+    {q:"Основной компонент воздуха?",o:["Кислород","CO2","Азот","Аргон"],a:2},
+    {q:"Самое высокое животное?",o:["Слон","Зебра","Жираф","Кенгуру"],a:2},
+    {q:"Столица Италии?",o:["Милан","Неаполь","Флоренция","Рим"],a:3},
+    {q:"Кто написал 'Одиссею'?",o:["Софокл","Аристотель","Гомер","Платон"],a:2},
+    {q:"Столица Испании?",o:["Барселона","Мадрид","Валенсия","Севилья"],a:1},
+    {q:"Самый распространённый парниковый газ?",o:["Метан","Озон","CO2","NO2"],a:2},
+    {q:"Я мыслю — следовательно, я существую. Кто сказал?",o:["Платон","Декарт","Кант","Ницше"],a:1},
+    {q:"Струн на скрипке?",o:["3","4","5","6"],a:1},
+    {q:"Самая горячая планета?",o:["Меркурий","Венера","Марс","Земля"],a:1},
+    {q:"Столица Турции?",o:["Стамбул","Измир","Бурса","Анкара"],a:3},
+    {q:"Квадратный корень из 144?",o:["10","11","12","13"],a:2},
+    {q:"Кто нарисовал 'Звёздную ночь'?",o:["Моне","Пикассо","Ван Гог","Дали"],a:2},
+    {q:"Температура кипения воды?",o:["90°C","95°C","100°C","105°C"],a:2},
+    {q:"Зубов у взрослого человека?",o:["28","30","32","34"],a:2},
+    {q:"Символ калия?",o:["Po","K","P","Pt"],a:1},
+    {q:"Клавиш на стандартном пианино?",o:["76","80","88","92"],a:2},
+    {q:"Кто открыл пенициллин?",o:["Пастер","Кюри","Флеминг","Листер"],a:2},
+    {q:"Игроков в баскетбольной команде?",o:["4","5","6","7"],a:1},
+    {q:"Самая большая пустыня?",o:["Сахара","Гоби","Аравийская","Антарктическая"],a:3},
+    {q:"Кто написал 'Гордость и предубеждение'?",o:["Элиот","Джейн Остин","Бронте","Вулф"],a:1},
+    {q:"Сторон у шестиугольника?",o:["5","6","7","8"],a:1},
+    {q:"Символ серебра?",o:["Si","Sv","Ag","Au"],a:2},
+    {q:"Самая длинная река?",o:["Амазонка","Янцзы","Миссисипи","Нил"],a:3},
+    {q:"Столица Норвегии?",o:["Берген","Ставангер","Тронхейм","Осло"],a:3},
+    {q:"Столица Украины?",o:["Львов","Харьков","Киев","Одесса"],a:2},
+    {q:"Кто изобрёл интернет (WWW)?",o:["Гейтс","Бернерс-Ли","Джобс","Цукерберг"],a:1},
+    {q:"Самая большая пустыня?",o:["Сахара","Гоби","Аравийская","Антарктическая"],a:3},
+    {q:"Сторон у шестиугольника?",o:["5","6","7","8"],a:1},
+    {q:"Столица Нигерии?",o:["Лагос","Кано","Ибадан","Абуджа"],a:3},
+    {q:"Число π (прибл.)?",o:["3.14","3.41","3.12","3.18"],a:0},
+    {q:"Сколько хромосом у человека?",o:["23","44","46","48"],a:2},
+  ],
+  es: [
+    {q:"¿Capital de Francia?",o:["París","Berlín","Madrid","Roma"],a:0},
+    {q:"¿Cuántos continentes hay?",o:["5","6","7","8"],a:2},
+    {q:"¿Planeta más grande?",o:["Saturno","Júpiter","Neptuno","Urano"],a:1},
+    {q:"¿Jugadores por equipo en fútbol?",o:["9","10","11","12"],a:2},
+    {q:"¿Idioma más hablado?",o:["Español","Inglés","Mandarín","Árabe"],a:2},
+    {q:"¿Segundos en un minuto?",o:["60","100","50","120"],a:0},
+    {q:"¿Rojo + amarillo = ?",o:["Verde","Naranja","Morado","Marrón"],a:1},
+    {q:"¿Quién pintó la Mona Lisa?",o:["Miguel Ángel","Rafael","Da Vinci","Rembrandt"],a:2},
+    {q:"¿Símbolo del oro?",o:["Ag","Fe","Au","Cu"],a:2},
+    {q:"¿Huesos en el cuerpo humano?",o:["186","206","226","246"],a:1},
+    {q:"¿Capital de Australia?",o:["Sídney","Melbourne","Canberra","Perth"],a:2},
+    {q:"¿Quién escribió Harry Potter?",o:["Tolkien","J.K. Rowling","Stephen King","Roald Dahl"],a:1},
+    {q:"¿Estrella más cercana a la Tierra?",o:["Próxima Centauri","El Sol","Sirio","Vega"],a:1},
+    {q:"¿Océano más grande?",o:["Atlántico","Índico","Ártico","Pacífico"],a:3},
+    {q:"¿Fórmula del agua?",o:["CO2","H2O","NaCl","O2"],a:1},
+    {q:"¿Patas de una araña?",o:["6","8","10","12"],a:1},
+    {q:"¿Capital de Japón?",o:["Osaka","Kioto","Tokio","Hiroshima"],a:2},
+    {q:"¿Quién inventó el teléfono?",o:["Edison","Einstein","Graham Bell","Marconi"],a:2},
+    {q:"¿Gramos en un kilogramo?",o:["100","500","1000","10000"],a:2},
+    {q:"¿Azul + amarillo = ?",o:["Morado","Verde","Naranja","Marrón"],a:1},
+    {q:"¿Quién escribió Romeo y Julieta?",o:["Dickens","Shakespeare","Hemingway","Molière"],a:1},
+    {q:"¿Días en febrero (no bisiesto)?",o:["27","28","29","30"],a:1},
+    {q:"¿Capital de Rusia?",o:["San Petersburgo","Moscú","Kiev","Minsk"],a:1},
+    {q:"¿Cuerdas de una guitarra estándar?",o:["4","5","6","7"],a:2},
+    {q:"¿País más grande por área?",o:["Canadá","China","EE.UU.","Rusia"],a:3},
+    {q:"¿Capital de Canadá?",o:["Toronto","Vancouver","Montreal","Ottawa"],a:3},
+    {q:"¿Segundos en una hora?",o:["600","3600","36000","360"],a:1},
+    {q:"¿Fórmula de la sal?",o:["H2O","CO2","NaCl","HCl"],a:2},
+    {q:"¿Altura del Everest?",o:["8488m","8848m","8284m","8448m"],a:1},
+    {q:"¿Moneda de Japón?",o:["Yuan","Won","Yen","Baht"],a:2},
+    {q:"¿pH del agua pura?",o:["5","6","7","8"],a:2},
+    {q:"¿8 × 8 = ?",o:["56","64","72","48"],a:1},
+    {q:"¿Capital de Egipto?",o:["Alejandría","El Cairo","Luxor","Asuán"],a:1},
+    {q:"¿Circunferencia de la Tierra (aprox)?",o:["20000km","40000km","60000km","80000km"],a:1},
+    {q:"¿Jugadores en béisbol?",o:["7","8","9","10"],a:2},
+    {q:"¿Capital de Argentina?",o:["Buenos Aires","Córdoba","Mendoza","Rosario"],a:0},
+    {q:"¿Pulmones del ser humano?",o:["1","2","3","4"],a:1},
+    {q:"¿Quién compuso la 9ª Sinfonía?",o:["Mozart","Chopin","Beethoven","Haydn"],a:2},
+    {q:"¿Símbolo del hierro?",o:["I","Ir","Fe","In"],a:2},
+    {q:"¿Países en la UE (2024)?",o:["22","25","27","30"],a:2},
+    {q:"¿Quién pintó 'El grito'?",o:["Kandinsky","Munch","Matisse","Kirchner"],a:1},
+    {q:"¿Segundos en un día?",o:["86400","8640","864000","8400"],a:0},
+    {q:"¿Corazones del pulpo?",o:["1","2","3","4"],a:2},
+    {q:"¿Capital de Portugal?",o:["Oporto","Coimbra","Braga","Lisboa"],a:3},
+    {q:"¿Quién formuló la gravedad?",o:["Kepler","Galileo","Einstein","Newton"],a:3},
+    {q:"¿Capital de Suiza?",o:["Ginebra","Zúrich","Lausana","Berna"],a:3},
+    {q:"¿Rojo + azul = ?",o:["Verde","Naranja","Morado","Marrón"],a:2},
+    {q:"¿Capital de Países Bajos?",o:["Rotterdam","La Haya","Ámsterdam","Utrecht"],a:2},
+    {q:"¿Quién inventó la bombilla?",o:["Tesla","Bell","Edison","Marconi"],a:2},
+    {q:"¿Capital de Corea del Sur?",o:["Busán","Incheon","Daegu","Seúl"],a:3},
+    {q:"¿Versos en un soneto clásico?",o:["10","12","14","16"],a:2},
+    {q:"¿Capital de México?",o:["Guadalajara","Monterrey","Cancún","Ciudad de México"],a:3},
+    {q:"¿Animal terrestre más grande?",o:["Hipopótamo","Rinoceronte","Elefante africano","Jirafa"],a:2},
+    {q:"¿Sentidos básicos del ser humano?",o:["4","5","6","7"],a:1},
+    {q:"¿Estrellas en la bandera de EE.UU.?",o:["48","50","52","54"],a:1},
+    {q:"¿Capital de Brasil?",o:["Río de Janeiro","São Paulo","Brasilia","Salvador"],a:2},
+    {q:"¿Animal terrestre más rápido?",o:["León","Guepardo","Leopardo","Caballo"],a:1},
+    {q:"¿Colores en el arcoíris?",o:["5","6","7","8"],a:2},
+    {q:"¿Capital de India?",o:["Bombay","Calcuta","Bangalore","Nueva Delhi"],a:3},
+    {q:"¿Primer elemento de la tabla periódica?",o:["Helio","Hidrógeno","Litio","Carbono"],a:1},
+    {q:"¿Capital de China?",o:["Shanghái","Pekín","Hong Kong","Guangzhou"],a:1},
+    {q:"¿Jugadores en voleibol?",o:["5","6","7","8"],a:1},
+    {q:"¿Quién escribió '1984'?",o:["Huxley","Orwell","Kafka","Bradbury"],a:1},
+    {q:"¿Km en una milla?",o:["1.2","1.6","2.0","0.8"],a:1},
+    {q:"¿Velocidad de la luz (aprox)?",o:["200000 km/s","300000 km/s","400000 km/s","150000 km/s"],a:1},
+    {q:"¿Capital de Alemania?",o:["Múnich","Hamburgo","Berlín","Fráncfort"],a:2},
+    {q:"¿Componente principal del aire?",o:["Oxígeno","CO2","Nitrógeno","Argón"],a:2},
+    {q:"¿Animal más alto?",o:["Elefante","Cebra","Jirafa","Canguro"],a:2},
+    {q:"¿Capital de Italia?",o:["Milán","Nápoles","Florencia","Roma"],a:3},
+    {q:"¿Quién escribió la Odisea?",o:["Sófocles","Aristóteles","Homero","Platón"],a:2},
+    {q:"¿Capital de España?",o:["Barcelona","Madrid","Valencia","Sevilla"],a:1},
+    {q:"¿Gas de efecto invernadero más común?",o:["Metano","Ozono","CO2","NO2"],a:2},
+    {q:"Pienso, luego existo. ¿Quién lo dijo?",o:["Platón","Descartes","Kant","Nietzsche"],a:1},
+    {q:"¿Cuerdas en un violín?",o:["3","4","5","6"],a:1},
+    {q:"¿Planeta más caliente?",o:["Mercurio","Venus","Marte","Tierra"],a:1},
+    {q:"¿Capital de Turquía?",o:["Estambul","Esmirna","Bursa","Ankara"],a:3},
+    {q:"¿Raíz cuadrada de 144?",o:["10","11","12","13"],a:2},
+    {q:"¿Quién pintó 'La noche estrellada'?",o:["Monet","Picasso","Van Gogh","Dalí"],a:2},
+    {q:"¿Temperatura de ebullición del agua?",o:["90°C","95°C","100°C","105°C"],a:2},
+    {q:"¿Dientes de un adulto?",o:["28","30","32","34"],a:2},
+    {q:"¿Símbolo del potasio?",o:["Po","K","P","Pt"],a:1},
+    {q:"¿Teclas en un piano estándar?",o:["76","80","88","92"],a:2},
+    {q:"¿Quién descubrió la penicilina?",o:["Pasteur","Curie","Fleming","Lister"],a:2},
+    {q:"¿Jugadores en baloncesto?",o:["4","5","6","7"],a:1},
+    {q:"¿Desierto más grande?",o:["Sahara","Gobi","Arábigo","Antártico"],a:3},
+    {q:"¿Quién escribió 'Orgullo y prejuicio'?",o:["George Eliot","Jane Austen","Charlotte Brontë","Virginia Woolf"],a:1},
+    {q:"¿Lados de un hexágono?",o:["5","6","7","8"],a:1},
+    {q:"¿Símbolo de la plata?",o:["Si","Sv","Ag","Au"],a:2},
+    {q:"¿Río más largo del mundo?",o:["Amazonas","Yangtsé","Misisipi","Nilo"],a:3},
+    {q:"¿Capital de Noruega?",o:["Bergen","Stavanger","Trondheim","Oslo"],a:3},
+    {q:"¿Quién inventó internet (WWW)?",o:["Gates","Berners-Lee","Jobs","Zuckerberg"],a:1},
+    {q:"¿Capital de Ucrania?",o:["Lviv","Jarkov","Kiev","Odesa"],a:2},
+    {q:"¿Número π (aprox)?",o:["3.14","3.41","3.12","3.18"],a:0},
+    {q:"¿Cromosomas humanos?",o:["23","44","46","48"],a:2},
+    {q:"¿Capital de Nigeria?",o:["Lagos","Kano","Ibadan","Abuja"],a:3},
+  ],
+  ar: [
+    {q:"ما عاصمة فرنسا؟",o:["باريس","برلين","مدريد","روما"],a:0},
+    {q:"كم عدد القارات؟",o:["5","6","7","8"],a:2},
+    {q:"أكبر كوكب في المجموعة الشمسية؟",o:["زحل","المشتري","نبتون","أورانوس"],a:1},
+    {q:"كم لاعباً في كرة القدم لكل فريق؟",o:["9","10","11","12"],a:2},
+    {q:"أكثر لغة يتحدث بها العالم؟",o:["الإسبانية","الإنجليزية","المندرين","العربية"],a:2},
+    {q:"كم ثانية في الدقيقة؟",o:["60","100","50","120"],a:0},
+    {q:"لون مزج الأحمر والأصفر؟",o:["أخضر","برتقالي","بنفسجي","بني"],a:1},
+    {q:"من رسم الموناليزا؟",o:["مايكل أنجلو","رافائيل","دافنشي","رامبرانت"],a:2},
+    {q:"الرمز الكيميائي للذهب؟",o:["Ag","Fe","Au","Cu"],a:2},
+    {q:"كم عظمة في جسم الإنسان؟",o:["186","206","226","246"],a:1},
+    {q:"ما عاصمة أستراليا؟",o:["سيدني","ملبورن","كانبيرا","بيرث"],a:2},
+    {q:"من كتب هاري بوتر؟",o:["تولكين","ج.ك. رولينغ","ستيفن كينغ","رولد دال"],a:1},
+    {q:"أقرب نجم إلى الأرض؟",o:["بروكسيما قنطورس","الشمس","سيريوس","فيغا"],a:1},
+    {q:"أكبر محيط؟",o:["الأطلسي","الهندي","المتجمد الشمالي","الهادئ"],a:3},
+    {q:"الصيغة الكيميائية للماء؟",o:["CO2","H2O","NaCl","O2"],a:1},
+    {q:"كم ساقاً للعنكبوت؟",o:["6","8","10","12"],a:1},
+    {q:"ما عاصمة اليابان؟",o:["أوساكا","كيوتو","طوكيو","هيروشيما"],a:2},
+    {q:"من اخترع الهاتف؟",o:["إديسون","أينشتاين","غراهام بيل","ماركوني"],a:2},
+    {q:"كم غرام في الكيلوغرام؟",o:["100","500","1000","10000"],a:2},
+    {q:"لون مزج الأزرق والأصفر؟",o:["بنفسجي","أخضر","برتقالي","بني"],a:1},
+    {q:"من كتب روميو وجولييت؟",o:["ديكنز","شكسبير","همنغواي","موليير"],a:1},
+    {q:"أيام فبراير في السنة العادية؟",o:["27","28","29","30"],a:1},
+    {q:"ما عاصمة روسيا؟",o:["سانت بطرسبرغ","موسكو","كييف","مينسك"],a:1},
+    {q:"أوتار الغيتار العادية؟",o:["4","5","6","7"],a:2},
+    {q:"أكبر دولة مساحة؟",o:["كندا","الصين","أمريكا","روسيا"],a:3},
+    {q:"ما عاصمة كندا؟",o:["تورنتو","فانكوفر","مونتريال","أوتاوا"],a:3},
+    {q:"ثوانٍ في الساعة؟",o:["600","3600","36000","360"],a:1},
+    {q:"الصيغة الكيميائية للملح؟",o:["H2O","CO2","NaCl","HCl"],a:2},
+    {q:"ارتفاع قمة إيفرست؟",o:["8488م","8848م","8284م","8448م"],a:1},
+    {q:"عملة اليابان؟",o:["يوان","وون","ين","بات"],a:2},
+    {q:"الرقم الهيدروجيني للماء النقي؟",o:["5","6","7","8"],a:2},
+    {q:"8 × 8 = ؟",o:["56","64","72","48"],a:1},
+    {q:"ما عاصمة مصر؟",o:["الإسكندرية","القاهرة","الأقصر","أسوان"],a:1},
+    {q:"محيط الأرض (تقريباً)؟",o:["20000كم","40000كم","60000كم","80000كم"],a:1},
+    {q:"لاعبو البيسبول في الفريق؟",o:["7","8","9","10"],a:2},
+    {q:"ما عاصمة الأرجنتين؟",o:["بوينس آيرس","قرطبة","ميندوسا","روساريو"],a:0},
+    {q:"رئتا الإنسان؟",o:["1","2","3","4"],a:1},
+    {q:"من ألّف السيمفونية التاسعة؟",o:["موزارت","شوبان","بيتهوفن","هايدن"],a:2},
+    {q:"رمز الحديد؟",o:["I","Ir","Fe","In"],a:2},
+    {q:"دول الاتحاد الأوروبي (2024)؟",o:["22","25","27","30"],a:2},
+    {q:"من رسم 'الصرخة'؟",o:["كاندينسكي","مونك","ماتيس","كيرشنر"],a:1},
+    {q:"ثوانٍ في اليوم؟",o:["86400","8640","864000","8400"],a:0},
+    {q:"قلوب الأخطبوط؟",o:["1","2","3","4"],a:2},
+    {q:"ما عاصمة البرتغال؟",o:["بورتو","كويمبرا","براغا","لشبونة"],a:3},
+    {q:"من صاغ نظرية الجاذبية؟",o:["كبلر","غاليليو","أينشتاين","نيوتن"],a:3},
+    {q:"ما عاصمة سويسرا؟",o:["جنيف","زيورخ","لوزان","برن"],a:3},
+    {q:"لون مزج الأحمر والأزرق؟",o:["أخضر","برتقالي","بنفسجي","بني"],a:2},
+    {q:"ما عاصمة هولندا؟",o:["روتردام","لاهاي","أمستردام","أوتريخت"],a:2},
+    {q:"من اخترع المصباح الكهربائي؟",o:["تسلا","بيل","إديسون","ماركوني"],a:2},
+    {q:"ما عاصمة كوريا الجنوبية؟",o:["بوسان","إنشون","دايغو","سيول"],a:3},
+    {q:"أبيات السونيتة الكلاسيكية؟",o:["10","12","14","16"],a:2},
+    {q:"ما عاصمة المكسيك؟",o:["غوادالاخارا","مونتيري","كانكون","مكسيكو سيتي"],a:3},
+    {q:"أكبر حيوان بري؟",o:["فرس النهر","وحيد القرن","الفيل الأفريقي","الزرافة"],a:2},
+    {q:"الحواس الأساسية للإنسان؟",o:["4","5","6","7"],a:1},
+    {q:"نجوم العلم الأمريكي؟",o:["48","50","52","54"],a:1},
+    {q:"ما عاصمة البرازيل؟",o:["ريو دي جانيرو","ساو باولو","برازيليا","سلفادور"],a:2},
+    {q:"أسرع حيوان بري؟",o:["أسد","فهد","نمر","حصان"],a:1},
+    {q:"ألوان قوس قزح؟",o:["5","6","7","8"],a:2},
+    {q:"ما عاصمة الهند؟",o:["مومباي","كلكتا","بنغالور","نيودلهي"],a:3},
+    {q:"أول عنصر في الجدول الدوري؟",o:["هيليوم","هيدروجين","ليثيوم","كربون"],a:1},
+    {q:"ما عاصمة الصين؟",o:["شنغهاي","بكين","هونغ كونغ","غوانغتشو"],a:1},
+    {q:"لاعبو الكرة الطائرة في الفريق؟",o:["5","6","7","8"],a:1},
+    {q:"من كتب '1984'؟",o:["هكسلي","أورويل","كافكا","برادبري"],a:1},
+    {q:"كم كيلومتر في الميل؟",o:["1.2","1.6","2.0","0.8"],a:1},
+    {q:"سرعة الضوء (تقريباً)؟",o:["200000 كم/ث","300000 كم/ث","400000 كم/ث","150000 كم/ث"],a:1},
+    {q:"ما عاصمة ألمانيا؟",o:["ميونخ","هامبورغ","برلين","فرانكفورت"],a:2},
+    {q:"المكوّن الرئيسي للهواء؟",o:["أكسجين","ثاني أكسيد الكربون","نيتروجين","أرغون"],a:2},
+    {q:"أطول حيوان؟",o:["فيل","حمار وحشي","زرافة","كنغر"],a:2},
+    {q:"ما عاصمة إيطاليا؟",o:["ميلانو","نابولي","فلورنسا","روما"],a:3},
+    {q:"من كتب الأوديسة؟",o:["سوفوكليس","أرسطو","هوميروس","أفلاطون"],a:2},
+    {q:"ما عاصمة إسبانيا؟",o:["برشلونة","مدريد","فالنسيا","إشبيلية"],a:1},
+    {q:"أكثر غازات الاحتباس الحراري شيوعاً؟",o:["ميثان","أوزون","ثاني أكسيد الكربون","NO2"],a:2},
+    {q:"أنا أفكر إذن أنا موجود، من قالها؟",o:["أفلاطون","ديكارت","كانط","نيتشه"],a:1},
+    {q:"أوتار الكمان؟",o:["3","4","5","6"],a:1},
+    {q:"أسخن كوكب في المجموعة الشمسية؟",o:["عطارد","الزهرة","المريخ","الأرض"],a:1},
+    {q:"ما عاصمة تركيا؟",o:["إسطنبول","إزمير","بورصة","أنقرة"],a:3},
+    {q:"الجذر التربيعي لـ 144؟",o:["10","11","12","13"],a:2},
+    {q:"من رسم 'ليلة النجوم'؟",o:["مونيه","بيكاسو","فان غوخ","دالي"],a:2},
+    {q:"درجة غليان الماء؟",o:["90°م","95°م","100°م","105°م"],a:2},
+    {q:"أسنان الإنسان البالغ؟",o:["28","30","32","34"],a:2},
+    {q:"رمز البوتاسيوم؟",o:["Po","K","P","Pt"],a:1},
+    {q:"مفاتيح البيانو العادي؟",o:["76","80","88","92"],a:2},
+    {q:"من اكتشف البنسلين؟",o:["باستور","كوري","فليمنغ","ليستر"],a:2},
+    {q:"لاعبو كرة السلة في الفريق؟",o:["4","5","6","7"],a:1},
+    {q:"أكبر صحراء في العالم؟",o:["الصحراء الكبرى","غوبي","العربية","القطب الجنوبي"],a:3},
+    {q:"من كتب 'كبرياء وتحيز'؟",o:["جورج إليوت","جين أوستن","شارلوت برونتي","فيرجينيا وولف"],a:1},
+    {q:"أضلاع المسدس؟",o:["5","6","7","8"],a:1},
+    {q:"رمز الفضة؟",o:["Si","Sv","Ag","Au"],a:2},
+    {q:"أطول نهر في العالم؟",o:["الأمازون","يانغتسي","المسيسيبي","النيل"],a:3},
+    {q:"ما عاصمة النرويج؟",o:["برغن","ستافانغر","تروندهايم","أوسلو"],a:3},
+    {q:"من اخترع الإنترنت (WWW)؟",o:["غيتس","بيرنرز لي","جوبز","زوكربرغ"],a:1},
+    {q:"ما عاصمة أوكرانيا؟",o:["لفيف","خاركيف","كييف","أوديسا"],a:2},
+    {q:"قيمة π (تقريباً)؟",o:["3.14","3.41","3.12","3.18"],a:0},
+    {q:"كروموسومات الإنسان؟",o:["23","44","46","48"],a:2},
+    {q:"ما عاصمة نيجيريا؟",o:["لاغوس","كانو","إبادان","أبوجا"],a:3},
+  ],
+};
+
+let triviaQ = 0, triviaScore = 0, triviaAnswered = false, triviaSelected = [];
+
+function initTrivia(){
+  triviaQ = 0; triviaScore = 0;
+  // Pick 10 random questions from the pool
+  const pool = [...(triviaData[lang] || triviaData.en)];
+  triviaSelected = [];
+  while(triviaSelected.length < 10 && pool.length > 0){
+    const idx = Math.floor(Math.random() * pool.length);
+    triviaSelected.push(pool.splice(idx, 1)[0]);
+  }
+  showTriviaQuestion();
+}
+
+function showTriviaQuestion(){
+  triviaAnswered = false;
+  document.getElementById('triviaNext').style.display = 'none';
+  document.getElementById('triviaScore').textContent = triviaScore;
+  const q = triviaSelected[triviaQ];
+  let dots = '';
+  for(let i=0;i<10;i++) dots += `<div class="trivia-dot${i<triviaQ?' done':''}"></div>`;
+  document.getElementById('triviaProgress').innerHTML = dots;
+  document.getElementById('triviaQ').textContent = q.q;
+  let html = '';
+  q.o.forEach((opt,i)=>{
+    html += `<button class="trivia-opt" onclick="answerTrivia(${i})" id="tOpt${i}">${opt}</button>`;
+  });
+  document.getElementById('triviaOpts').innerHTML = html;
+}
+
+function answerTrivia(i){
+  if(triviaAnswered) return;
+  triviaAnswered = true;
+  const correct = triviaSelected[triviaQ].a;
+  document.getElementById(`tOpt${correct}`).classList.add('correct');
+  if(i !== correct) document.getElementById(`tOpt${i}`).classList.add('wrong');
+  else triviaScore++;
+  document.querySelectorAll('.trivia-opt').forEach(b=>b.disabled=true);
+  document.getElementById('triviaNext').style.display = 'block';
+  document.getElementById('triviaScore').textContent = triviaScore;
+}
+
+function nextTrivia(){
+  triviaQ++;
+  if(triviaQ >= 10){
+    showResult('🏆', t('triviaWin')+' '+triviaScore, triviaScore+t('triviaOf'));
+    return;
+  }
+  showTriviaQuestion();
+}
+
+// ============ MEMORY ============
+const memEmojis = ['🦁','🐯','🦊','🐼','🦋','🌟','🎸','🍕'];
+let memFlipped=[], memMatched=0, memMoves=0, memLocked=false, memTimer=null, memSeconds=0;
+
+function initMemory(){
+  clearInterval(memTimer);
+  memFlipped=[]; memMatched=0; memMoves=0; memSeconds=0; memLocked=false;
+  document.getElementById('memMoves').textContent=0;
+  document.getElementById('memPairs').textContent=0;
+  document.getElementById('memTime').textContent=0;
+  const cards = [...memEmojis,...memEmojis].sort(()=>Math.random()-0.5);
+  let html='';
+  cards.forEach((e,i)=>{
+    html+=`<div class="mem-card" id="mc${i}" onclick="flipCard(${i})" data-emoji="${e}">❓</div>`;
+  });
+  document.getElementById('memoryGrid').innerHTML=html;
+  memTimer=setInterval(()=>{
+    memSeconds++;
+    document.getElementById('memTime').textContent=memSeconds;
+  },1000);
+}
+
+const memCards = ()=>[...memEmojis,...memEmojis].sort(()=>Math.random()-0.5);
+let memCardEmojis=[];
+
+function flipCard(i){
+  if(memLocked) return;
+  const el=document.getElementById(`mc${i}`);
+  if(el.classList.contains('flipped')||el.classList.contains('matched')) return;
+  el.classList.add('flipped');
+  el.textContent = el.dataset.emoji;
+  memFlipped.push(i);
+  if(memFlipped.length===2){
+    memLocked=true;
+    memMoves++;
+    document.getElementById('memMoves').textContent=memMoves;
+    const [a,b]=memFlipped;
+    const ea=document.getElementById(`mc${a}`).dataset.emoji;
+    const eb=document.getElementById(`mc${b}`).dataset.emoji;
+    if(ea===eb){
+      document.getElementById(`mc${a}`).classList.add('matched');
+      document.getElementById(`mc${b}`).classList.add('matched');
+      memMatched++;
+      document.getElementById('memPairs').textContent=memMatched;
+      memFlipped=[]; memLocked=false;
+      if(memMatched===8){
+        clearInterval(memTimer);
+        setTimeout(()=>showResult('🎉',t('win'),`${memMoves} ${t('pairs')} ${memSeconds}s`),400);
+      }
+    } else {
+      setTimeout(()=>{
+        document.getElementById(`mc${a}`).classList.remove('flipped');
+        document.getElementById(`mc${a}`).textContent='❓';
+        document.getElementById(`mc${b}`).classList.remove('flipped');
+        document.getElementById(`mc${b}`).textContent='❓';
+        memFlipped=[]; memLocked=false;
+      },900);
+    }
+  }
+}
+
+// ============ HANGMAN ============
+const hangWords = {
+  he:[{w:'ירושלים',h:'עיר'},  {w:'שוקולד',h:'מתוק'},  {w:'מחשב',h:'טכנולוגיה'},
+      {w:'אריה',h:'חיה'},     {w:'כדורגל',h:'ספורט'},  {w:'ים תיכון',h:'גוף מים'},
+      {w:'תפוז',h:'פרי'},     {w:'עיפרון',h:'כלי כתיבה'}],
+  en:[{w:'ELEPHANT',h:'animal'},{w:'GUITAR',h:'instrument'},{w:'CHOCOLATE',h:'food'},
+      {w:'COMPUTER',h:'technology'},{w:'FOOTBALL',h:'sport'},{w:'BUTTERFLY',h:'insect'},
+      {w:'DIAMOND',h:'gem'},{w:'LIBRARY',h:'building'}],
+  ru:[{w:'СЛОН',h:'животное'},{w:'ГИТАРА',h:'инструмент'},{w:'ШОКОЛАД',h:'еда'},
+      {w:'КОМПЬЮТЕР',h:'технология'},{w:'ФУТБОЛ',h:'спорт'},{w:'БАБОЧКА',h:'насекомое'}],
+  es:[{w:'ELEFANTE',h:'animal'},{w:'GUITARRA',h:'instrumento'},{w:'CHOCOLATE',h:'comida'},
+      {w:'COMPUTADORA',h:'tecnología'},{w:'FUTBOL',h:'deporte'},{w:'MARIPOSA',h:'insecto'}],
+  ar:[{w:'فيل',h:'حيوان'},{w:'جيتار',h:'آلة موسيقية'},{w:'شوكولاتة',h:'طعام'},
+      {w:'حاسوب',h:'تقنية'},{w:'كرة قدم',h:'رياضة'},{w:'فراشة',h:'حشرة'}],
+};
+
+const hangParts = ['hHead','hBody','hArmL','hArmR','hLegL','hLegR'];
+let hangWord='', hangGuessed=[], hangErrors=0;
+
+function initHangman(){
+  const words = hangWords[lang] || hangWords.en;
+  const w = words[Math.floor(Math.random()*words.length)];
+  hangWord = w.w.toUpperCase();
+  document.getElementById('hangHint').textContent = `💡 ${w.h}`;
+  hangGuessed=[]; hangErrors=0;
+  hangParts.forEach(id=>document.getElementById(id).style.display='none');
+  document.getElementById('hangLives').textContent=6;
+  renderWordDisplay();
+  renderKeyboard();
+}
+
+function renderWordDisplay(){
+  const letters = [...new Set(hangWord.replace(/\s/g,'').split(''))];
+  let html='';
+  for(const ch of hangWord){
+    if(ch===' ') html+='<div style="width:10px"></div>';
+    else html+=`<div class="word-letter">${hangGuessed.includes(ch)?ch:''}</div>`;
+  }
+  document.getElementById('wordDisplay').innerHTML=html;
+}
+
+function renderKeyboard(){
+  const isHeb = lang==='he';
+  const heLetters='אבגדהוזחטיכלמנסעפצקרשת';
+  const enLetters='ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  const keys = isHeb ? [...heLetters] : [...enLetters];
+  let html='';
+  keys.forEach(k=>{
+    const cls = hangGuessed.includes(k) ? (hangWord.includes(k)?'correct':'wrong') : '';
+    html+=`<button class="key-btn ${cls}" onclick="guessLetter('${k}')" ${hangGuessed.includes(k)?'disabled':''}>${k}</button>`;
+  });
+  document.getElementById('keyboard').innerHTML=html;
+}
+
+function guessLetter(k){
+  if(hangGuessed.includes(k)) return;
+  hangGuessed.push(k);
+  if(!hangWord.includes(k)){
+    hangErrors++;
+    document.getElementById(hangParts[hangErrors-1]).style.display='';
+    document.getElementById('hangLives').textContent=6-hangErrors;
+    if(hangErrors>=6){
+      renderWordDisplay(); renderKeyboard();
+      setTimeout(()=>showResult('💀',t('lose'),`${t('hangLose')} ${hangWord}`),400);
+      return;
+    }
+  }
+  renderWordDisplay();
+  renderKeyboard();
+  const unguessed = [...new Set(hangWord.replace(/\s/g,'').split(''))].filter(c=>!hangGuessed.includes(c));
+  if(unguessed.length===0){
+    setTimeout(()=>showResult('🎉',t('win'),t('hangWin')),400);
+  }
+}
+
+// ============ BLACKJACK ============
+const suits=['♠','♥','♦','♣'], ranks=['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
+let deck=[], playerHand=[], dealerHand=[], bjBalance=100, bjBet=10, bjGameOver=false;
+
+function buildDeck(){
+  deck=[];
+  for(const s of suits) for(const r of ranks) deck.push({r,s,red:['♥','♦'].includes(s)});
+  deck.sort(()=>Math.random()-0.5);
+}
+
+function cardVal(c){
+  if(['J','Q','K'].includes(c.r)) return 10;
+  if(c.r==='A') return 11;
+  return parseInt(c.r);
+}
+
+function handScore(hand){
+  let s=0, aces=0;
+  hand.forEach(c=>{ s+=cardVal(c); if(c.r==='A') aces++; });
+  while(s>21 && aces>0){ s-=10; aces--; }
+  return s;
+}
+
+function initBlackjack(){
+  bjGameOver=false;
+  buildDeck();
+  playerHand=[deck.pop(),deck.pop()];
+  dealerHand=[deck.pop(),deck.pop()];
+  document.getElementById('bjBalance').textContent=bjBalance;
+  renderBJ(true);
+  document.getElementById('bjMsg').textContent='';
+  document.getElementById('bjActions').innerHTML=`
+    <button class="gold-btn" onclick="bjHit()" data-i="hit">${t('hit')}</button>
+    <button class="outline-btn" onclick="bjStand()" data-i="stand">${t('stand')}</button>
+    <button class="outline-btn" onclick="initBlackjack()" data-i="deal">${t('deal')}</button>`;
+  if(handScore(playerHand)===21){
+    bjEndGame(t('bjBlackjack'),true);
+  }
+}
+
+function renderCard(c, hide=false){
+  if(hide) return `<div class="playing-card back"></div>`;
+  return `<div class="playing-card${c.red?' red':''}"><div class="card-label">${c.r}</div><div class="card-suit">${c.s}</div></div>`;
+}
+
+function renderBJ(hideDealer=false){
+  document.getElementById('dealerCards').innerHTML = dealerHand.map((c,i)=>renderCard(c,hideDealer&&i===1)).join('');
+  document.getElementById('playerCards').innerHTML = playerHand.map(c=>renderCard(c)).join('');
+  const ds = hideDealer ? cardVal(dealerHand[0]) : handScore(dealerHand);
+  const ps = handScore(playerHand);
+  const dEl=document.getElementById('dealerScore');
+  const pEl=document.getElementById('playerScore');
+  dEl.textContent = hideDealer ? '?' : ds;
+  pEl.textContent = ps;
+  dEl.className = 'bj-score' + (ds>21?' bust':'');
+  pEl.className = 'bj-score' + (ps>21?' bust':'');
+}
+
+function bjHit(){
+  if(bjGameOver) return;
+  playerHand.push(deck.pop());
+  renderBJ(true);
+  if(handScore(playerHand)>21) bjEndGame(t('bjBust'),false);
+  else if(handScore(playerHand)===21) bjStand();
+}
+
+function bjStand(){
+  if(bjGameOver) return;
+  while(handScore(dealerHand)<17) dealerHand.push(deck.pop());
+  renderBJ(false);
+  const ps=handScore(playerHand), ds=handScore(dealerHand);
+  if(ds>21) bjEndGame(t('bjDealerBust'),true);
+  else if(ps>ds) bjEndGame(t('bjWin'),true);
+  else if(ps===ds) bjEndGame(t('bjPush'),null);
+  else bjEndGame(t('bjLose'),false);
+}
+
+function bjEndGame(msg, win){
+  bjGameOver=true;
+  if(win===true) bjBalance+=bjBet;
+  else if(win===false) bjBalance-=bjBet;
+  if(bjBalance<0) bjBalance=0;
+  document.getElementById('bjBalance').textContent=bjBalance;
+  document.getElementById('bjMsg').textContent=msg;
+  document.getElementById('bjActions').innerHTML=`<button class="gold-btn" onclick="initBlackjack()" data-i="deal">${t('deal')}</button>`;
+}
+
+// ============ NUMBER GUESS ============
+let numSecret=0, numAttempts=[];
+
+function initNumGuess(){
+  numSecret=Math.floor(Math.random()*100)+1;
+  numAttempts=[];
+  document.getElementById('numDisplay').textContent='?';
+  document.getElementById('numHint').textContent='';
+  document.getElementById('numHint').className='hint-bar';
+  document.getElementById('numAttempts').innerHTML='';
+  document.getElementById('numTries').textContent=0;
+  document.getElementById('numInput').value='';
+}
+
+function numGuess(){
+  const v=parseInt(document.getElementById('numInput').value);
+  if(!v||v<1||v>100) return;
+  numAttempts.push(v);
+  document.getElementById('numTries').textContent=numAttempts.length;
+  document.getElementById('numInput').value='';
+  const hintEl=document.getElementById('numHint');
+  if(v===numSecret){
+    document.getElementById('numDisplay').textContent=numSecret;
+    hintEl.textContent='✅';
+    hintEl.className='hint-bar win';
+    setTimeout(()=>showResult('🎉',t('win'),`${t('numWin')}${numAttempts.length}${t('numTries')}`),300);
+  } else {
+    const high = v < numSecret; // need to guess higher
+    document.getElementById('numDisplay').textContent=v;
+    hintEl.textContent=high?t('higher'):t('lower');
+    hintEl.className='hint-bar '+(high?'high':'low');
+    // Add chip
+    const chip=document.createElement('div');
+    chip.className=`attempt-chip ${high?'high':'low'}`;
+    chip.textContent=v;
+    document.getElementById('numAttempts').appendChild(chip);
+  }
+}
+
+// Init
+applyTranslations();
+</script>
+</body>
+</html>
