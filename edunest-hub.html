@@ -1,0 +1,892 @@
+<!DOCTYPE html>
+<html lang="he">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EduNest Hub — AppNest</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Heebo:wght@300;400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --gold:#C9A84C;--gold-light:#F0C060;--gold-dim:#8A6A2A;
+  --bg:#0A0A0A;--dark:#111;--dark2:#1A1A1A;--dark3:#222;
+  --text:#E8E0D0;--text-dim:#888;
+  --green:#4CAF7A;--red:#E05050;--blue:#4A8FD4;--purple:#9B59B6;--teal:#22D0D8;
+}
+body.day{--bg:#F0EDE6;--dark:#E8E2D8;--dark2:#FFF;--dark3:#F0EDE6;--text:#1A1A1A;--text-dim:#888;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'Heebo',sans-serif;min-height:100vh;direction:rtl;transition:background 0.3s,color 0.3s;}
+body.ltr{direction:ltr;}
+
+.header{background:var(--dark);border-bottom:2px solid var(--gold-dim);padding:10px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+.logo-text{font-family:'Cinzel',serif;color:var(--gold);font-size:1.1rem;letter-spacing:1px;}
+.logo-sub{font-size:0.55rem;color:var(--gold-dim);letter-spacing:3px;display:block;}
+.hbtns{display:flex;gap:6px;align-items:center;}
+.icon-btn{background:var(--dark3);border:1px solid var(--gold-dim);color:var(--gold);width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:0.9rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background 0.2s;}
+.icon-btn:hover{background:var(--dark2);}
+.lang-btn{background:var(--dark3);border:1px solid var(--gold-dim);color:var(--gold);padding:5px 9px;border-radius:16px;cursor:pointer;font-size:0.75rem;font-family:'Heebo',sans-serif;white-space:nowrap;}
+.lang-drop{position:absolute;top:110%;left:0;background:var(--dark2);border:1px solid var(--gold-dim);border-radius:10px;display:none;min-width:130px;z-index:200;box-shadow:0 4px 20px rgba(0,0,0,0.5);}
+.lang-drop.open{display:block;}
+.lang-opt{padding:9px 12px;cursor:pointer;font-size:0.82rem;display:flex;align-items:center;gap:7px;color:var(--text);}
+.lang-opt:hover{background:var(--dark3);color:var(--gold);}
+
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.82);z-index:400;display:none;align-items:center;justify-content:center;padding:16px;}
+.modal-bg.open{display:flex;}
+.modal{background:var(--dark2);border:1px solid var(--gold-dim);border-radius:18px;padding:22px 18px;max-width:350px;width:100%;max-height:88vh;overflow-y:auto;}
+.modal-title{font-family:'Cinzel',serif;color:var(--gold);font-size:1.1rem;margin-bottom:12px;text-align:center;}
+.modal-close{float:left;background:none;border:1px solid var(--gold-dim);color:var(--gold);padding:3px 10px;border-radius:8px;cursor:pointer;font-family:'Heebo',sans-serif;font-size:0.78rem;}
+body.ltr .modal-close{float:right;}
+.modal p,.modal li{color:var(--text-dim);font-size:0.85rem;line-height:1.7;margin-bottom:5px;}
+.modal ul{padding-right:16px;}body.ltr .modal ul{padding-left:16px;padding-right:0;}
+.key-b{display:inline-block;background:var(--dark3);border:1px solid var(--gold-dim);color:var(--gold);padding:1px 7px;border-radius:5px;font-size:0.78rem;}
+.stitle{color:var(--gold);font-size:0.78rem;font-weight:700;margin-top:10px;margin-bottom:3px;letter-spacing:1px;}
+.about-link{color:var(--gold);text-decoration:none;font-weight:700;}
+
+.screen{display:none;}.screen.active{display:block;}
+.menu-wrap{max-width:480px;margin:0 auto;padding:24px 14px;}
+.menu-title{font-family:'Cinzel',serif;font-size:2rem;color:var(--gold);text-align:center;margin-bottom:4px;}
+.menu-sub{text-align:center;color:var(--text-dim);font-size:0.85rem;margin-bottom:24px;}
+.tools-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.tool-card{background:var(--dark2);border:1px solid var(--dark3);border-radius:14px;padding:20px 14px;text-align:center;cursor:pointer;transition:all 0.22s;position:relative;overflow:hidden;}
+.tool-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent);opacity:0;transition:opacity 0.3s;}
+.tool-card:hover{border-color:var(--gold-dim);transform:translateY(-3px);box-shadow:0 8px 24px rgba(201,168,76,0.15);}
+.tool-card:hover::before{opacity:1;}
+.tool-card.wide{grid-column:span 2;}
+.tool-icon{font-size:2.2rem;margin-bottom:8px;display:block;}
+.tool-name{font-size:0.98rem;font-weight:700;color:var(--gold);margin-bottom:3px;}
+.tool-desc{font-size:0.72rem;color:var(--text-dim);}
+
+.tool-screen{max-width:480px;margin:0 auto;padding:14px;}
+.tool-hdr{display:flex;align-items:center;gap:10px;margin-bottom:16px;}
+.back-btn{background:var(--dark2);border:1px solid var(--gold-dim);color:var(--gold);width:36px;height:36px;border-radius:9px;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.tool-title{font-family:'Cinzel',serif;font-size:1.2rem;color:var(--gold);}
+.score-badge{margin-right:auto;background:var(--dark3);border:1px solid var(--gold-dim);color:var(--gold);padding:4px 12px;border-radius:16px;font-size:0.82rem;font-weight:700;}
+body.ltr .score-badge{margin-right:0;margin-left:auto;}
+.card{background:var(--dark2);border:1px solid var(--dark3);border-radius:14px;padding:16px;margin-bottom:12px;}
+.gold-btn{background:linear-gradient(135deg,var(--gold-dim),var(--gold));color:#0A0A0A;border:none;padding:10px 26px;border-radius:22px;font-family:'Heebo',sans-serif;font-size:0.9rem;font-weight:700;cursor:pointer;transition:all 0.2s;display:inline-block;}
+.gold-btn:hover{transform:scale(1.04);}
+.outline-btn{background:transparent;color:var(--gold);border:1px solid var(--gold-dim);padding:9px 20px;border-radius:22px;font-family:'Heebo',sans-serif;font-size:0.86rem;cursor:pointer;}
+.outline-btn:hover{background:var(--dark3);}
+
+/* ===== MATH ===== */
+.math-question{font-family:'Cinzel',serif;font-size:3rem;color:var(--gold);text-align:center;margin:16px 0;}
+.math-answers{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;direction:ltr;}
+.math-ans{background:var(--dark3);border:2px solid var(--dark3);border-radius:12px;padding:16px;font-family:'Cinzel',serif;font-size:1.4rem;cursor:pointer;text-align:center;transition:all 0.2s;color:var(--text);}
+.math-ans:hover{border-color:var(--gold-dim);}
+.math-ans.correct{background:#1A3A1A;border-color:var(--green);color:var(--green);}
+.math-ans.wrong{background:#3A1A1A;border-color:var(--red);color:var(--red);}
+.math-ops{display:flex;gap:8px;justify-content:center;margin-bottom:14px;direction:ltr;}
+.op-btn{background:var(--dark3);border:1px solid #444;color:var(--text-dim);padding:6px 14px;border-radius:12px;cursor:pointer;font-size:0.85rem;font-family:'Heebo',sans-serif;}
+.op-btn.active{border-color:var(--gold);color:var(--gold);}
+.math-level{display:flex;gap:6px;justify-content:center;margin-bottom:10px;}
+.lvl-btn{background:var(--dark3);border:1px solid #444;color:var(--text-dim);padding:5px 12px;border-radius:10px;cursor:pointer;font-size:0.78rem;font-family:'Heebo',sans-serif;}
+.lvl-btn.active{border-color:var(--blue);color:var(--blue);}
+.math-streak{text-align:center;font-size:0.85rem;color:var(--text-dim);margin-bottom:8px;}
+
+/* ===== FLAGS ===== */
+.flag-display{text-align:center;margin:10px 0;line-height:1;}
+.flag-img{width:160px;height:106px;object-fit:cover;border-radius:8px;border:2px solid var(--gold-dim);box-shadow:0 4px 16px rgba(0,0,0,0.4);}
+.flag-hint{text-align:center;color:var(--text-dim);font-size:0.8rem;margin-bottom:8px;}
+.flag-answers{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;}
+.flag-ans{background:var(--dark3);border:2px solid var(--dark3);border-radius:10px;padding:12px 8px;cursor:pointer;text-align:center;font-size:0.88rem;transition:all 0.2s;color:var(--text);}
+.flag-ans:hover{border-color:var(--gold-dim);}
+.flag-ans.correct{background:#1A3A1A;border-color:var(--green);color:var(--green);}
+.flag-ans.wrong{background:#3A1A1A;border-color:var(--red);color:var(--red);}
+.flag-progress{display:flex;gap:5px;justify-content:center;margin-bottom:12px;flex-wrap:wrap;}
+.fpd{width:12px;height:12px;border-radius:50%;background:var(--dark3);border:1px solid #444;}
+.fpd.ok{background:var(--green);}
+.fpd.no{background:var(--red);}
+.flag-diff{display:flex;gap:6px;justify-content:center;margin-bottom:10px;}
+.fdiff-btn{background:var(--dark3);border:1px solid #444;color:var(--text-dim);padding:5px 12px;border-radius:10px;cursor:pointer;font-size:0.78rem;font-family:'Heebo',sans-serif;}
+.fdiff-btn.active{border-color:var(--gold);color:var(--gold);}
+
+/* ===== ENGLISH ===== */
+.flash-card{background:var(--dark2);border:2px solid var(--gold-dim);border-radius:18px;padding:28px 20px;text-align:center;margin-bottom:14px;min-height:140px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:all 0.3s;position:relative;}
+.flash-word{font-family:'Cinzel',serif;font-size:2rem;color:var(--gold);margin-bottom:8px;}
+.flash-translation{font-size:1.1rem;color:var(--text-dim);min-height:28px;}
+.flash-hint{font-size:0.75rem;color:var(--text-dim);margin-top:8px;}
+.flash-category{position:absolute;top:10px;right:12px;font-size:0.7rem;background:var(--dark3);color:var(--gold-dim);padding:2px 8px;border-radius:8px;}
+body.ltr .flash-category{right:auto;left:12px;}
+.flash-controls{display:flex;gap:10px;justify-content:center;margin-bottom:12px;direction:ltr;}
+.flash-ctrl{background:var(--dark2);border:1px solid var(--gold-dim);color:var(--gold);width:44px;height:44px;border-radius:10px;cursor:pointer;font-size:1.1rem;display:flex;align-items:center;justify-content:center;}
+.eng-cats{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin-bottom:10px;}
+.eng-cat-btn{background:var(--dark3);border:1px solid #444;color:var(--text-dim);padding:5px 12px;border-radius:10px;cursor:pointer;font-size:0.78rem;font-family:'Heebo',sans-serif;}
+.eng-cat-btn.active{border-color:var(--purple);color:var(--purple);}
+.flash-progress{text-align:center;color:var(--text-dim);font-size:0.8rem;margin-bottom:8px;}
+
+/* ===== HEBREW CALENDAR ===== */
+.heb-month-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.heb-month-name{font-family:'Cinzel',serif;font-size:1.2rem;color:var(--gold);text-align:center;}
+.nav-arrow{background:var(--dark3);border:1px solid var(--gold-dim);color:var(--gold);width:34px;height:34px;border-radius:8px;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;}
+.heb-cal{width:100%;border-collapse:collapse;margin-bottom:14px;direction:rtl;}
+.heb-cal th{text-align:center;font-size:0.72rem;color:var(--text-dim);padding:6px 2px;font-weight:600;}
+.heb-cal td{text-align:center;padding:5px 2px;font-size:0.82rem;cursor:pointer;border-radius:6px;}
+.heb-cal td:hover{background:var(--dark3);}
+.heb-cal td.today{background:var(--gold-dim);color:var(--gold);font-weight:700;border-radius:8px;}
+.heb-cal td.holiday{color:var(--gold);font-weight:700;}
+.heb-cal td.shabbat{color:var(--blue);}
+.heb-cal td.empty{cursor:default;}
+.heb-date-info{background:var(--dark3);border-radius:12px;padding:12px;margin-bottom:10px;min-height:50px;}
+.heb-date-heb{font-size:1rem;font-weight:700;color:var(--gold);margin-bottom:4px;}
+.heb-date-detail{font-size:0.8rem;color:var(--text-dim);line-height:1.5;}
+.holidays-list{max-height:180px;overflow-y:auto;}
+.holiday-item{background:var(--dark3);border-radius:8px;padding:8px 12px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;}
+.holiday-name{font-size:0.85rem;color:var(--gold);}
+.holiday-date{font-size:0.75rem;color:var(--text-dim);}
+
+/* ===== PERIODIC TABLE ===== */
+.element-search{background:var(--dark3);border:1px solid var(--gold-dim);color:var(--text);padding:10px 14px;border-radius:10px;font-family:'Heebo',sans-serif;font-size:0.9rem;width:100%;outline:none;margin-bottom:10px;}
+.elements-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:12px;direction:ltr;}
+.element-card{background:var(--dark3);border:1px solid #333;border-radius:8px;padding:8px 4px;text-align:center;cursor:pointer;transition:all 0.15s;}
+.element-card:hover{border-color:var(--gold-dim);transform:scale(1.05);}
+.element-num{font-size:0.62rem;color:var(--text-dim);}
+.element-sym{font-size:1.2rem;font-weight:700;color:var(--gold);font-family:'Cinzel',serif;}
+.element-name{font-size:0.6rem;color:var(--text-dim);margin-top:2px;}
+.element-detail{background:var(--dark2);border:1px solid var(--gold-dim);border-radius:14px;padding:16px;margin-bottom:10px;display:none;}
+.element-detail.show{display:block;}
+.el-header{display:flex;align-items:center;gap:14px;margin-bottom:12px;}
+.el-big-sym{font-family:'Cinzel',serif;font-size:3rem;color:var(--gold);width:70px;height:70px;background:var(--dark3);border:2px solid var(--gold-dim);border-radius:12px;display:flex;align-items:center;justify-content:center;}
+.el-info{flex:1;}
+.el-name{font-size:1.1rem;font-weight:700;color:var(--gold);}
+.el-num{font-size:0.8rem;color:var(--text-dim);}
+.el-props{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+.el-prop{background:var(--dark3);border-radius:8px;padding:6px 10px;}
+.el-prop-l{font-size:0.65rem;color:var(--text-dim);}
+.el-prop-v{font-size:0.85rem;font-weight:600;color:var(--text);}
+.cat-filter{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px;direction:ltr;}
+.cat-filter-btn{font-size:0.68rem;padding:3px 8px;border-radius:8px;cursor:pointer;border:1px solid transparent;font-family:'Heebo',sans-serif;}
+
+/* RESULT */
+.result-ov{position:fixed;inset:0;background:rgba(0,0,0,0.86);display:none;align-items:center;justify-content:center;z-index:300;padding:20px;}
+.result-ov.show{display:flex;}
+.result-box{background:var(--dark2);border:1px solid var(--gold-dim);border-radius:18px;padding:28px 22px;text-align:center;max-width:300px;width:100%;}
+.r-emoji{font-size:3rem;margin-bottom:10px;}
+.r-title{font-family:'Cinzel',serif;font-size:1.4rem;color:var(--gold);margin-bottom:6px;}
+.r-msg{color:var(--text-dim);font-size:0.87rem;margin-bottom:18px;}
+.r-btns{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;}
+
+@media(max-width:380px){.tools-grid{grid-template-columns:1fr;}.tool-card.wide{grid-column:span 1;}}
+</style>
+</head>
+<body>
+
+<div class="modal-bg" id="howtoModal"><div class="modal">
+  <button class="modal-close" onclick="closeModal('howto')" data-i="close">סגור</button>
+  <div class="modal-title" id="howtoTitle">❓</div>
+  <div id="howtoContent"></div>
+</div></div>
+<div class="modal-bg" id="aboutModal"><div class="modal">
+  <button class="modal-close" onclick="closeModal('about')" data-i="close">סגור</button>
+  <div style="text-align:center;margin-bottom:10px;"><svg width="46" height="46" viewBox="0 0 38 38"><polygon points="19,2 35,10.5 35,27.5 19,36 3,27.5 3,10.5" fill="#111" stroke="#C9A84C" stroke-width="1.5"/><text x="19" y="24" text-anchor="middle" font-family="Cinzel,serif" font-size="11" fill="#C9A84C">E</text></svg></div>
+  <div class="modal-title">EduNest Hub</div>
+  <div id="aboutContent"></div>
+</div></div>
+
+<div class="header">
+  <div style="display:flex;align-items:center;gap:8px;">
+    <svg width="32" height="32" viewBox="0 0 38 38"><polygon points="19,2 35,10.5 35,27.5 19,36 3,27.5 3,10.5" fill="#111" stroke="#C9A84C" stroke-width="1.5"/><text x="19" y="24" text-anchor="middle" font-family="Cinzel,serif" font-size="11" fill="#C9A84C">E</text></svg>
+    <div><span class="logo-text">EduNest</span><span class="logo-sub">APPNEST</span></div>
+  </div>
+  <div class="hbtns">
+    <button class="icon-btn" onclick="openModal('howto')">❓</button>
+    <button class="icon-btn" onclick="toggleTheme()" id="themeBtn">🌙</button>
+    <button class="icon-btn" onclick="openModal('about')">ℹ️</button>
+    <div style="position:relative;">
+      <button class="lang-btn" onclick="toggleLang()">🌐 <span id="lLabel">עב</span> ▾</button>
+      <div class="lang-drop" id="lDrop">
+        <div class="lang-opt" onclick="setLang('he')">🇮🇱 עברית</div>
+        <div class="lang-opt" onclick="setLang('en')">🇬🇧 English</div>
+        <div class="lang-opt" onclick="setLang('ru')">🇷🇺 Русский</div>
+        <div class="lang-opt" onclick="setLang('es')">🇪🇸 Español</div>
+        <div class="lang-opt" onclick="setLang('ar')">🇸🇦 العربية</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MENU -->
+<div class="screen active" id="menuScreen">
+  <div class="menu-wrap">
+    <div class="menu-title" data-i="menuTitle">📚 EduNest</div>
+    <div class="menu-sub" data-i="menuSub">5 כלים לימודיים לבחירה</div>
+    <div class="tools-grid">
+      <div class="tool-card" onclick="startTool('math')"><span class="tool-icon">🔢</span><div class="tool-name" data-i="mathName">חשבון לילדים</div><div class="tool-desc" data-i="mathDesc">כפל, חיבור, חיסור וחילוק</div></div>
+      <div class="tool-card" onclick="startTool('flags')"><span class="tool-icon">🌍</span><div class="tool-name" data-i="flagsName">ניחוש דגלים</div><div class="tool-desc" data-i="flagsDesc">נחש את המדינה לפי הדגל</div></div>
+      <div class="tool-card" onclick="startTool('english')"><span class="tool-icon">📖</span><div class="tool-name" data-i="engName">לומד אנגלית</div><div class="tool-desc" data-i="engDesc">כרטיסיות מילים ותרגום</div></div>
+      <div class="tool-card" onclick="startTool('calendar')"><span class="tool-icon">🗓️</span><div class="tool-name" data-i="calName">לוח שנה עברי</div><div class="tool-desc" data-i="calDesc">חגים, פרשות וזמני שבת</div></div>
+      <div class="tool-card wide" onclick="startTool('periodic')"><span class="tool-icon">🧪</span><div class="tool-name" data-i="perName">טבלה מחזורית</div><div class="tool-desc" data-i="perDesc">כל היסודות עם פרטים</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- MATH -->
+<div class="screen" id="mathScreen">
+  <div class="tool-screen">
+    <div class="tool-hdr"><button class="back-btn" onclick="goMenu()">←</button><div class="tool-title" data-i="mathName">🔢 חשבון</div><div class="score-badge">⭐ <span id="mathScore">0</span></div></div>
+    <div class="math-ops">
+      <button class="op-btn active" onclick="setOp('+')" id="op+">➕</button>
+      <button class="op-btn" onclick="setOp('-')" id="op-">➖</button>
+      <button class="op-btn" onclick="setOp('×')" id="op×">✖️</button>
+      <button class="op-btn" onclick="setOp('÷')" id="op÷">➗</button>
+    </div>
+    <div class="math-level">
+      <button class="lvl-btn active" onclick="setMathLevel(1)" id="ml1" data-i="easy">קל</button>
+      <button class="lvl-btn" onclick="setMathLevel(2)" id="ml2" data-i="medium">בינוני</button>
+      <button class="lvl-btn" onclick="setMathLevel(3)" id="ml3" data-i="hard">קשה</button>
+    </div>
+    <div class="math-streak" id="mathStreak"></div>
+    <div class="math-question" id="mathQ">2 + 3</div>
+    <div class="math-answers" id="mathAnswers"></div>
+    <div style="text-align:center;"><button class="outline-btn" onclick="mathNew()" data-i="skip">דלג</button></div>
+  </div>
+</div>
+
+<!-- FLAGS -->
+<div class="screen" id="flagsScreen">
+  <div class="tool-screen">
+    <div class="tool-hdr"><button class="back-btn" onclick="goMenu()">←</button><div class="tool-title" data-i="flagsName">🌍 דגלים</div><div class="score-badge">⭐ <span id="flagScore">0</span></div></div>
+    <div class="flag-diff">
+      <button class="fdiff-btn active" onclick="setFlagDiff('easy')" id="fd-easy" data-i="easy">קל</button>
+      <button class="fdiff-btn" onclick="setFlagDiff('medium')" id="fd-medium" data-i="medium">בינוני</button>
+      <button class="fdiff-btn" onclick="setFlagDiff('hard')" id="fd-hard" data-i="hard">קשה</button>
+    </div>
+    <div class="flag-progress" id="flagProgress"></div>
+    <div class="flag-display" id="flagEmoji">🏳️</div>
+    <div class="flag-hint" id="flagHint"></div>
+    <div class="flag-answers" id="flagAnswers"></div>
+    <div style="text-align:center;"><button class="gold-btn" onclick="flagsStart()" data-i="start">התחל</button></div>
+  </div>
+</div>
+
+<!-- ENGLISH -->
+<div class="screen" id="englishScreen">
+  <div class="tool-screen">
+    <div class="tool-hdr"><button class="back-btn" onclick="goMenu()">←</button><div class="tool-title" data-i="engName">📖 אנגלית</div><div class="score-badge">📚 <span id="engProgress">1/1</span></div></div>
+    <div class="eng-cats">
+      <button class="eng-cat-btn active" onclick="setEngCat('basic')" data-i="basic">בסיסי</button>
+      <button class="eng-cat-btn" onclick="setEngCat('food')" data-i="food">אוכל</button>
+      <button class="eng-cat-btn" onclick="setEngCat('animals')" data-i="animals">חיות</button>
+      <button class="eng-cat-btn" onclick="setEngCat('colors')" data-i="colors">צבעים</button>
+      <button class="eng-cat-btn" onclick="setEngCat('numbers')" data-i="numbers">מספרים</button>
+    </div>
+    <div class="flash-progress" id="flashProgress"></div>
+    <div class="flash-card" id="flashCard" onclick="flipFlash()">
+      <div class="flash-category" id="flashCat"></div>
+      <div class="flash-word" id="flashWord">Hello</div>
+      <div class="flash-translation" id="flashTrans"></div>
+      <div class="flash-hint" data-i="tapFlip">לחץ לתרגום</div>
+    </div>
+    <div class="flash-controls" dir="ltr">
+      <button class="flash-ctrl" onclick="prevFlash()">◄</button>
+      <button class="flash-ctrl" onclick="shuffleFlash()">🔀</button>
+      <button class="flash-ctrl" onclick="nextFlash()">►</button>
+    </div>
+    <div id="engFeedback" style="display:flex;gap:10px;justify-content:center;margin-top:8px;direction:ltr;">
+      <button onclick="engKnow(true)" style="background:#1A3A1A;border:2px solid var(--green);color:var(--green);padding:10px 22px;border-radius:18px;font-family:Heebo,sans-serif;font-size:0.9rem;font-weight:700;cursor:pointer;" data-i="knew">✅ ידעתי</button>
+      <button onclick="engKnow(false)" style="background:#3A1A1A;border:2px solid var(--red);color:var(--red);padding:10px 22px;border-radius:18px;font-family:Heebo,sans-serif;font-size:0.9rem;font-weight:700;cursor:pointer;" data-i="didntKnow">❌ לא ידעתי</button>
+    </div>
+    <div id="engStats" style="text-align:center;margin-top:8px;font-size:0.8rem;color:var(--text-dim);">
+      <span style="color:var(--green)">✅ <span id="engKnewCount">0</span></span> &nbsp;
+      <span style="color:var(--red)">❌ <span id="engDontCount">0</span></span>
+    </div>
+  </div>
+</div>
+
+<!-- HEBREW CALENDAR -->
+<div class="screen" id="calendarScreen">
+  <div class="tool-screen">
+    <div class="tool-hdr"><button class="back-btn" onclick="goMenu()">←</button><div class="tool-title" data-i="calName">🗓️ לוח עברי</div></div>
+    <div class="heb-month-nav">
+      <button class="nav-arrow" onclick="calPrev()">›</button>
+      <div class="heb-month-name" id="calMonthName"></div>
+      <button class="nav-arrow" onclick="calNext()">‹</button>
+    </div>
+    <table class="heb-cal" id="hebCal"></table>
+    <div class="heb-date-info" id="hebDateInfo"></div>
+    <div style="font-size:0.78rem;color:var(--gold);font-weight:700;margin-bottom:6px;" data-i="upcoming">חגים קרובים</div>
+    <div class="holidays-list" id="holidaysList"></div>
+  </div>
+</div>
+
+<!-- PERIODIC TABLE -->
+<div class="screen" id="periodicScreen">
+  <div class="tool-screen">
+    <div class="tool-hdr"><button class="back-btn" onclick="goMenu()">←</button><div class="tool-title" data-i="perName">🧪 טבלה מחזורית</div></div>
+    <input class="element-search" id="elemSearch" data-i-ph="searchElement" placeholder="חפש יסוד — שם, סמל או מספר..." oninput="filterElements()">
+    <div class="cat-filter" id="catFilter"></div>
+    <div class="element-detail" id="elemDetail"></div>
+    <div class="elements-grid" id="elemGrid"></div>
+  </div>
+</div>
+
+<!-- RESULT -->
+<div class="result-ov" id="resultOv">
+  <div class="result-box">
+    <div class="r-emoji" id="rEmoji">🎉</div>
+    <div class="r-title" id="rTitle"></div>
+    <div class="r-msg" id="rMsg"></div>
+    <div class="r-btns">
+      <button class="gold-btn" onclick="replayTool()" data-i="again">שוב</button>
+      <button class="outline-btn" onclick="goMenu()" data-i="menu">תפריט</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============ I18N ============
+const T={
+  he:{menuTitle:'📚 EduNest',menuSub:'5 כלים לימודיים לבחירה',
+    mathName:'🔢 חשבון לילדים',mathDesc:'כפל, חיבור, חיסור וחילוק',
+    flagsName:'🌍 ניחוש דגלים',flagsDesc:'נחש את המדינה לפי הדגל',
+    engName:'📖 לומד אנגלית',engDesc:'כרטיסיות מילים ותרגום',
+    calName:'🗓️ לוח שנה עברי',calDesc:'חגים, פרשות וזמני שבת',
+    perName:'🧪 טבלה מחזורית',perDesc:'כל היסודות עם פרטים',
+    easy:'קל',medium:'בינוני',hard:'קשה',start:'התחל',skip:'דלג',
+    again:'שוב',menu:'תפריט',close:'סגור',
+    basic:'בסיסי',food:'אוכל',animals:'חיות',colors:'צבעים',numbers:'מספרים',
+    tapFlip:'לחץ לתרגום',knew:'ידעתי ✅',didntKnow:'לא ידעתי ❌',upcoming:'חגים קרובים',
+    searchElement:'חפש יסוד — שם, סמל או מספר...',
+    correct:'נכון! ✅',wrong:'שגוי ❌',
+    score:'ניקוד',streak:'רצף',
+    win:'כל הכבוד! 🎉',roundDone:'סיבוב הושלם!',
+  },
+  en:{menuTitle:'📚 EduNest',menuSub:'5 learning tools to choose from',
+    mathName:'🔢 Math for Kids',mathDesc:'Multiplication, addition, subtraction, division',
+    flagsName:'🌍 Flag Quiz',flagsDesc:'Guess the country by its flag',
+    engName:'📖 English Learner',engDesc:'Flashcards with translation',
+    calName:'🗓️ Hebrew Calendar',calDesc:'Holidays, portions & Shabbat times',
+    perName:'🧪 Periodic Table',perDesc:'All elements with details',
+    easy:'Easy',medium:'Medium',hard:'Hard',start:'Start',skip:'Skip',
+    again:'Again',menu:'Menu',close:'Close',
+    basic:'Basic',food:'Food',animals:'Animals',colors:'Colors',numbers:'Numbers',
+    tapFlip:'Tap to translate',knew:'I knew it ✅',didntKnow:'Didn’t know ❌',upcoming:'Upcoming holidays',
+    searchElement:'Search element — name, symbol or number...',
+    correct:'Correct! ✅',wrong:'Wrong ❌',
+    score:'Score',streak:'Streak',
+    win:'Well done! 🎉',roundDone:'Round complete!',
+  },
+  ru:{menuTitle:'📚 EduNest',menuSub:'5 учебных инструментов',
+    mathName:'🔢 Математика',mathDesc:'Умножение, сложение, вычитание, деление',
+    flagsName:'🌍 Угадай флаг',flagsDesc:'Угадай страну по флагу',
+    engName:'📖 Английский',engDesc:'Карточки со словами',
+    calName:'🗓️ Еврейский календарь',calDesc:'Праздники, главы и Шаббат',
+    perName:'🧪 Периодическая таблица',perDesc:'Все элементы с деталями',
+    easy:'Легко',medium:'Средне',hard:'Сложно',start:'Старт',skip:'Пропустить',
+    again:'Снова',menu:'Меню',close:'Закрыть',
+    basic:'Базовый',food:'Еда',animals:'Животные',colors:'Цвета',numbers:'Числа',
+    tapFlip:'Нажми для перевода',knew:'Знал ✅',didntKnow:'Не знал ❌',upcoming:'Ближайшие праздники',
+    searchElement:'Поиск элемента...',
+    correct:'Правильно! ✅',wrong:'Неверно ❌',
+    score:'Счёт',streak:'Серия',
+    win:'Отлично! 🎉',roundDone:'Раунд завершён!',
+  },
+  es:{menuTitle:'📚 EduNest',menuSub:'5 herramientas de aprendizaje',
+    mathName:'🔢 Matemáticas',mathDesc:'Multiplicación, suma, resta, división',
+    flagsName:'🌍 Adivina banderas',flagsDesc:'Adivina el país por su bandera',
+    engName:'📖 Aprende inglés',engDesc:'Tarjetas con traducción',
+    calName:'🗓️ Calendario hebreo',calDesc:'Festividades, porciones y Shabat',
+    perName:'🧪 Tabla periódica',perDesc:'Todos los elementos con detalles',
+    easy:'Fácil',medium:'Medio',hard:'Difícil',start:'Iniciar',skip:'Saltar',
+    again:'Otra vez',menu:'Menú',close:'Cerrar',
+    basic:'Básico',food:'Comida',animals:'Animales',colors:'Colores',numbers:'Números',
+    tapFlip:'Toca para traducir',knew:'Lo sabía ✅',didntKnow:'No sabía ❌',upcoming:'Próximas festividades',
+    searchElement:'Buscar elemento...',
+    correct:'¡Correcto! ✅',wrong:'Incorrecto ❌',
+    score:'Puntos',streak:'Racha',
+    win:'¡Muy bien! 🎉',roundDone:'¡Ronda completada!',
+  },
+  ar:{menuTitle:'📚 EduNest',menuSub:'5 أدوات تعليمية للاختيار',
+    mathName:'🔢 الرياضيات',mathDesc:'ضرب وجمع وطرح وقسمة',
+    flagsName:'🌍 خمّن الأعلام',flagsDesc:'خمّن الدولة من علمها',
+    engName:'📖 تعلم الإنجليزية',engDesc:'بطاقات كلمات مع ترجمة',
+    calName:'🗓️ التقويم العبري',calDesc:'الأعياد والباراشا وأوقات السبت',
+    perName:'🧪 الجدول الدوري',perDesc:'كل العناصر مع التفاصيل',
+    easy:'سهل',medium:'متوسط',hard:'صعب',start:'ابدأ',skip:'تخطَّ',
+    again:'مجدداً',menu:'القائمة',close:'إغلاق',
+    basic:'أساسي',food:'طعام',animals:'حيوانات',colors:'ألوان',numbers:'أرقام',
+    tapFlip:'اضغط للترجمة',knew:'عرفتها ✅',didntKnow:'لم أعرف ❌',upcoming:'الأعياد القادمة',
+    searchElement:'ابحث عن عنصر...',
+    correct:'صحيح! ✅',wrong:'خطأ ❌',
+    score:'النقاط',streak:'سلسلة',
+    win:'أحسنت! 🎉',roundDone:'انتهت الجولة!',
+  },
+};
+const HOWTO={
+  he:{
+    menu:`<p class="stitle">📚 EduNest Hub</p><p>5 כלים לימודיים — חשבון, דגלים, אנגלית, לוח עברי וטבלה מחזורית.</p>`,
+    math:`<p class="stitle">🔢 חשבון לילדים</p><p>בחר סוג פעולה ורמת קושי, וענה על השאלות.</p><ul><li>4 תשובות אפשריות — בחר את הנכונה</li><li>רצף נכון = בונוס נקודות</li><li>"דלג" עובר לשאלה הבאה</li></ul>`,
+    flags:`<p class="stitle">🌍 ניחוש דגלים</p><p>מוצג דגל של מדינה — נחש איזו!</p><ul><li>4 אפשרויות, אחת נכונה</li><li>3 רמות קושי — קל: מדינות גדולות, קשה: מדינות קטנות</li><li>10 שאלות בסיבוב</li></ul>`,
+    english:`<p class="stitle">📖 לומד אנגלית</p><p>כרטיסיות מילים — לחץ לגלות את התרגום.</p><ul><li>5 קטגוריות: בסיסי, אוכל, חיות, צבעים, מספרים</li><li>◄ ► לניווט בין הכרטיסיות</li><li>🔀 לסדר אקראי</li></ul>`,
+    calendar:`<p class="stitle">🗓️ לוח שנה עברי</p><p>לוח שנה עברי עם חגים ופרשות.</p><ul><li>ניווט בין חודשים עם ‹ ›</li><li>לחץ על תאריך לפרטים</li><li>ימי שישי = כחול (שבת), חגים = זהב</li></ul>`,
+    periodic:`<p class="stitle">🧪 טבלה מחזורית</p><p>כל 118 יסודות עם פרטים מלאים.</p><ul><li>חפש לפי שם, סמל או מספר אטומי</li><li>סנן לפי קטגוריה</li><li>לחץ על יסוד לפרטים</li></ul>`,
+  },
+  en:{
+    menu:`<p class="stitle">📚 EduNest Hub</p><p>5 learning tools — Math, Flags, English, Hebrew Calendar and Periodic Table.</p>`,
+    math:`<p class="stitle">🔢 Math for Kids</p><p>Choose operation and difficulty, then answer questions.</p><ul><li>4 possible answers — pick the right one</li><li>Correct streak = bonus points</li></ul>`,
+    flags:`<p class="stitle">🌍 Flag Quiz</p><p>A country flag is shown — guess which country!</p><ul><li>4 options, one correct</li><li>3 difficulty levels</li><li>10 questions per round</li></ul>`,
+    english:`<p class="stitle">📖 English Learner</p><p>Word flashcards — tap to reveal translation.</p><ul><li>5 categories</li><li>◄ ► to navigate</li><li>🔀 for random order</li></ul>`,
+    calendar:`<p class="stitle">🗓️ Hebrew Calendar</p><p>Hebrew calendar with holidays and Torah portions.</p><ul><li>Navigate months with ‹ ›</li><li>Click date for details</li></ul>`,
+    periodic:`<p class="stitle">🧪 Periodic Table</p><p>All 118 elements with full details.</p><ul><li>Search by name, symbol or atomic number</li><li>Filter by category</li><li>Click element for details</li></ul>`,
+  },
+  ru:{menu:`<p class="stitle">📚 EduNest Hub</p><p>5 учебных инструментов.</p>`,math:`<p class="stitle">🔢 Математика</p><ul><li>4 варианта ответа</li><li>Серия правильных = бонус</li></ul>`,flags:`<p class="stitle">🌍 Угадай флаг</p><ul><li>10 вопросов за раунд</li><li>3 уровня сложности</li></ul>`,english:`<p class="stitle">📖 Английский</p><ul><li>5 категорий слов</li><li>Нажми для перевода</li></ul>`,calendar:`<p class="stitle">🗓️ Еврейский календарь</p><ul><li>Нажми дату для деталей</li></ul>`,periodic:`<p class="stitle">🧪 Периодическая таблица</p><ul><li>Поиск по имени или символу</li></ul>`,},
+  es:{menu:`<p class="stitle">📚 EduNest Hub</p><p>5 herramientas educativas.</p>`,math:`<p class="stitle">🔢 Matemáticas</p><ul><li>4 respuestas posibles</li><li>Racha correcta = bonus</li></ul>`,flags:`<p class="stitle">🌍 Banderas</p><ul><li>10 preguntas por ronda</li><li>3 niveles</li></ul>`,english:`<p class="stitle">📖 Inglés</p><ul><li>5 categorías</li><li>Toca para traducir</li></ul>`,calendar:`<p class="stitle">🗓️ Calendario hebreo</p><ul><li>Toca fecha para detalles</li></ul>`,periodic:`<p class="stitle">🧪 Tabla periódica</p><ul><li>Busca por nombre o símbolo</li></ul>`,},
+  ar:{menu:`<p class="stitle">📚 EduNest Hub</p><p>5 أدوات تعليمية.</p>`,math:`<p class="stitle">🔢 الرياضيات</p><ul><li>4 إجابات محتملة</li><li>سلسلة صحيحة = مكافأة</li></ul>`,flags:`<p class="stitle">🌍 خمّن الأعلام</p><ul><li>10 أسئلة في كل جولة</li><li>3 مستويات</li></ul>`,english:`<p class="stitle">📖 الإنجليزية</p><ul><li>5 فئات</li><li>اضغط للترجمة</li></ul>`,calendar:`<p class="stitle">🗓️ التقويم العبري</p><ul><li>اضغط التاريخ للتفاصيل</li></ul>`,periodic:`<p class="stitle">🧪 الجدول الدوري</p><ul><li>ابحث بالاسم أو الرمز</li></ul>`,},
+};
+const ABOUT={
+  he:`<p>© 2025 AppNest — כל הזכויות שמורות</p><p style="margin-top:8px">🌐 <a class="about-link" href="https://barakaflalo.github.io/appnest" target="_blank">barakaflalo.github.io/appnest</a></p>`,
+  en:`<p>© 2025 AppNest — All rights reserved</p><p style="margin-top:8px">🌐 <a class="about-link" href="https://barakaflalo.github.io/appnest" target="_blank">barakaflalo.github.io/appnest</a></p>`,
+  ru:`<p>© 2025 AppNest</p><p style="margin-top:8px">🌐 <a class="about-link" href="https://barakaflalo.github.io/appnest" target="_blank">barakaflalo.github.io/appnest</a></p>`,
+  es:`<p>© 2025 AppNest</p><p style="margin-top:8px">🌐 <a class="about-link" href="https://barakaflalo.github.io/appnest" target="_blank">barakaflalo.github.io/appnest</a></p>`,
+  ar:`<p>© 2025 AppNest</p><p style="margin-top:8px">🌐 <a class="about-link" href="https://barakaflalo.github.io/appnest" target="_blank">barakaflalo.github.io/appnest</a></p>`,
+};
+
+let lang='he',isDark=true,currentTool='';
+function t(k){return(T[lang]||T.en)[k]||k;}
+function setLang(l){lang=l;document.getElementById('lLabel').textContent={he:'עב',en:'EN',ru:'РУ',es:'ES',ar:'عر'}[l];document.getElementById('lDrop').classList.remove('open');const rtl=['he','ar'].includes(l);document.body.dir=rtl?'rtl':'ltr';document.body.classList.toggle('ltr',!rtl);applyT();}
+function toggleLang(){document.getElementById('lDrop').classList.toggle('open');}
+document.addEventListener('click',e=>{if(!e.target.closest('.lang-btn')&&!e.target.closest('.lang-drop'))document.getElementById('lDrop').classList.remove('open');});
+function applyT(){document.querySelectorAll('[data-i]').forEach(el=>el.textContent=t(el.dataset.i));document.querySelectorAll('[data-i-ph]').forEach(el=>el.placeholder=t(el.dataset.iPh));updateModals();}
+function toggleTheme(){isDark=!isDark;document.body.classList.toggle('day',!isDark);document.getElementById('themeBtn').textContent=isDark?'🌙':'☀️';}
+function openModal(tp){updateModals();document.getElementById(tp+'Modal').classList.add('open');}
+function closeModal(tp){document.getElementById(tp+'Modal').classList.remove('open');}
+document.querySelectorAll('.modal-bg').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');}));
+function updateModals(){const hw=HOWTO[lang]||HOWTO.en;document.getElementById('howtoContent').innerHTML=hw[currentTool]||hw.menu;document.getElementById('howtoTitle').textContent={he:'❓ איך משתמשים',en:'❓ How to Use',ru:'❓ Как использовать',es:'❓ Cómo usar',ar:'❓ كيف تستخدم'}[lang]||'❓';document.getElementById('aboutContent').innerHTML=ABOUT[lang]||ABOUT.en;}
+function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');}
+function goMenu(){hideResult();showScreen('menuScreen');currentTool='';}
+function showResult(e,tt,m){document.getElementById('rEmoji').textContent=e;document.getElementById('rTitle').textContent=tt;document.getElementById('rMsg').textContent=m;document.getElementById('resultOv').classList.add('show');}
+function hideResult(){document.getElementById('resultOv').classList.remove('show');}
+function replayTool(){hideResult();startTool(currentTool);}
+function startTool(tool){currentTool=tool;hideResult();
+  if(tool==='math'){showScreen('mathScreen');mathNew();}
+  if(tool==='flags'){showScreen('flagsScreen');flagsStart();}
+  if(tool==='english'){showScreen('englishScreen');engInit();}
+  if(tool==='calendar'){showScreen('calendarScreen');calInit();}
+  if(tool==='periodic'){showScreen('periodicScreen');periodicInit();}
+}
+
+// ===== MATH =====
+let mathOp='+',mathLevel=1,mathScore=0,mathStreak=0,mathAnswered=false;
+function setOp(op){mathOp=op;document.querySelectorAll('.op-btn').forEach(b=>b.classList.remove('active'));const opEl=document.getElementById('op'+op);if(opEl)opEl.classList.add('active');if(currentTool==='math')mathNew();}
+function setMathLevel(l){mathLevel=l;document.querySelectorAll('.lvl-btn').forEach(b=>b.classList.remove('active'));const lvlEl=document.getElementById('ml'+l);if(lvlEl)lvlEl.classList.add('active');if(currentTool==='math')mathNew();}
+function mathNew(){
+  mathAnswered=false;
+  const max={1:10,2:20,3:50}[mathLevel];
+  let a,b,answer;
+  if(mathOp==='+'){a=rnd(max);b=rnd(max);answer=a+b;}
+  else if(mathOp==='-'){b=rnd(max);a=b+rnd(max);answer=a-b;} // ensure a >= b always
+  else if(mathOp==='×'){a=rnd(mathLevel===1?10:12);b=rnd(mathLevel===1?10:12);answer=a*b;}
+  else{b=rnd(mathLevel===1?10:12)||1;answer=rnd(mathLevel===1?10:12)||1;a=b*answer;}
+  document.getElementById('mathQ').textContent=`${a} ${mathOp} ${b} = ?`;
+  document.getElementById('mathStreak').textContent=mathStreak>1?`🔥 ${t('streak')}: ${mathStreak}`:'';
+  // Generate wrong answers
+  const wrongs=new Set();
+  let attempts=0;
+  while(wrongs.size<3&&attempts<100){
+    attempts++;
+    const w=Math.max(0,answer+Math.floor((Math.random()-0.5)*Math.max(5,Math.max(answer,5)*0.5)));
+    if(w!==answer)wrongs.add(w);
+  }
+  // Fallback if not enough wrong answers
+  while(wrongs.size<3){wrongs.add(wrongs.size+answer+1);}
+  const opts=[answer,...wrongs].sort(()=>Math.random()-0.5);
+  const container=document.getElementById('mathAnswers');
+  container.innerHTML='';
+  opts.forEach(opt=>{
+    const btn=document.createElement('button');
+    btn.className='math-ans';btn.textContent=opt;
+    btn.onclick=()=>{
+      if(mathAnswered)return;mathAnswered=true;
+      if(opt===answer){btn.classList.add('correct');mathScore+=10+(mathStreak*2);mathStreak++;document.getElementById('mathScore').textContent=mathScore;}
+      else{btn.classList.add('wrong');mathStreak=0;container.querySelectorAll('.math-ans').forEach(b=>{if(parseInt(b.textContent)===answer)b.classList.add('correct');});}
+      setTimeout(mathNew,900);
+    };
+    container.appendChild(btn);
+  });
+}
+function rnd(max){return Math.floor(Math.random()*(max+1));}
+
+// ===== FLAGS =====
+const FLAGS_EASY=[
+  {code:'il',he:'ישראל',en:'Israel',ru:'Израиль',es:'Israel',ar:'إسرائيل'},
+  {code:'us',he:'ארצות הברית',en:'USA',ru:'США',es:'EE.UU.',ar:'أمريكا'},
+  {code:'gb',he:'בריטניה',en:'UK',ru:'Великобритания',es:'Reino Unido',ar:'بريطانيا'},
+  {code:'fr',he:'צרפת',en:'France',ru:'Франция',es:'Francia',ar:'فرنسا'},
+  {code:'de',he:'גרמניה',en:'Germany',ru:'Германия',es:'Alemania',ar:'ألمانيا'},
+  {code:'it',he:'איטליה',en:'Italy',ru:'Италия',es:'Italia',ar:'إيطاليا'},
+  {code:'es',he:'ספרד',en:'Spain',ru:'Испания',es:'España',ar:'إسبانيا'},
+  {code:'ru',he:'רוסיה',en:'Russia',ru:'Россия',es:'Rusia',ar:'روسيا'},
+  {code:'jp',he:'יפן',en:'Japan',ru:'Япония',es:'Japón',ar:'اليابان'},
+  {code:'cn',he:'סין',en:'China',ru:'Китай',es:'China',ar:'الصين'},
+  {code:'br',he:'ברזיל',en:'Brazil',ru:'Бразилия',es:'Brasil',ar:'البرازيل'},
+  {code:'au',he:'אוסטרליה',en:'Australia',ru:'Австралия',es:'Australia',ar:'أستراليا'},
+  {code:'ca',he:'קנדה',en:'Canada',ru:'Канада',es:'Canadá',ar:'كندا'},
+  {code:'mx',he:'מקסיקו',en:'Mexico',ru:'Мексика',es:'México',ar:'المكسيك'},
+  {code:'sa',he:'ערב הסעודית',en:'Saudi Arabia',ru:'Саудовская Аравия',es:'Arabia Saudí',ar:'السعودية'},
+];
+const FLAGS_MED=[
+  {code:'nl',he:'הולנד',en:'Netherlands',ru:'Нидерланды',es:'Países Bajos',ar:'هولندا'},
+  {code:'pt',he:'פורטוגל',en:'Portugal',ru:'Португалия',es:'Portugal',ar:'البرتغال'},
+  {code:'se',he:'שוודיה',en:'Sweden',ru:'Швеция',es:'Suecia',ar:'السويد'},
+  {code:'no',he:'נורווגיה',en:'Norway',ru:'Норвегия',es:'Noruega',ar:'النرويج'},
+  {code:'dk',he:'דנמרק',en:'Denmark',ru:'Дания',es:'Dinamarca',ar:'الدنمارك'},
+  {code:'pl',he:'פולין',en:'Poland',ru:'Польша',es:'Polonia',ar:'بولندا'},
+  {code:'ua',he:'אוקראינה',en:'Ukraine',ru:'Украина',es:'Ucrania',ar:'أوكرانيا'},
+  {code:'ar',he:'ארגנטינה',en:'Argentina',ru:'Аргентина',es:'Argentina',ar:'الأرجنتين'},
+  {code:'kr',he:'קוריאה הדרומית',en:'South Korea',ru:'Южная Корея',es:'Corea del Sur',ar:'كوريا الجنوبية'},
+  {code:'in',he:'הודו',en:'India',ru:'Индия',es:'India',ar:'الهند'},
+  {code:'tr',he:'טורקיה',en:'Turkey',ru:'Турция',es:'Turquía',ar:'تركيا'},
+  {code:'eg',he:'מצרים',en:'Egypt',ru:'Египет',es:'Egipto',ar:'مصر'},
+];
+const FLAGS_HARD=[
+  {code:'nz',he:'ניו זילנד',en:'New Zealand',ru:'Новая Зеландия',es:'Nueva Zelanda',ar:'نيوزيلندا'},
+  {code:'ch',he:'שוויץ',en:'Switzerland',ru:'Швейцария',es:'Suiza',ar:'سويسرا'},
+  {code:'at',he:'אוסטריה',en:'Austria',ru:'Австрия',es:'Austria',ar:'النمسا'},
+  {code:'be',he:'בלגיה',en:'Belgium',ru:'Бельгия',es:'Bélgica',ar:'بلجيكا'},
+  {code:'cz',he:'צ׳כיה',en:'Czech Republic',ru:'Чехия',es:'República Checa',ar:'التشيك'},
+  {code:'hu',he:'הונגריה',en:'Hungary',ru:'Венгрия',es:'Hungría',ar:'المجر'},
+  {code:'ro',he:'רומניה',en:'Romania',ru:'Румыния',es:'Rumanía',ar:'رومانيا'},
+  {code:'gr',he:'יוון',en:'Greece',ru:'Греция',es:'Grecia',ar:'اليونان'},
+  {code:'ir',he:'איראן',en:'Iran',ru:'Иران',es:'Irán',ar:'إيران'},
+  {code:'ph',he:'פיליפינים',en:'Philippines',ru:'Филиппины',es:'Filipinas',ar:'الفلبين'},
+];
+
+
+function getFlagHtml(code){
+  // Map country code to Twemoji flag image (works on all platforms including Windows)
+  const codeToEmoji={
+    'il':'1f1ee-1f1f1','us':'1f1fa-1f1f8','gb':'1f1ec-1f1e7','fr':'1f1eb-1f1f7',
+    'de':'1f1e9-1f1ea','it':'1f1ee-1f1f9','es':'1f1ea-1f1f8','ru':'1f1f7-1f1fa',
+    'jp':'1f1ef-1f1f5','cn':'1f1e8-1f1f3','br':'1f1e7-1f1f7','au':'1f1e6-1f1fa',
+    'ca':'1f1e8-1f1e6','mx':'1f1f2-1f1fd','sa':'1f1f8-1f1e6','nl':'1f1f3-1f1f1',
+    'pt':'1f1f5-1f1f9','se':'1f1f8-1f1ea','no':'1f1f3-1f1f4','dk':'1f1e9-1f1f0',
+    'pl':'1f1f5-1f1f1','ua':'1f1fa-1f1e6','ar':'1f1e6-1f1f7','kr':'1f1f0-1f1f7',
+    'in':'1f1ee-1f1f3','tr':'1f1f9-1f1f7','eg':'1f1ea-1f1ec','nz':'1f1f3-1f1ff',
+    'ch':'1f1e8-1f1ed','at':'1f1e6-1f1f9','be':'1f1e7-1f1ea','cz':'1f1e8-1f1ff',
+    'hu':'1f1ed-1f1fa','ro':'1f1f7-1f1f4','gr':'1f1ec-1f1f7','ir':'1f1ee-1f1f7','ph':'1f1f5-1f1ed'
+  };
+  const twCode = codeToEmoji[code];
+  if(!twCode) return '<div style="font-size:4rem;">🏳️</div>';
+  const url = `https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/svg/${twCode}.svg`;
+  return `<img src="${url}" style="width:160px;height:auto;border-radius:8px;border:2px solid var(--gold-dim);box-shadow:0 4px 16px rgba(0,0,0,0.4);" alt="flag" onerror="this.parentElement.innerHTML='<div style=font-size:4rem;padding:10px>${code.toUpperCase()}</div>'">`;
+}
+let flagDiff='easy',flagQ=0,flagScore2=0,flagResults=[],flagAnswered=false;
+function setFlagDiff(d){flagDiff=d;['easy','medium','hard'].forEach(x=>document.getElementById('fd-'+x).classList.toggle('active',x===d));}
+function getFlagPool(){return flagDiff==='easy'?FLAGS_EASY:flagDiff==='medium'?[...FLAGS_EASY,...FLAGS_MED]:[ ...FLAGS_EASY,...FLAGS_MED,...FLAGS_HARD];}
+function flagsStart(){
+  flagQ=0;flagScore2=0;flagResults=[];flagAnswered=false;
+  document.getElementById('flagScore').textContent=0;
+  showFlagQ();
+}
+function showFlagQ(){
+  if(flagQ>=10){
+    const pct=Math.round(flagScore2/10*100);
+    showResult(pct>=70?'🏆':'😔',t('roundDone'),`${flagScore2}/10`);
+    return;
+  }
+  flagAnswered=false;
+  const pool=getFlagPool();
+  const correct=pool[Math.floor(Math.random()*pool.length)];
+  const flagHtml = getFlagHtml(correct.code);
+document.getElementById('flagEmoji').innerHTML = flagHtml;
+  document.getElementById('flagHint').textContent='';
+  // 4 options
+  const opts=new Set([correct]);
+  while(opts.size<4){opts.add(pool[Math.floor(Math.random()*pool.length)]);}
+  const optsArr=[...opts].sort(()=>Math.random()-0.5);
+  const container=document.getElementById('flagAnswers');
+  container.innerHTML='';
+  optsArr.forEach(opt=>{
+    const btn=document.createElement('button');
+    btn.className='flag-ans';
+    btn.textContent=opt[lang]||opt.en;
+    btn.onclick=()=>{
+      if(flagAnswered)return;flagAnswered=true;
+      const isCorrect=opt===correct;
+      btn.classList.add(isCorrect?'correct':'wrong');
+      if(!isCorrect)container.querySelectorAll('.flag-ans').forEach(b=>{if((b.textContent===correct[lang]||b.textContent===correct.en))b.classList.add('correct');});
+      if(isCorrect){flagScore2++;document.getElementById('flagScore').textContent=flagScore2;}
+      flagResults.push(isCorrect);flagQ++;
+      renderFlagProgress();
+      setTimeout(showFlagQ,900);
+    };
+    container.appendChild(btn);
+  });
+  renderFlagProgress();
+}
+function renderFlagProgress(){
+  const p=document.getElementById('flagProgress');p.innerHTML='';
+  for(let i=0;i<10;i++){const d=document.createElement('div');d.className='fpd'+(i<flagResults.length?(flagResults[i]?' ok':' no'):'');p.appendChild(d);}
+}
+
+// ===== ENGLISH FLASHCARDS =====
+const ENG_WORDS={
+  basic:[
+    {en:'Hello',he:'שלום',ru:'Привет',es:'Hola',ar:'مرحبا'},
+    {en:'Goodbye',he:'להתראות',ru:'До свидания',es:'Adiós',ar:'وداعاً'},
+    {en:'Thank you',he:'תודה',ru:'Спасибо',es:'Gracias',ar:'شكراً'},
+    {en:'Please',he:'בבקשה',ru:'Пожалуйста',es:'Por favor',ar:'من فضلك'},
+    {en:'Yes',he:'כן',ru:'Да',es:'Sí',ar:'نعم'},
+    {en:'No',he:'לא',ru:'Нет',es:'No',ar:'لا'},
+    {en:'Water',he:'מים',ru:'Вода',es:'Agua',ar:'ماء'},
+    {en:'House',he:'בית',ru:'Дом',es:'Casa',ar:'بيت'},
+    {en:'Friend',he:'חבר',ru:'Друг',es:'Amigo',ar:'صديق'},
+    {en:'Love',he:'אהבה',ru:'Любовь',es:'Amor',ar:'حب'},
+    {en:'Book',he:'ספר',ru:'Книга',es:'Libro',ar:'كتاب'},
+    {en:'School',he:'בית ספר',ru:'Школа',es:'Escuela',ar:'مدرسة'},
+  ],
+  food:[
+    {en:'Apple',he:'תפוח',ru:'Яблоко',es:'Manzana',ar:'تفاح'},
+    {en:'Bread',he:'לחם',ru:'Хлеб',es:'Pan',ar:'خبز'},
+    {en:'Milk',he:'חלב',ru:'Молоко',es:'Leche',ar:'حليب'},
+    {en:'Chicken',he:'עוף',ru:'Курица',es:'Pollo',ar:'دجاج'},
+    {en:'Rice',he:'אורז',ru:'Рис',es:'Arroz',ar:'أرز'},
+    {en:'Egg',he:'ביצה',ru:'Яйцо',es:'Huevo',ar:'بيضة'},
+    {en:'Fish',he:'דג',ru:'Рыба',es:'Pescado',ar:'سمك'},
+    {en:'Orange',he:'תפוז',ru:'Апельсин',es:'Naranja',ar:'برتقال'},
+    {en:'Pizza',he:'פיצה',ru:'Пицца',es:'Pizza',ar:'بيتزا'},
+    {en:'Coffee',he:'קפה',ru:'Кофе',es:'Café',ar:'قهوة'},
+  ],
+  animals:[
+    {en:'Dog',he:'כלב',ru:'Собака',es:'Perro',ar:'كلب'},
+    {en:'Cat',he:'חתול',ru:'Кошка',es:'Gato',ar:'قطة'},
+    {en:'Lion',he:'אריה',ru:'Лев',es:'León',ar:'أسد'},
+    {en:'Elephant',he:'פיל',ru:'Слон',es:'Elefante',ar:'فيل'},
+    {en:'Bird',he:'ציפור',ru:'Птица',es:'Pájaro',ar:'طائر'},
+    {en:'Fish',he:'דג',ru:'Рыба',es:'Pez',ar:'سمكة'},
+    {en:'Horse',he:'סוס',ru:'Лошадь',es:'Caballo',ar:'حصان'},
+    {en:'Butterfly',he:'פרפר',ru:'Бабочка',es:'Mariposa',ar:'فراشة'},
+    {en:'Snake',he:'נחש',ru:'Змея',es:'Serpiente',ar:'ثعبان'},
+    {en:'Rabbit',he:'ארנב',ru:'Кролик',es:'Conejo',ar:'أرنب'},
+  ],
+  colors:[
+    {en:'Red',he:'אדום',ru:'Красный',es:'Rojo',ar:'أحمر'},
+    {en:'Blue',he:'כחול',ru:'Синий',es:'Azul',ar:'أزرق'},
+    {en:'Green',he:'ירוק',ru:'Зелёный',es:'Verde',ar:'أخضر'},
+    {en:'Yellow',he:'צהוב',ru:'Жёлтый',es:'Amarillo',ar:'أصفر'},
+    {en:'Black',he:'שחור',ru:'Чёрный',es:'Negro',ar:'أسود'},
+    {en:'White',he:'לבן',ru:'Белый',es:'Blanco',ar:'أبيض'},
+    {en:'Orange',he:'כתום',ru:'Оранжевый',es:'Naranja',ar:'برتقالي'},
+    {en:'Purple',he:'סגול',ru:'Фиолетовый',es:'Morado',ar:'بنفسجي'},
+    {en:'Pink',he:'ורוד',ru:'Розовый',es:'Rosa',ar:'وردي'},
+    {en:'Brown',he:'חום',ru:'Коричневый',es:'Marrón',ar:'بني'},
+  ],
+  numbers:[
+    {en:'One',he:'אחד',ru:'Один',es:'Uno',ar:'واحد'},
+    {en:'Two',he:'שניים',ru:'Два',es:'Dos',ar:'اثنان'},
+    {en:'Three',he:'שלושה',ru:'Три',es:'Tres',ar:'ثلاثة'},
+    {en:'Four',he:'ארבעה',ru:'Четыре',es:'Cuatro',ar:'أربعة'},
+    {en:'Five',he:'חמישה',ru:'Пять',es:'Cinco',ar:'خمسة'},
+    {en:'Six',he:'שישה',ru:'Шесть',es:'Seis',ar:'ستة'},
+    {en:'Seven',he:'שבעה',ru:'Семь',es:'Siete',ar:'سبعة'},
+    {en:'Eight',he:'שמונה',ru:'Восемь',es:'Ocho',ar:'ثمانية'},
+    {en:'Nine',he:'תשעה',ru:'Девять',es:'Nueve',ar:'تسعة'},
+    {en:'Ten',he:'עשרה',ru:'Десять',es:'Diez',ar:'عشرة'},
+  ],
+};
+let engCat='basic',engCards=[],engIdx=0,engFlipped=false;
+function setEngCat(cat){engCat=cat;document.querySelectorAll('.eng-cat-btn').forEach(b=>b.classList.remove('active'));document.querySelectorAll('.eng-cat-btn').forEach(b=>{if(b.getAttribute('onclick').includes(cat))b.classList.add('active');});engInit();}
+let engKnewCnt=0,engDontCnt=0;
+function engInit(){engCards=[...ENG_WORDS[engCat]];engIdx=0;engFlipped=false;engKnewCnt=0;engDontCnt=0;updateEngStats();showFlash();}
+function engKnow(knew){
+  if(!engFlipped){
+    // First flip the card to show translation
+    const card=engCards[engIdx];
+    document.getElementById('flashTrans').textContent=card[lang]||card.he;
+    document.getElementById('flashCard').querySelector('.flash-hint').textContent='';
+    engFlipped=true;
+    return;
+  }
+  if(knew)engKnewCnt++;else engDontCnt++;
+  updateEngStats();
+  nextFlash();
+}
+function updateEngStats(){
+  document.getElementById('engKnewCount').textContent=engKnewCnt;
+  document.getElementById('engDontCount').textContent=engDontCnt;
+}
+function showFlash(){
+  const card=engCards[engIdx];
+  document.getElementById('flashWord').textContent=card.en;
+  document.getElementById('flashTrans').textContent='';
+  document.getElementById('flashCat').textContent=t(engCat);
+  document.getElementById('flashProgress').textContent=`${engIdx+1} / ${engCards.length}`;
+  document.getElementById('flashCard').querySelector('.flash-hint').textContent=t('tapFlip');
+  engFlipped=false;
+  document.getElementById('engProgress').textContent=`${engIdx+1}/${engCards.length}`;
+}
+function flipFlash(){
+  const card=engCards[engIdx];
+  if(!engFlipped){document.getElementById('flashTrans').textContent=card[lang]||card.he;document.getElementById('flashCard').querySelector('.flash-hint').textContent='';engFlipped=true;}
+  else{nextFlash();}
+}
+function nextFlash(){engIdx=(engIdx+1)%engCards.length;showFlash();}
+function prevFlash(){engIdx=(engIdx-1+engCards.length)%engCards.length;showFlash();}
+function shuffleFlash(){engCards.sort(()=>Math.random()-0.5);engIdx=0;showFlash();}
+
+// ===== HEBREW CALENDAR =====
+const HEB_MONTHS_HE=['תשרי','חשון','כסלו','טבת','שבט','אדר','ניסן','אייר','סיון','תמוז','אב','אלול'];
+const HEB_MONTHS_EN=['Tishrei','Cheshvan','Kislev','Tevet','Shevat','Adar','Nisan','Iyar','Sivan','Tammuz','Av','Elul'];
+const GREGORIAN_HOLIDAYS=[
+  {month:9,day:5,he:'ראש השנה',en:"Rosh Hashana",type:'holiday'},
+  {month:9,day:14,he:'יום כיפור',en:"Yom Kippur",type:'holiday'},
+  {month:9,day:19,he:'סוכות',en:"Sukkot",type:'holiday'},
+  {month:9,day:26,he:'שמחת תורה',en:"Simchat Torah",type:'holiday'},
+  {month:12,day:25,he:'חנוכה',en:"Hanukkah",type:'holiday'},
+  {month:3,day:14,he:'פורים',en:"Purim",type:'holiday'},
+  {month:4,day:15,he:'פסח',en:"Passover",type:'holiday'},
+  {month:5,day:14,he:'פסח שני',en:"Pesach Sheni",type:'holiday'},
+  {month:5,day:18,he:'ל״ג בעומר',en:"Lag BaOmer",type:'holiday'},
+  {month:6,day:5,he:'שבועות',en:"Shavuot",type:'holiday'},
+];
+let calYear=2025,calMonth=8;
+function calInit(){calYear=new Date().getFullYear();calMonth=new Date().getMonth();renderCal();}
+function calPrev(){calMonth--;if(calMonth<0){calMonth=11;calYear--;}renderCal();}
+function calNext(){calMonth++;if(calMonth>11){calMonth=0;calYear++;}renderCal();}
+function renderCal(){
+  const monthNames={he:['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'],en:['January','February','March','April','May','June','July','August','September','October','November','December'],ru:['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'],es:['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'],ar:['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر']};
+  const names=monthNames[lang]||monthNames.en;
+  document.getElementById('calMonthName').textContent=`${names[calMonth]} ${calYear}`;
+  const firstDay=new Date(calYear,calMonth,1).getDay();
+  const daysInMonth=new Date(calYear,calMonth+1,0).getDate();
+  const today=new Date();
+  const table=document.getElementById('hebCal');
+  const dayNames={he:['א׳','ב׳','ג׳','ד׳','ה׳','ו׳','ש׳'],en:['Su','Mo','Tu','We','Th','Fr','Sa'],ru:['Вс','Пн','Вт','Ср','Чт','Пт','Сб'],es:['Do','Lu','Ma','Mi','Ju','Vi','Sa'],ar:['أح','إث','ثل','أر','خم','جم','سب']};
+  const dn=dayNames[lang]||dayNames.en;
+  let html=`<tr>${dn.map(d=>`<th>${d}</th>`).join('')}</tr><tr>`;
+  for(let i=0;i<firstDay;i++)html+=`<td class="empty"></td>`;
+  for(let d=1;d<=daysInMonth;d++){
+    const isToday=d===today.getDate()&&calMonth===today.getMonth()&&calYear===today.getFullYear();
+    const isFri=(new Date(calYear,calMonth,d).getDay()===5);
+    const isSat=(new Date(calYear,calMonth,d).getDay()===6);
+    const holiday=GREGORIAN_HOLIDAYS.find(h=>h.month===calMonth+1&&h.day===d);
+    let cls='';
+    if(isToday)cls='today';
+    else if(holiday)cls='holiday';
+    else if(isSat)cls='shabbat';
+    else if(isFri)cls='shabbat';
+    html+=`<td class="${cls}" onclick="calSelectDay(${d})">${d}</td>`;
+    if((firstDay+d)%7===0&&d<daysInMonth)html+=`</tr><tr>`;
+  }
+  html+=`</tr>`;
+  table.innerHTML=html;
+  // Show holidays for this month
+  const monthHolidays=GREGORIAN_HOLIDAYS.filter(h=>h.month===calMonth+1);
+  const list=document.getElementById('holidaysList');
+  list.innerHTML='';
+  if(!monthHolidays.length){list.innerHTML=`<div style="color:var(--text-dim);font-size:0.8rem;text-align:center;padding:10px;">${lang==='he'?'אין חגים בחודש זה':'No holidays this month'}</div>`;}
+  monthHolidays.forEach(h=>{
+    const el=document.createElement('div');el.className='holiday-item';
+    el.innerHTML=`<div class="holiday-name">${h[lang]||h.he}</div><div class="holiday-date">${h.day}/${calMonth+1}</div>`;
+    list.appendChild(el);
+  });
+  calSelectDay(today.getDate());
+}
+function calSelectDay(d){
+  const date=new Date(calYear,calMonth,d);
+  const holiday=GREGORIAN_HOLIDAYS.find(h=>h.month===calMonth+1&&h.day===d);
+  const dayNames2={he:['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'],en:['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday']};
+  const dn=dayNames2[lang==='he'?'he':'en']||dayNames2.en;
+  const info=document.getElementById('hebDateInfo');
+  info.innerHTML=`<div class="heb-date-heb">${d}/${calMonth+1}/${calYear} — ${dn[date.getDay()]}</div><div class="heb-date-detail">${holiday?(holiday[lang]||holiday.he):(lang==='he'?'אין אירוע מיוחד':'No special event')}</div>`;
+}
+
+// ===== PERIODIC TABLE =====
+const ELEMENTS=[
+  {n:1,sym:'H',name:{he:'מימן',en:'Hydrogen'},mass:'1.008',cat:'nonmetal',color:'#4A8FD4'},
+  {n:2,sym:'He',name:{he:'הליום',en:'Helium'},mass:'4.003',cat:'noble',color:'#9B59B6'},
+  {n:3,sym:'Li',name:{he:'ליתיום',en:'Lithium'},mass:'6.941',cat:'alkali',color:'#E05050'},
+  {n:4,sym:'Be',name:{he:'בריליום',en:'Beryllium'},mass:'9.012',cat:'alkaline',color:'#E08050'},
+  {n:5,sym:'B',name:{he:'בורון',en:'Boron'},mass:'10.81',cat:'metalloid',color:'#4CAF7A'},
+  {n:6,sym:'C',name:{he:'פחמן',en:'Carbon'},mass:'12.01',cat:'nonmetal',color:'#4A8FD4'},
+  {n:7,sym:'N',name:{he:'חנקן',en:'Nitrogen'},mass:'14.01',cat:'nonmetal',color:'#4A8FD4'},
+  {n:8,sym:'O',name:{he:'חמצן',en:'Oxygen'},mass:'16.00',cat:'nonmetal',color:'#4A8FD4'},
+  {n:9,sym:'F',name:{he:'פלואור',en:'Fluorine'},mass:'19.00',cat:'halogen',color:'#22D0D8'},
+  {n:10,sym:'Ne',name:{he:'ניאון',en:'Neon'},mass:'20.18',cat:'noble',color:'#9B59B6'},
+  {n:11,sym:'Na',name:{he:'נתרן',en:'Sodium'},mass:'22.99',cat:'alkali',color:'#E05050'},
+  {n:12,sym:'Mg',name:{he:'מגנזיום',en:'Magnesium'},mass:'24.31',cat:'alkaline',color:'#E08050'},
+  {n:13,sym:'Al',name:{he:'אלומיניום',en:'Aluminum'},mass:'26.98',cat:'post-trans',color:'#778899'},
+  {n:14,sym:'Si',name:{he:'סיליקון',en:'Silicon'},mass:'28.09',cat:'metalloid',color:'#4CAF7A'},
+  {n:15,sym:'P',name:{he:'זרחן',en:'Phosphorus'},mass:'30.97',cat:'nonmetal',color:'#4A8FD4'},
+  {n:16,sym:'S',name:{he:'גופרית',en:'Sulfur'},mass:'32.06',cat:'nonmetal',color:'#4A8FD4'},
+  {n:17,sym:'Cl',name:{he:'כלור',en:'Chlorine'},mass:'35.45',cat:'halogen',color:'#22D0D8'},
+  {n:18,sym:'Ar',name:{he:'ארגון',en:'Argon'},mass:'39.95',cat:'noble',color:'#9B59B6'},
+  {n:19,sym:'K',name:{he:'אשלגן',en:'Potassium'},mass:'39.10',cat:'alkali',color:'#E05050'},
+  {n:20,sym:'Ca',name:{he:'סידן',en:'Calcium'},mass:'40.08',cat:'alkaline',color:'#E08050'},
+  {n:26,sym:'Fe',name:{he:'ברזל',en:'Iron'},mass:'55.85',cat:'transition',color:'#C9A84C'},
+  {n:29,sym:'Cu',name:{he:'נחושת',en:'Copper'},mass:'63.55',cat:'transition',color:'#C9A84C'},
+  {n:30,sym:'Zn',name:{he:'אבץ',en:'Zinc'},mass:'65.38',cat:'transition',color:'#C9A84C'},
+  {n:47,sym:'Ag',name:{he:'כסף',en:'Silver'},mass:'107.87',cat:'transition',color:'#C9A84C'},
+  {n:50,sym:'Sn',name:{he:'בדיל',en:'Tin'},mass:'118.71',cat:'post-trans',color:'#778899'},
+  {n:53,sym:'I',name:{he:'יוד',en:'Iodine'},mass:'126.90',cat:'halogen',color:'#22D0D8'},
+  {n:54,sym:'Xe',name:{he:'קסנון',en:'Xenon'},mass:'131.29',cat:'noble',color:'#9B59B6'},
+  {n:56,sym:'Ba',name:{he:'בריום',en:'Barium'},mass:'137.33',cat:'alkaline',color:'#E08050'},
+  {n:79,sym:'Au',name:{he:'זהב',en:'Gold'},mass:'196.97',cat:'transition',color:'#C9A84C'},
+  {n:80,sym:'Hg',name:{he:'כספית',en:'Mercury'},mass:'200.59',cat:'transition',color:'#C9A84C'},
+  {n:82,sym:'Pb',name:{he:'עופרת',en:'Lead'},mass:'207.2',cat:'post-trans',color:'#778899'},
+  {n:86,sym:'Rn',name:{he:'ראדון',en:'Radon'},mass:'222',cat:'noble',color:'#9B59B6'},
+  {n:88,sym:'Ra',name:{he:'רדיום',en:'Radium'},mass:'226',cat:'alkaline',color:'#E08050'},
+  {n:92,sym:'U',name:{he:'אורניום',en:'Uranium'},mass:'238.03',cat:'actinide',color:'#78B878'},
+];
+const CAT_COLORS={'alkali':'#E05050','alkaline':'#E08050','transition':'#C9A84C','nonmetal':'#4A8FD4','noble':'#9B59B6','halogen':'#22D0D8','metalloid':'#4CAF7A','post-trans':'#778899','actinide':'#78B878'};
+const CAT_NAMES={he:{alkali:'מתכות אלקלי',alkaline:'מתכות אלק׳-אדמה',transition:'מתכות מעבר',nonmetal:'אל-מתכות',noble:'גזים אצילים',halogen:'הלוגנים',metalloid:'דמויי מתכת','post-trans':'מתכות בתר-מעבר',actinide:'אקטינידים'},en:{alkali:'Alkali metals',alkaline:'Alkaline earth',transition:'Transition metals',nonmetal:'Nonmetals',noble:'Noble gases',halogen:'Halogens',metalloid:'Metalloids','post-trans':'Post-transition',actinide:'Actinides'}};
+let elemFilter='';
+function periodicInit(){
+  // Build category filters
+  const cats=[...new Set(ELEMENTS.map(e=>e.cat))];
+  const cf=document.getElementById('catFilter');
+  cf.innerHTML=`<button class="cat-filter-btn" style="background:var(--dark3);border-color:var(--gold);color:var(--gold);" onclick="setElemCat('')">${lang==='he'?'הכל':'All'}</button>`;
+  cats.forEach(cat=>{
+    const btn=document.createElement('button');
+    btn.className='cat-filter-btn';
+    btn.style.background=CAT_COLORS[cat]+'22';
+    btn.style.borderColor=CAT_COLORS[cat];
+    btn.style.color=CAT_COLORS[cat];
+    btn.textContent=(CAT_NAMES[lang]||CAT_NAMES.en)[cat]||cat;
+    btn.onclick=()=>setElemCat(cat);
+    cf.appendChild(btn);
+  });
+  renderElements();
+}
+function setElemCat(cat){elemFilter=cat;renderElements();}
+function filterElements(){renderElements();}
+function renderElements(){
+  const search=document.getElementById('elemSearch').value.toLowerCase();
+  const filtered=ELEMENTS.filter(e=>{
+    const matchCat=!elemFilter||e.cat===elemFilter;
+    const matchSearch=!search||e.sym.toLowerCase().includes(search)||(e.name.en||'').toLowerCase().includes(search)||(e.name.he||'').includes(search)||String(e.n).includes(search);
+    return matchCat&&matchSearch;
+  });
+  const grid=document.getElementById('elemGrid');
+  grid.innerHTML='';
+  filtered.forEach(el=>{
+    const card=document.createElement('div');
+    card.className='element-card';
+    card.style.borderColor=CAT_COLORS[el.cat]+'66';
+    card.innerHTML=`<div class="element-num">${el.n}</div><div class="element-sym" style="color:${CAT_COLORS[el.cat]}">${el.sym}</div><div class="element-name">${el.name[lang]||el.name.en}</div>`;
+    card.onclick=()=>showElement(el);
+    grid.appendChild(card);
+  });
+}
+function showElement(el){
+  const d=document.getElementById('elemDetail');
+  const catName=(CAT_NAMES[lang]||CAT_NAMES.en)[el.cat]||el.cat;
+  d.innerHTML=`
+    <div class="el-header">
+      <div class="el-big-sym" style="color:${CAT_COLORS[el.cat]};border-color:${CAT_COLORS[el.cat]}">${el.sym}</div>
+      <div class="el-info">
+        <div class="el-name">${el.name[lang]||el.name.en}</div>
+        <div class="el-num" style="color:${CAT_COLORS[el.cat]}">${catName}</div>
+      </div>
+    </div>
+    <div class="el-props">
+      <div class="el-prop"><div class="el-prop-l">${lang==='he'?'מספר אטומי':'Atomic Number'}</div><div class="el-prop-v">${el.n}</div></div>
+      <div class="el-prop"><div class="el-prop-l">${lang==='he'?'סמל':'Symbol'}</div><div class="el-prop-v">${el.sym}</div></div>
+      <div class="el-prop"><div class="el-prop-l">${lang==='he'?'מסה אטומית':'Atomic Mass'}</div><div class="el-prop-v">${el.mass}</div></div>
+      <div class="el-prop"><div class="el-prop-l">${lang==='he'?'קטגוריה':'Category'}</div><div class="el-prop-v" style="color:${CAT_COLORS[el.cat]}">${catName}</div></div>
+    </div>`;
+  d.classList.add('show');
+}
+
+applyT();
+</script>
+</body>
+</html>

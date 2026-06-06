@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="he">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ArcadeNest Hub 4 — AppNest</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Heebo:wght@300;400;700&display=swap" rel="stylesheet">
+<style>
+:root{--gold:#C9A84C;--gold-light:#F0C060;--gold-dim:#8A6A2A;--bg:#0A0A0A;--dark:#111;--dark2:#1A1A1A;--dark3:#222;--text:#E8E0D0;--text-dim:#888;--green:#4CAF7A;--red:#E05050;--blue:#4A8FD4;--purple:#9B59B6;}
+body.day{--bg:#F0EDE6;--dark:#E8E2D8;--dark2:#FFF;--dark3:#F0EDE6;--text:#1A1A1A;--text-dim:#888;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'Heebo',sans-serif;min-height:100vh;direction:rtl;transition:background 0.3s,color 0.3s;}
+body.ltr{direction:ltr;}
+.header{background:var(--dark);border-bottom:2px solid var(--gold-dim);padding:10px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+.logo-text{font-family:'Cinzel',serif;color:var(--gold);font-size:1.1rem;letter-spacing:1px;}
+.logo-sub{font-size:0.55rem;color:var(--gold-dim);letter-spacing:3px;display:block;}
+.hbtns{display:flex;gap:6px;align-items:center;}
+.icon-btn{background:var(--dark3);border:1px solid var(--gold-dim);color:var(--gold);width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:0.9rem;display:flex;align-items:center;justify-content:center;}
+.lang-btn{background:var(--dark3);border:1px solid var(--gold-dim);color:var(--gold);padding:5px 9px;border-radius:16px;cursor:pointer;font-size:0.75rem;font-family:'Heebo',sans-serif;white-space:nowrap;}
+.lang-drop{position:absolute;top:110%;left:0;background:var(--dark2);border:1px solid var(--gold-dim);border-radius:10px;display:none;min-width:130px;z-index:200;}
+.lang-drop.open{display:block;}
+.lang-opt{padding:9px 12px;cursor:pointer;font-size:0.82rem;display:flex;align-items:center;gap:7px;color:var(--text);}
+.lang-opt:hover{background:var(--dark3);color:var(--gold);}
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.82);z-index:400;display:none;align-items:center;justify-content:center;padding:16px;}
+.modal-bg.open{display:flex;}
+.modal{background:var(--dark2);border:1px solid var(--gold-dim);border-radius:18px;padding:22px 18px;max-width:350px;width:100%;max-height:88vh;overflow-y:auto;}
+.modal-title{font-family:'Cinzel',serif;color:var(--gold);font-size:1.1rem;margin-bottom:12px;text-align:center;}
+.modal-close{float:left;background:none;border:1px solid var(--gold-dim);color:var(--gold);padding:3px 10px;border-radius:8px;cursor:pointer;font-family:'Heebo',sans-serif;font-size:0.78rem;}
+body.ltr .modal-close{float:right;}
+.modal p,.modal li{color:var(--text-dim);font-size:0.85rem;line-height:1.7;margin-bottom:5px;}
+.modal ul{padding-right:16px;}body.ltr .modal ul{padding-left:16px;padding-right:0;}
+.stitle{color:var(--gold);font-size:0.78rem;font-weight:700;margin-top:10px;margin-bottom:3px;letter-spacing:1px;}
+.about-link{color:var(--gold);text-decoration:none;font-weight:700;}
+.screen{display:none;}.screen.active{display:block;}
+.menu-wrap{max-width:480px;margin:0 auto;padding:24px 14px;}
+.menu-title{font-family:'Cinzel',serif;font-size:2rem;color:var(--gold);text-align:center;margin-bottom:4px;}
+.menu-sub{text-align:center;color:var(--text-dim);font-size:0.85rem;margin-bottom:24px;}
+.games-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.game-card{background:var(--dark2);border:1px solid var(--dark3);border-radius:14px;padding:20px 14px;text-align:center;cursor:pointer;transition:all 0.22s;position:relative;overflow:hidden;}
+.game-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent);opacity:0;transition:opacity 0.3s;}
+.game-card:hover{border-color:var(--gold-dim);transform:translateY(-3px);box-shadow:0 8px 24px rgba(201,168,76,0.15);}
+.game-card:hover::before{opacity:1;}
+.game-card.wide{grid-column:span 2;}
+.game-icon{font-size:2.2rem;margin-bottom:8px;display:block;}
+.game-name{font-size:0.98rem;font-weight:700;color:var(--gold);margin-bottom:3px;}
+.game-desc{font-size:0.72rem;color:var(--text-dim);}
+.game-screen{max-width:480px;margin:0 auto;padding:14px;}
+.game-hdr{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+.back-btn{background:var(--dark2);border:1px solid var(--gold-dim);color:var(--gold);width:36px;height:36px;border-radius:9px;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.game-title{font-family:'Cinzel',serif;font-size:1.2rem;color:var(--gold);}
+.score-badge{margin-right:auto;background:var(--dark3);border:1px solid var(--gold-dim);color:var(--gold);padding:4px 12px;border-radius:16px;font-size:0.82rem;font-weight:700;}
+body.ltr .score-badge{margin-right:0;margin-left:auto;}
+.gold-btn{background:linear-gradient(135deg,var(--gold-dim),var(--gold));color:#0A0A0A;border:none;padding:10px 24px;border-radius:22px;font-family:'Heebo',sans-serif;font-size:0.9rem;font-weight:700;cursor:pointer;transition:all 0.2s;}
+.gold-btn:hover{transform:scale(1.04);}
+.outline-btn{background:transparent;color:var(--gold);border:1px solid var(--gold-dim);padding:9px 20px;border-radius:22px;font-family:'Heebo',sans-serif;font-size:0.86rem;cursor:pointer;}
+.status-bar{text-align:center;font-size:0.9rem;font-weight:600;margin-bottom:10px;min-height:26px;color:var(--gold);}
+
+/* CHECKERS */
+.ch-board{display:grid;grid-template-columns:repeat(8,1fr);border:2px solid var(--gold-dim);border-radius:6px;overflow:hidden;direction:ltr;max-width:320px;margin:0 auto 10px;}
+.ch-cell{aspect-ratio:1;display:flex;align-items:center;justify-content:center;cursor:pointer;}
+.ch-cell.light{background:#2A2010;}
+.ch-cell.dark-sq{background:#1A1208;}
+.ch-cell.selected{box-shadow:inset 0 0 0 3px var(--gold);}
+.ch-cell.possible{background:#1A3A1A!important;}
+body.day .ch-cell.light{background:#F0D9A8;}
+body.day .ch-cell.dark-sq{background:#B8864A;}
+.ch-piece{width:82%;height:82%;border-radius:50%;border:2px solid rgba(255,255,255,0.3);}
+.ch-piece.red{background:radial-gradient(circle at 35% 35%,#FF6060,#C02020);}
+.ch-piece.black{background:radial-gradient(circle at 35% 35%,#666,#222);}
+.ch-piece.king{border-color:var(--gold);border-width:3px;}
+
+/* TTT */
+.ttt-grid{display:grid;gap:6px;margin:0 auto 12px;direction:ltr;}
+.ttt-cell{background:var(--dark3);border-radius:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-weight:700;transition:all 0.15s;aspect-ratio:1;}
+.ttt-cell:hover{background:var(--dark2);}
+.ttt-cell.x{color:var(--blue);}
+.ttt-cell.o{color:var(--red);}
+.ttt-cell.win{background:#1A3A1A!important;}
+.size-row{display:flex;gap:8px;justify-content:center;margin-bottom:10px;}
+.size-btn{background:var(--dark3);border:1px solid #444;color:var(--text-dim);padding:5px 14px;border-radius:10px;cursor:pointer;font-size:0.82rem;font-family:'Heebo',sans-serif;}
+.size-btn.active{border-color:var(--gold);color:var(--gold);}
+
+/* REVERSI */
+.rev-board{display:grid;grid-template-columns:repeat(8,1fr);border:2px solid var(--gold-dim);border-radius:6px;overflow:hidden;direction:ltr;max-width:320px;margin:0 auto 10px;}
+.rev-cell{aspect-ratio:1;background:#0A2A0A;display:flex;align-items:center;justify-content:center;cursor:pointer;border:1px solid #0A3A0A;}
+.rev-cell.hint{background:#1A4A1A!important;}
+.rev-piece{width:80%;height:80%;border-radius:50%;}
+.rev-piece.white{background:radial-gradient(circle at 35% 35%,#FFF,#CCC);}
+.rev-piece.black2{background:radial-gradient(circle at 35% 35%,#555,#111);}
+.rev-counts{display:flex;gap:14px;justify-content:center;margin-bottom:8px;}
+.rev-count{background:var(--dark3);border:1px solid var(--gold-dim);border-radius:10px;padding:6px 16px;text-align:center;}
+
+/* WAR CARDS */
+.war-arena{display:flex;gap:16px;justify-content:center;align-items:center;margin-bottom:12px;direction:ltr;}
+.playing-card{width:72px;height:98px;background:var(--dark2);border:2px solid var(--gold-dim);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:700;box-shadow:0 4px 12px rgba(0,0,0,0.4);transition:all 0.3s;}
+.playing-card.red{color:#E05050;}
+.playing-card.black-card{color:#1A1A1A;}
+.playing-card.back{background:linear-gradient(135deg,#1A3A6A,#0A1A3A);font-size:2rem;}
+.war-counts{display:flex;gap:14px;justify-content:center;margin-bottom:10px;}
+.war-count{background:var(--dark3);border:1px solid var(--gold-dim);border-radius:10px;padding:6px 16px;text-align:center;}
+.war-count-l{font-size:0.65rem;color:var(--text-dim);}
+.war-count-v{font-size:1.1rem;font-weight:700;color:var(--gold);}
+.war-msg{text-align:center;min-height:28px;font-size:0.95rem;font-weight:600;margin-bottom:10px;}
+
+/* SNAKES */
+.sl-board{display:grid;grid-template-columns:repeat(10,1fr);border:2px solid var(--gold-dim);border-radius:8px;overflow:hidden;direction:ltr;max-width:340px;margin:0 auto 10px;position:relative;}
+.sl-cell{aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:0.7rem;border:1px solid rgba(255,255,255,0.05);position:relative;}
+.sl-num{font-size:0.45rem;color:rgba(255,255,255,0.35);position:absolute;top:1px;right:2px;}
+.sl-pieces{position:absolute;bottom:1px;display:flex;gap:1px;}
+.sl-piece{width:13px;height:13px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.5rem;border:1px solid rgba(255,255,255,0.4);}
+.sl-piece.p1{background:#E05050;}
+.sl-piece.p2{background:#4A8FD4;}
+.sl-stat{display:flex;gap:12px;justify-content:center;margin-bottom:8px;}
+.sl-player{background:var(--dark3);border:1px solid var(--gold-dim);border-radius:10px;padding:6px 14px;text-align:center;}
+.sl-player-l{font-size:0.65rem;color:var(--text-dim);}
+.sl-player-v{font-size:0.95rem;font-weight:700;}
+.die-big{font-size:2.5rem;text-align:center;margin:6px 0;}
+
+/* RESULT */
+.result-ov{position:fixed;inset:0;background:rgba(0,0,0,0.86);display:none;align-items:center;justify-content:center;z-index:300;padding:20px;}
+.result-ov.show{display:flex;}
+.result-box{background:var(--dark2);border:1px solid var(--gold-dim);border-radius:18px;padding:28px 22px;text-align:center;max-width:300px;width:100%;}
+.r-emoji{font-size:3rem;margin-bottom:10px;}
+.r-title{font-family:'Cinzel',serif;font-size:1.4rem;color:var(--gold);margin-bottom:6px;}
+.r-msg{color:var(--text-dim);font-size:0.87rem;margin-bottom:18px;}
+.r-btns{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;}
+@media(max-width:380px){.games-grid{grid-template-columns:1fr;}.game-card.wide{grid-column:span 1;}}
+</style>
+</head>
+<body>
+
+<div class="modal-bg" id="howtoModal"><div class="modal">
+  <button class="modal-close" onclick="closeModal('howto')" data-i="close">סגור</button>
+  <div class="modal-title" id="howtoTitle">❓</div>
+  <div id="howtoContent"></div>
+</div></div>
+<div class="modal-bg" id="aboutModal"><div class="modal">
+  <button class="modal-close" onclick="closeModal('about')" data-i="close">סגור</button>
+  <div style="text-align:center;margin-bottom:10px;"><svg width="46" height="46" viewBox="0 0 38 38"><polygon points="19,2 35,10.5 35,27.5 19,36 3,27.5 3,10.5" fill="#111" stroke="#C9A84C" stroke-width="1.5"/><text x="19" y="24" text-anchor="middle" font-family="Cinzel,serif" font-size="11" fill="#C9A84C">A</text></svg></div>
+  <div class="modal-title">ArcadeNest Hub 4</div>
+  <div id="aboutContent"></div>
+</div></div>
+
+<div class="header">
+  <div style="display:flex;align-items:center;gap:8px;">
+    <svg width="32" height="32" viewBox="0 0 38 38"><polygon points="19,2 35,10.5 35,27.5 19,36 3,27.5 3,10.5" fill="#111" stroke="#C9A84C" stroke-width="1.5"/><text x="19" y="24" text-anchor="middle" font-family="Cinzel,serif" font-size="11" fill="#C9A84C">A</text></svg>
+    <div><span class="logo-text">ArcadeNest 4</span><span class="logo-sub">APPNEST</span></div>
+  </div>
+  <div class="hbtns">
+    <button class="icon-btn" onclick="openModal('howto')">❓</button>
+    <button class="icon-btn" onclick="toggleTheme()" id="themeBtn">🌙</button>
+    <button class="icon-btn" onclick="openModal('about')">ℹ️</button>
+    <div style="position:relative;">
+      <button class="lang-btn" onclick="toggleLang()">🌐 <span id="lLabel">עב</span> ▾</button>
+      <div class="lang-drop" id="lDrop">
+        <div class="lang-opt" onclick="setLang('he')">🇮🇱 עברית</div>
+        <div class="lang-opt" onclick="setLang('en')">🇬🇧 English</div>
+        <div class="lang-opt" onclick="setLang('ru')">🇷🇺 Русский</div>
+        <div class="lang-opt" onclick="setLang('es')">🇪🇸 Español</div>
+        <div class="lang-opt" onclick="setLang('ar')">🇸🇦 العربية</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MENU -->
+<div class="screen active" id="menuScreen">
+  <div class="menu-wrap">
+    <div class="menu-title" data-i="menuTitle">♟️ ArcadeNest 4</div>
+    <div class="menu-sub" data-i="menuSub">5 משחקי לוח קלאסיים</div>
+    <div class="games-grid">
+      <div class="game-card" onclick="startGame('checkers')"><span class="game-icon">🔴</span><div class="game-name" data-i="checkersName">דמקה</div><div class="game-desc" data-i="checkersDesc">קלאסי מול מחשב</div></div>
+      <div class="game-card" onclick="startGame('ttt')"><span class="game-icon">⭕</span><div class="game-name" data-i="tttName">איקס-עיגול</div><div class="game-desc" data-i="tttDesc">3x3 ו-5x5</div></div>
+      <div class="game-card" onclick="startGame('reversi')"><span class="game-icon">🔷</span><div class="game-name" data-i="reversiName">Reversi</div><div class="game-desc" data-i="reversiDesc">הפוך כלים וכבוש</div></div>
+      <div class="game-card" onclick="startGame('war')"><span class="game-icon">🃏</span><div class="game-name" data-i="warName">מלחמת קלפים</div><div class="game-desc" data-i="warDesc">גבוה יותר = לוקח הכל</div></div>
+      <div class="game-card wide" onclick="startGame('snakes')"><span class="game-icon">🐍</span><div class="game-name" data-i="slName">סולמות ונחשים</div><div class="game-desc" data-i="slDesc">שחקן מול מחשב</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- CHECKERS -->
+<div class="screen" id="checkersScreen">
+  <div class="game-screen">
+    <div class="game-hdr"><button class="back-btn" onclick="goMenu()">←</button><div class="game-title" data-i="checkersName">🔴 דמקה</div></div>
+    <div class="status-bar" id="chStatus"></div>
+    <div class="ch-board" id="chBoard"></div>
+    <div style="text-align:center;"><button class="gold-btn" onclick="chNewGame()" data-i="newGame">משחק חדש</button></div>
+  </div>
+</div>
+
+<!-- TTT -->
+<div class="screen" id="tttScreen">
+  <div class="game-screen">
+    <div class="game-hdr"><button class="back-btn" onclick="goMenu()">←</button><div class="game-title" data-i="tttName">⭕ איקס-עיגול</div><div class="score-badge">X:<span id="tttSX">0</span> O:<span id="tttSO">0</span></div></div>
+    <div class="size-row">
+      <button class="size-btn active" onclick="setTttSize(3)" id="btn3">3×3</button>
+      <button class="size-btn" onclick="setTttSize(5)" id="btn5">5×5</button>
+    </div>
+    <div class="status-bar" id="tttStatus"></div>
+    <div id="tttGrid" style="max-width:300px;margin:0 auto 12px;"></div>
+    <div style="text-align:center;"><button class="gold-btn" onclick="tttNew()" data-i="newGame">משחק חדש</button></div>
+  </div>
+</div>
+
+<!-- REVERSI -->
+<div class="screen" id="reversiScreen">
+  <div class="game-screen">
+    <div class="game-hdr"><button class="back-btn" onclick="goMenu()">←</button><div class="game-title" data-i="reversiName">🔷 Reversi</div></div>
+    <div class="rev-counts">
+      <div class="rev-count"><div class="rev-count-l" data-i="youBlack">אתה ⚫</div><div class="rev-count-v" id="revB">2</div></div>
+      <div class="rev-count"><div class="rev-count-l" data-i="cpuWhite">מחשב ⚪</div><div class="rev-count-v" id="revW">2</div></div>
+    </div>
+    <div class="status-bar" id="revStatus"></div>
+    <div class="rev-board" id="revBoard"></div>
+    <div style="text-align:center;"><button class="gold-btn" onclick="revNew()" data-i="newGame">משחק חדש</button></div>
+  </div>
+</div>
+
+<!-- WAR -->
+<div class="screen" id="warScreen">
+  <div class="game-screen">
+    <div class="game-hdr"><button class="back-btn" onclick="goMenu()">←</button><div class="game-title" data-i="warName">🃏 מלחמת קלפים</div></div>
+    <div class="war-counts">
+      <div class="war-count"><div class="war-count-l" data-i="yourCards">הקלפים שלך</div><div class="war-count-v" id="warYC">26</div></div>
+      <div class="war-count"><div class="war-count-l" data-i="cpuCards">קלפי המחשב</div><div class="war-count-v" id="warCC">26</div></div>
+    </div>
+    <div class="war-arena">
+      <div style="text-align:center;">
+        <div style="font-size:0.72rem;color:var(--text-dim);margin-bottom:4px;" data-i="you">אתה</div>
+        <div class="playing-card back" id="warYCard">🂠</div>
+      </div>
+      <div style="font-family:'Cinzel',serif;font-size:1.5rem;color:var(--gold-dim);">VS</div>
+      <div style="text-align:center;">
+        <div style="font-size:0.72rem;color:var(--text-dim);margin-bottom:4px;" data-i="cpu">מחשב</div>
+        <div class="playing-card back" id="warCCard">🂠</div>
+      </div>
+    </div>
+    <div class="war-msg" id="warMsg"></div>
+    <div style="text-align:center;display:flex;gap:8px;justify-content:center;">
+      <button class="gold-btn" onclick="warDraw()" id="warBtn" data-i="drawCard">משוך קלף</button>
+      <button class="outline-btn" onclick="warNew()" data-i="newGame">חדש</button>
+    </div>
+    <div style="text-align:center;margin-top:6px;color:var(--text-dim);font-size:0.75rem;" data-i="warHint">גבוה = לוקח שניהם | A=14 K=13 Q=12 J=11</div>
+  </div>
+</div>
+
+<!-- SNAKES -->
+<div class="screen" id="snakesScreen">
+  <div class="game-screen">
+    <div class="game-hdr"><button class="back-btn" onclick="goMenu()">←</button><div class="game-title" data-i="slName">🐍 סולמות ונחשים</div></div>
+    <div class="sl-stat">
+      <div class="sl-player"><div class="sl-player-l" data-i="youPlayer">אתה 👤</div><div class="sl-player-v" id="slP1" style="color:var(--red)">1</div></div>
+      <div class="sl-player"><div class="sl-player-l" data-i="cpuPlayer">מחשב 🤖</div><div class="sl-player-v" id="slP2" style="color:var(--blue)">1</div></div>
+    </div>
+    <div class="status-bar" id="slStatus"></div>
+    <div class="die-big" id="slDie">🎲</div>
+    <div class="sl-board" id="slBoard"></div>
+    <div style="text-align:center;display:flex;gap:8px;justify-content:center;">
+      <button class="gold-btn" onclick="slRoll()" id="slBtn" data-i="rollDice">זרוק קוביה 🎲</button>
+      <button class="outline-btn" onclick="slNew()" data-i="newGame">חדש</button>
+    </div>
+  </div>
+</div>
+
+<!-- RESULT -->
+<div class="result-ov" id="resultOv">
+  <div class="result-box">
+    <div class="r-emoji" id="rEmoji">🎉</div>
+    <div class="r-title" id="rTitle"></div>
+    <div class="r-msg" id="rMsg"></div>
+    <div class="r-btns">
+      <button class="gold-btn" onclick="replayGame()" data-i="playAgain">שחק שוב</button>
+      <button class="outline-btn" onclick="goMenu()" data-i="menu">תפריט</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const T={
+  he:{menuTitle:'♟️ ArcadeNest 4',menuSub:'5 משחקי לוח קלאסיים',
+    checkersName:'🔴 דמקה',checkersDesc:'קלאסי מול מחשב',
+    tttName:'⭕ איקס-עיגול',tttDesc:'3x3 ו-5x5',
+    reversiName:'🔷 Reversi',reversiDesc:'הפוך כלים וכבוש',
+    warName:'🃏 מלחמת קלפים',warDesc:'גבוה יותר = לוקח הכל',
+    slName:'🐍 סולמות ונחשים',slDesc:'שחקן מול מחשב',
+    newGame:'משחק חדש',playAgain:'שחק שוב',menu:'תפריט',close:'סגור',
+    you:'אתה',cpu:'מחשב',youBlack:'אתה ⚫',cpuWhite:'מחשב ⚪',
+    yourCards:'הקלפים שלך',cpuCards:'קלפי המחשב',
+    drawCard:'משוך קלף',warHint:'גבוה = לוקח שניהם | A=14 K=13 Q=12 J=11',
+    youPlayer:'אתה 👤',cpuPlayer:'מחשב 🤖',rollDice:'זרוק קוביה 🎲',
+    chYour:'תורך — בחר כלי אדום',chCpu:'המחשב חושב...',
+    chYouWin:'ניצחת! 🎉',chCpuWin:'המחשב ניצח 😔',
+    tttYou:'תורך (X)',tttCpu:'המחשב (O)',tttWinX:'X ניצח!',tttWinO:'O ניצח!',
+    revYour:'תורך ⚫',revCpu:'תור המחשב ⚪',revNoMove:'אין מהלכים — עובר תור',
+    warWin:'ניצחת! 🎉',warLose:'המחשב ניצח 😔',warDraw:'תיקו 🤝',
+    warWon:'כל הקלפים שלך! 🏆',warLost:'המחשב לקח הכל 😔',
+    slYour:'תורך 👤',slCpu:'תור המחשב 🤖...',
+    slSnake:'נחש! יורד ⬇️',slLadder:'סולם! עולה ⬆️',
+    slYouWin:'ניצחת! 🎉',slCpuWin:'המחשב ניצח 😔',
+    win:'ניצחת! 🎉',lose:'הפסדת 😔',draw:'תיקו!',score:'ניקוד',
+  },
+  en:{menuTitle:'♟️ ArcadeNest 4',menuSub:'5 Classic Board Games',
+    checkersName:'🔴 Checkers',checkersDesc:'Classic vs CPU',
+    tttName:'⭕ Tic Tac Toe',tttDesc:'3x3 and 5x5',
+    reversiName:'🔷 Reversi',reversiDesc:'Flip pieces and conquer',
+    warName:'🃏 Card War',warDesc:'Higher card takes all',
+    slName:'🐍 Snakes & Ladders',slDesc:'Player vs CPU',
+    newGame:'New Game',playAgain:'Play Again',menu:'Menu',close:'Close',
+    you:'You',cpu:'CPU',youBlack:'You ⚫',cpuWhite:'CPU ⚪',
+    yourCards:'Your cards',cpuCards:'CPU cards',
+    drawCard:'Draw Card',warHint:'Higher takes both | A=14 K=13 Q=12 J=11',
+    youPlayer:'You 👤',cpuPlayer:'CPU 🤖',rollDice:'Roll Dice 🎲',
+    chYour:'Your turn — pick a red piece',chCpu:'CPU thinking...',
+    chYouWin:'You win! 🎉',chCpuWin:'CPU wins 😔',
+    tttYou:'Your turn (X)',tttCpu:'CPU turn (O)',tttWinX:'X wins!',tttWinO:'O wins!',
+    revYour:'Your turn ⚫',revCpu:'CPU turn ⚪',revNoMove:'No moves — turn passes',
+    warWin:'You win! 🎉',warLose:'CPU wins 😔',warDraw:'Draw 🤝',
+    warWon:'All cards are yours! 🏆',warLost:'CPU took everything 😔',
+    slYour:'Your turn 👤',slCpu:'CPU turn 🤖...',
+    slSnake:'Snake! Down ⬇️',slLadder:'Ladder! Up ⬆️',
+    slYouWin:'You win! 🎉',slCpuWin:'CPU wins 😔',
+    win:'You Win! 🎉',lose:'You Lose 😔',draw:'Draw!',score:'Score',
+  },
+  ru:{menuTitle:'♟️ ArcadeNest 4',menuSub:'5 классических настольных игр',
+    checkersName:'🔴 Шашки',checkersDesc:'Против ПК',
+    tttName:'⭕ Крестики-нолики',tttDesc:'3x3 и 5x5',
+    reversiName:'🔷 Реверси',reversiDesc:'Переворачивай и захватывай',
+    warName:'🃏 Война карт',warDesc:'Старшая берёт обе',
+    slName:'🐍 Змеи и лестницы',slDesc:'Игрок против ПК',
+    newGame:'Новая игра',playAgain:'Играть снова',menu:'Меню',close:'Закрыть',
+    you:'Ты',cpu:'ПК',youBlack:'Ты ⚫',cpuWhite:'ПК ⚪',
+    yourCards:'Твои карты',cpuCards:'Карты ПК',
+    drawCard:'Взять карту',warHint:'Старшая берёт обе | A=14 K=13',
+    youPlayer:'Ты 👤',cpuPlayer:'ПК 🤖',rollDice:'Бросить кость 🎲',
+    chYour:'Твой ход — выбери красную шашку',chCpu:'ПК думает...',
+    chYouWin:'Победа! 🎉',chCpuWin:'ПК победил 😔',
+    tttYou:'Твой ход (X)',tttCpu:'Ход ПК (O)',tttWinX:'X победил!',tttWinO:'O победил!',
+    revYour:'Твой ход ⚫',revCpu:'Ход ПК ⚪',revNoMove:'Нет ходов — пропуск',
+    warWin:'Победа! 🎉',warLose:'ПК победил 😔',warDraw:'Ничья 🤝',
+    warWon:'Все карты твои! 🏆',warLost:'ПК взял всё 😔',
+    slYour:'Твой ход 👤',slCpu:'Ход ПК 🤖...',
+    slSnake:'Змея! Вниз ⬇️',slLadder:'Лестница! Вверх ⬆️',
+    slYouWin:'Победа! 🎉',slCpuWin:'ПК победил 😔',
+    win:'Победа! 🎉',lose:'Поражение 😔',draw:'Ничья!',score:'Счёт',
+  },
+  es:{menuTitle:'♟️ ArcadeNest 4',menuSub:'5 juegos de mesa clásicos',
+    checkersName:'🔴 Damas',checkersDesc:'Clásico contra CPU',
+    tttName:'⭕ Tres en raya',tttDesc:'3x3 y 5x5',
+    reversiName:'🔷 Reversi',reversiDesc:'Voltea y conquista',
+    warName:'🃏 Guerra de cartas',warDesc:'La más alta se lleva todo',
+    slName:'🐍 Serpientes y escaleras',slDesc:'Jugador contra CPU',
+    newGame:'Nueva partida',playAgain:'Jugar de nuevo',menu:'Menú',close:'Cerrar',
+    you:'Tú',cpu:'CPU',youBlack:'Tú ⚫',cpuWhite:'CPU ⚪',
+    yourCards:'Tus cartas',cpuCards:'Cartas CPU',
+    drawCard:'Robar carta',warHint:'La más alta se lleva ambas',
+    youPlayer:'Tú 👤',cpuPlayer:'CPU 🤖',rollDice:'Lanzar dado 🎲',
+    chYour:'Tu turno — elige pieza roja',chCpu:'CPU pensando...',
+    chYouWin:'Ganaste! 🎉',chCpuWin:'CPU gana 😔',
+    tttYou:'Tu turno (X)',tttCpu:'Turno CPU (O)',tttWinX:'X gana!',tttWinO:'O gana!',
+    revYour:'Tu turno ⚫',revCpu:'Turno CPU ⚪',revNoMove:'Sin movimientos — pasa turno',
+    warWin:'Ganaste! 🎉',warLose:'CPU gana 😔',warDraw:'Empate 🤝',
+    warWon:'Todas las cartas son tuyas! 🏆',warLost:'CPU se lo llevo todo 😔',
+    slYour:'Tu turno 👤',slCpu:'Turno CPU 🤖...',
+    slSnake:'Serpiente! Bajas ⬇️',slLadder:'Escalera! Subes ⬆️',
+    slYouWin:'Ganaste! 🎉',slCpuWin:'CPU gana 😔',
+    win:'Ganaste! 🎉',lose:'Perdiste 😔',draw:'Empate!',score:'Puntos',
+  },
+  ar:{menuTitle:'♟️ ArcadeNest 4',menuSub:'5 ألعاب لوح كلاسيكية',
+    checkersName:'🔴 الداما',checkersDesc:'ضد الكمبيوتر',
+    tttName:'⭕ إكس-أو',tttDesc:'3x3 و5x5',
+    reversiName:'🔷 ريفيرسي',reversiDesc:'اقلب وابسط',
+    warName:'🃏 حرب الأوراق',warDesc:'الأعلى يأخذ الكل',
+    slName:'🐍 ثعابين وسلالم',slDesc:'لاعب ضد الكمبيوتر',
+    newGame:'لعبة جديدة',playAgain:'العب مجدداً',menu:'القائمة',close:'إغلاق',
+    you:'أنت',cpu:'كمبيوتر',youBlack:'أنت ⚫',cpuWhite:'كمبيوتر ⚪',
+    yourCards:'أوراقك',cpuCards:'أوراق الكمبيوتر',
+    drawCard:'اسحب ورقة',warHint:'الأعلى يأخذ الاثنتين | A=14 K=13',
+    youPlayer:'أنت 👤',cpuPlayer:'كمبيوتر 🤖',rollDice:'ارمِ النرد 🎲',
+    chYour:'دورك — اختر قطعة حمراء',chCpu:'الكمبيوتر يفكر...',
+    chYouWin:'فزت! 🎉',chCpuWin:'الكمبيوتر فاز 😔',
+    tttYou:'دورك (X)',tttCpu:'دور الكمبيوتر (O)',tttWinX:'X فاز!',tttWinO:'O فاز!',
+    revYour:'دورك ⚫',revCpu:'دور الكمبيوتر ⚪',revNoMove:'لا تحركات — ينتقل الدور',
+    warWin:'فزت! 🎉',warLose:'الكمبيوتر فاز 😔',warDraw:'تعادل 🤝',
+    warWon:'كل الأوراق لك! 🏆',warLost:'الكمبيوتر أخذ كل شيء 😔',
+    slYour:'دورك 👤',slCpu:'دور الكمبيوتر 🤖...',
+    slSnake:'ثعبان! نزول ⬇️',slLadder:'سلم! صعود ⬆️',
+    slYouWin:'فزت! 🎉',slCpuWin:'الكمبيوتر فاز 😔',
+    win:'فزت! 🎉',lose:'خسرت 😔',draw:'تعادل!',score:'النقاط',
+  },
+};
+const HOWTO={
+  he:{
+    menu:`<p class="stitle">♟️ ArcadeNest Hub 4</p><p>5 משחקי לוח — דמקה, איקס-עיגול, Reversi, מלחמת קלפים וסולמות ונחשים.</p>`,
+    checkers:`<p class="stitle">🔴 דמקה</p><ul><li>לחץ כלי אדום לבחור — יוצגו מהלכים אפשריים בירוק</li><li>לחץ משבצת ירוקה לזוז</li><li>קפץ מעל כלי יריב לאכול אותו</li><li>הגע לשורה האחרונה — קבל מלך (מסגרת זהב)</li></ul>`,
+    ttt:`<p class="stitle">⭕ איקס-עיגול</p><ul><li>אתה X, המחשב O</li><li>3×3: הרכב 3 ברצף | 5×5: הרכב 4 ברצף</li><li>המחשב חוסם ותוקף חכם</li></ul>`,
+    reversi:`<p class="stitle">🔷 Reversi</p><ul><li>אתה שחור ⚫, המחשב לבן ⚪</li><li>ריבועים ירוקים = מהלכים חוקיים</li><li>הנח כלי כדי להקיף יריב — הוא יהפוך לשלך</li><li>מנצח מי שיש לו יותר כלים בסוף</li></ul>`,
+    war:`<p class="stitle">🃏 מלחמת קלפים</p><ul><li>לחץ "משוך קלף" — שניכם מגלים קלף</li><li>הגבוה יותר לוקח שניהם: A=14, K=13, Q=12, J=11</li><li>תיקו = כל אחד לוקח חזרה</li><li>מי שנגמרים לו הקלפים מפסיד</li></ul>`,
+    snakes:`<p class="stitle">🐍 סולמות ונחשים</p><ul><li>אתה 👤 מול המחשב 🤖</li><li>לחץ "זרוק קוביה" — המחשב יזרוק אוטומטית</li><li>🐍 נחש = יורד | 🪜 סולם = עולה</li><li>הגע ראשון לתא 100 לנצח!</li></ul>`,
+  },
+  en:{
+    menu:`<p class="stitle">♟️ ArcadeNest Hub 4</p><p>5 board games — Checkers, Tic Tac Toe, Reversi, Card War and Snakes & Ladders.</p>`,
+    checkers:`<p class="stitle">🔴 Checkers</p><ul><li>Click a red piece — green squares show valid moves</li><li>Click a green square to move</li><li>Jump over opponent pieces to capture</li><li>Reach the last row to become King</li></ul>`,
+    ttt:`<p class="stitle">⭕ Tic Tac Toe</p><ul><li>You are X, CPU is O</li><li>3×3: get 3 in a row | 5×5: get 4 in a row</li></ul>`,
+    reversi:`<p class="stitle">🔷 Reversi</p><ul><li>You are Black ⚫, CPU is White ⚪</li><li>Green squares = valid moves</li><li>Surround opponent pieces to flip them</li><li>Most pieces at end wins</li></ul>`,
+    war:`<p class="stitle">🃏 Card War</p><ul><li>Press "Draw Card" — both reveal a card</li><li>Higher card takes both: A=14, K=13, Q=12, J=11</li><li>Tie = each takes back their card</li><li>Run out of cards = you lose</li></ul>`,
+    snakes:`<p class="stitle">🐍 Snakes & Ladders</p><ul><li>You 👤 vs CPU 🤖</li><li>Press Roll Dice — CPU rolls automatically</li><li>🐍 Snake = go down | 🪜 Ladder = go up</li><li>First to reach 100 wins!</li></ul>`,
+  },
+  ru:{menu:`<p class="stitle">♟️ ArcadeNest Hub 4</p>`,checkers:`<p class="stitle">🔴 Шашки</p><ul><li>Нажми шашку — зелёные клетки = ходы</li><li>Прыгай через чужие шашки</li></ul>`,ttt:`<p class="stitle">⭕ Крестики-нолики</p><ul><li>Ты X, ПК — O</li></ul>`,reversi:`<p class="stitle">🔷 Реверси</p><ul><li>Ты чёрный, ПК белый</li><li>Окружи чужие фишки</li></ul>`,war:`<p class="stitle">🃏 Война карт</p><ul><li>Нажми взять карту</li><li>Старшая берёт обе</li></ul>`,snakes:`<p class="stitle">🐍 Змеи и лестницы</p><ul><li>Ты против ПК</li><li>🐍 = вниз, 🪜 = вверх</li></ul>`,},
+  es:{menu:`<p class="stitle">♟️ ArcadeNest Hub 4</p>`,checkers:`<p class="stitle">🔴 Damas</p><ul><li>Toca una pieza — verde = movimientos</li></ul>`,ttt:`<p class="stitle">⭕ Tres en raya</p><ul><li>Tú X, CPU O</li></ul>`,reversi:`<p class="stitle">🔷 Reversi</p><ul><li>Tú negro, CPU blanco</li></ul>`,war:`<p class="stitle">🃏 Guerra de cartas</p><ul><li>La más alta se lleva ambas</li></ul>`,snakes:`<p class="stitle">🐍 Serpientes</p><ul><li>Tú contra CPU</li></ul>`,},
+  ar:{menu:`<p class="stitle">♟️ ArcadeNest Hub 4</p>`,checkers:`<p class="stitle">🔴 الداما</p><ul><li>انقر قطعة — الأخضر = تحركات</li></ul>`,ttt:`<p class="stitle">⭕ إكس-أو</p><ul><li>أنت X، الكمبيوتر O</li></ul>`,reversi:`<p class="stitle">🔷 ريفيرسي</p><ul><li>أنت أسود، الكمبيوتر أبيض</li></ul>`,war:`<p class="stitle">🃏 حرب الأوراق</p><ul><li>الأعلى يأخذ الاثنتين</li></ul>`,snakes:`<p class="stitle">🐍 ثعابين وسلالم</p><ul><li>أنت ضد الكمبيوتر</li></ul>`,},
+};
+const ABOUT={he:`<p>© 2025 AppNest</p><p style="margin-top:8px">🌐 <a class="about-link" href="https://barakaflalo.github.io/appnest" target="_blank">barakaflalo.github.io/appnest</a></p>`,en:`<p>© 2025 AppNest</p><p style="margin-top:8px">🌐 <a class="about-link" href="https://barakaflalo.github.io/appnest" target="_blank">barakaflalo.github.io/appnest</a></p>`,ru:`<p>© 2025 AppNest</p><p style="margin-top:8px">🌐 <a class="about-link" href="https://barakaflalo.github.io/appnest" target="_blank">barakaflalo.github.io/appnest</a></p>`,es:`<p>© 2025 AppNest</p><p style="margin-top:8px">🌐 <a class="about-link" href="https://barakaflalo.github.io/appnest" target="_blank">barakaflalo.github.io/appnest</a></p>`,ar:`<p>© 2025 AppNest</p><p style="margin-top:8px">🌐 <a class="about-link" href="https://barakaflalo.github.io/appnest" target="_blank">barakaflalo.github.io/appnest</a></p>`,};
+
+let lang='he',isDark=true,currentGame='';
+function t(k){return(T[lang]||T.en)[k]||k;}
+function setLang(l){lang=l;document.getElementById('lLabel').textContent={he:'עב',en:'EN',ru:'РУ',es:'ES',ar:'عر'}[l];document.getElementById('lDrop').classList.remove('open');const rtl=['he','ar'].includes(l);document.body.dir=rtl?'rtl':'ltr';document.body.classList.toggle('ltr',!rtl);applyT();}
+function toggleLang(){document.getElementById('lDrop').classList.toggle('open');}
+document.addEventListener('click',e=>{if(!e.target.closest('.lang-btn')&&!e.target.closest('.lang-drop'))document.getElementById('lDrop').classList.remove('open');});
+function applyT(){document.querySelectorAll('[data-i]').forEach(el=>el.textContent=t(el.dataset.i));updateModals();}
+function toggleTheme(){isDark=!isDark;document.body.classList.toggle('day',!isDark);document.getElementById('themeBtn').textContent=isDark?'🌙':'☀️';}
+function openModal(tp){updateModals();document.getElementById(tp+'Modal').classList.add('open');}
+function closeModal(tp){document.getElementById(tp+'Modal').classList.remove('open');}
+document.querySelectorAll('.modal-bg').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');}));
+function updateModals(){const hw=HOWTO[lang]||HOWTO.en;document.getElementById('howtoContent').innerHTML=hw[currentGame]||hw.menu;document.getElementById('howtoTitle').textContent={he:'❓ איך משחקים',en:'❓ How to Play',ru:'❓ Как играть',es:'❓ Cómo jugar',ar:'❓ كيف تلعب'}[lang]||'❓';document.getElementById('aboutContent').innerHTML=ABOUT[lang]||ABOUT.en;}
+function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');}
+function goMenu(){hideResult();showScreen('menuScreen');currentGame='';}
+function showResult(e,tt,m){document.getElementById('rEmoji').textContent=e;document.getElementById('rTitle').textContent=tt;document.getElementById('rMsg').textContent=m;document.getElementById('resultOv').classList.add('show');}
+function hideResult(){document.getElementById('resultOv').classList.remove('show');}
+function replayGame(){hideResult();startGame(currentGame);}
+function startGame(g){currentGame=g;hideResult();
+  if(g==='checkers'){showScreen('checkersScreen');chNewGame();}
+  if(g==='ttt'){showScreen('tttScreen');tttNew();}
+  if(g==='reversi'){showScreen('reversiScreen');revNew();}
+  if(g==='war'){showScreen('warScreen');warNew();}
+  if(g==='snakes'){showScreen('snakesScreen');slNew();}
+}
+
+// ===== CHECKERS =====
+let chB,chSel,chTurn,chDone;
+function chNewGame(){chB=[];chSel=null;chTurn='red';chDone=false;
+  for(let r=0;r<8;r++){chB.push([]);for(let c=0;c<8;c++){let p=null;if((r+c)%2===1){if(r<3)p={col:'black',king:false};else if(r>4)p={col:'red',king:false};}chB[r].push(p);}}
+  renderCh();document.getElementById('chStatus').textContent=t('chYour');}
+function chMoves(b,r,c,must){const p=b[r][c];if(!p)return[];const dirs=[];if(p.col==='red'||p.king)dirs.push([-1,-1],[-1,1]);if(p.col==='black'||p.king)dirs.push([1,-1],[1,1]);const moves=[],caps=[];dirs.forEach(([dr,dc])=>{const nr=r+dr,nc=c+dc;if(nr>=0&&nr<8&&nc>=0&&nc<8){if(!b[nr][nc])moves.push({r:nr,c:nc,t:'m'});else if(b[nr][nc].col!==p.col){const jr=r+2*dr,jc=c+2*dc;if(jr>=0&&jr<8&&jc>=0&&jc<8&&!b[jr][jc])caps.push({r:jr,c:jc,cr:nr,cc:nc,t:'c'});}}});if(must)return caps;return caps.length?caps:moves;}
+function chHasCaps(b,col){for(let r=0;r<8;r++)for(let c=0;c<8;c++)if(b[r][c]&&b[r][c].col===col&&chMoves(b,r,c,true).length)return true;return false;}
+function chClick(r,c){if(chDone||chTurn!=='red')return;const mc=chHasCaps(chB,'red');if(chSel){const mvs=chMoves(chB,chSel.r,chSel.c,mc);const mv=mvs.find(m=>m.r===r&&m.c===c);if(mv){chB[r][c]=chB[chSel.r][chSel.c];chB[chSel.r][chSel.c]=null;if(mv.t==='c')chB[mv.cr][mv.cc]=null;if((chB[r][c].col==='red'&&r===0)||(chB[r][c].col==='black'&&r===7))chB[r][c].king=true;chSel=null;if(!chB.flat().filter(p=>p&&p.col==='black').length){chDone=true;renderCh();showResult('🏆',t('win'),t('chYouWin'));return;}chTurn='black';renderCh();document.getElementById('chStatus').textContent=t('chCpu');setTimeout(chCpu,600);}else if(chB[r][c]&&chB[r][c].col==='red'){chSel={r,c};renderCh();}else{chSel=null;renderCh();}}else if(chB[r][c]&&chB[r][c].col==='red'&&chMoves(chB,r,c,mc).length){chSel={r,c};renderCh();}}
+function chCpu(){const mc=chHasCaps(chB,'black');const all=[];for(let r=0;r<8;r++)for(let c=0;c<8;c++)if(chB[r][c]&&chB[r][c].col==='black')chMoves(chB,r,c,mc).forEach(m=>all.push({fr:r,fc:c,...m}));if(!all.length){chDone=true;showResult('🏆',t('win'),t('chYouWin'));return;}const caps=all.filter(m=>m.t==='c');const mv=(caps.length?caps:all)[Math.floor(Math.random()*(caps.length||all.length))];chB[mv.r][mv.c]=chB[mv.fr][mv.fc];chB[mv.fr][mv.fc]=null;if(mv.t==='c')chB[mv.cr][mv.cc]=null;if(chB[mv.r][mv.c].col==='black'&&mv.r===7)chB[mv.r][mv.c].king=true;if(!chB.flat().filter(p=>p&&p.col==='red').length){chDone=true;renderCh();showResult('😔',t('lose'),t('chCpuWin'));return;}chTurn='red';renderCh();document.getElementById('chStatus').textContent=t('chYour');}
+function renderCh(){const bd=document.getElementById('chBoard');bd.innerHTML='';const mc=chTurn==='red'&&chHasCaps(chB,'red');for(let r=0;r<8;r++)for(let c=0;c<8;c++){const cell=document.createElement('div');cell.className='ch-cell '+((r+c)%2===0?'light':'dark-sq');if(chSel&&chSel.r===r&&chSel.c===c)cell.classList.add('selected');if(chSel){const mvs=chMoves(chB,chSel.r,chSel.c,mc);if(mvs.find(m=>m.r===r&&m.c===c))cell.classList.add('possible');}const p=chB[r][c];if(p){const pc=document.createElement('div');pc.className='ch-piece '+p.col+(p.king?' king':'');cell.appendChild(pc);}cell.addEventListener('click',()=>chClick(r,c));bd.appendChild(cell);}}
+
+// ===== TIC TAC TOE =====
+let tttB,tttSz=3,tttTn,tttDone,tttSc={X:0,O:0};
+function setTttSize(s){tttSz=s;document.getElementById('btn3').classList.toggle('active',s===3);document.getElementById('btn5').classList.toggle('active',s===5);tttNew();}
+function tttNew(){tttB=Array(tttSz*tttSz).fill('');tttTn='X';tttDone=false;renderTtt();document.getElementById('tttStatus').textContent=t('tttYou');}
+function tttClick(i){if(tttDone||tttB[i]||tttTn!=='X')return;tttB[i]='X';const wx=tttCheck('X');if(wx){tttSc.X++;document.getElementById('tttSX').textContent=tttSc.X;tttDone=true;renderTtt(wx);showResult('🏆',t('tttWinX'),'');return;}if(tttB.every(c=>c)){tttDone=true;renderTtt();showResult('🤝',t('draw'),'');return;}tttTn='O';renderTtt();document.getElementById('tttStatus').textContent=t('tttCpu');setTimeout(tttCpu,400);}
+function tttCpu(){const emp=tttB.map((v,i)=>v?-1:i).filter(i=>i>=0);if(!emp.length)return;let best=-1;for(const i of emp){tttB[i]='O';if(tttCheck('O')){best=i;tttB[i]='';break;}tttB[i]='';}if(best===-1)for(const i of emp){tttB[i]='X';if(tttCheck('X')){best=i;tttB[i]='';break;}tttB[i]='';}if(best===-1){const mid=Math.floor(tttSz/2)*tttSz+Math.floor(tttSz/2);best=tttB[mid]?emp[Math.floor(Math.random()*emp.length)]:mid;}tttB[best]='O';const wo=tttCheck('O');if(wo){tttSc.O++;document.getElementById('tttSO').textContent=tttSc.O;tttDone=true;renderTtt(wo);showResult('😔',t('tttWinO'),'');return;}if(tttB.every(c=>c)){tttDone=true;renderTtt();showResult('🤝',t('draw'),'');return;}tttTn='X';renderTtt();document.getElementById('tttStatus').textContent=t('tttYou');}
+function tttCheck(p){const n=tttSz,need=n===3?3:4;const dirs=[[0,1],[1,0],[1,1],[1,-1]];for(let r=0;r<n;r++)for(let c=0;c<n;c++){if(tttB[r*n+c]!==p)continue;for(const [dr,dc] of dirs){const cells=[r*n+c];for(let k=1;k<need;k++){const nr=r+dr*k,nc=c+dc*k;if(nr<0||nr>=n||nc<0||nc>=n||tttB[nr*n+nc]!==p)break;cells.push(nr*n+nc);}if(cells.length===need)return cells;}}return null;}
+function renderTtt(wc=null){const g=document.getElementById('tttGrid');g.style.display='grid';g.style.gridTemplateColumns=`repeat(${tttSz},1fr)`;g.style.gap='6px';g.innerHTML='';const sz=Math.floor(280/tttSz-8);tttB.forEach((v,i)=>{const cell=document.createElement('div');cell.className='ttt-cell'+(v?' '+v.toLowerCase():'');if(wc&&wc.includes(i))cell.classList.add('win');cell.style.height=sz+'px';cell.style.fontSize=(sz*0.5)+'px';cell.textContent=v;cell.addEventListener('click',()=>tttClick(i));g.appendChild(cell);});}
+
+// ===== REVERSI =====
+let revB,revTn,revDone;
+const RV=8;
+function revNew(){revB=Array(RV).fill(null).map(()=>Array(RV).fill(0));revB[3][3]=revB[4][4]=1;revB[3][4]=revB[4][3]=2;revTn=2;revDone=false;renderRev();document.getElementById('revStatus').textContent=t('revYour');}
+function revFlips(b,r,c,col){const opp=col===2?1:2;const flips=[];[[-1,-1],[-1,0],[-1,1],[0,-1],[0,1],[1,-1],[1,0],[1,1]].forEach(([dr,dc])=>{const line=[];let nr=r+dr,nc=c+dc;while(nr>=0&&nr<RV&&nc>=0&&nc<RV&&b[nr][nc]===opp){line.push([nr,nc]);nr+=dr;nc+=dc;}if(line.length&&nr>=0&&nr<RV&&nc>=0&&nc<RV&&b[nr][nc]===col)flips.push(...line);});return flips;}
+function revValid(b,col){const m=[];for(let r=0;r<RV;r++)for(let c=0;c<RV;c++)if(!b[r][c]&&revFlips(b,r,c,col).length)m.push([r,c]);return m;}
+function revClick(r,c){if(revDone||revTn!==2)return;const fl=revFlips(revB,r,c,2);if(!fl.length)return;revB[r][c]=2;fl.forEach(([fr,fc])=>revB[fr][fc]=2);revTn=1;renderRev();document.getElementById('revStatus').textContent=t('revCpu');const cm=revValid(revB,1);if(!cm.length){const ym=revValid(revB,2);if(!ym.length){renderRev();revEnd();return;}revTn=2;renderRev();document.getElementById('revStatus').textContent=t('revNoMove');return;}setTimeout(revCpu,500);}
+function revCpu(){const m=revValid(revB,1);if(!m.length){revTn=2;renderRev();document.getElementById('revStatus').textContent=t('revYour');return;}let best=null,bf=0;m.forEach(([r,c])=>{const f=revFlips(revB,r,c,1).length;if(f>bf){bf=f;best=[r,c];}});const [r,c]=best||m[0];const fl=revFlips(revB,r,c,1);revB[r][c]=1;fl.forEach(([fr,fc])=>revB[fr][fc]=1);revTn=2;const ym=revValid(revB,2);if(!ym.length){const cm2=revValid(revB,1);if(!cm2.length){renderRev();revEnd();return;}revTn=1;renderRev();document.getElementById('revStatus').textContent=t('revNoMove');setTimeout(revCpu,600);return;}renderRev();document.getElementById('revStatus').textContent=t('revYour');}
+function revEnd(){let bk=0,wh=0;revB.forEach(row=>row.forEach(c=>{if(c===2)bk++;if(c===1)wh++;}));document.getElementById('revB').textContent=bk;document.getElementById('revW').textContent=wh;if(bk>wh)showResult('🏆',t('win'),`⚫${bk} — ⚪${wh}`);else if(wh>bk)showResult('😔',t('lose'),`⚫${bk} — ⚪${wh}`);else showResult('🤝',t('draw'),`⚫${bk} — ⚪${wh}`);}
+function renderRev(){let bk=0,wh=0;const hints=revTn===2?revValid(revB,2):[];revB.forEach(row=>row.forEach(c=>{if(c===2)bk++;if(c===1)wh++;}));document.getElementById('revB').textContent=bk;document.getElementById('revW').textContent=wh;const bd=document.getElementById('revBoard');bd.innerHTML='';for(let r=0;r<RV;r++)for(let c=0;c<RV;c++){const cell=document.createElement('div');cell.className='rev-cell';if(hints.find(([hr,hc])=>hr===r&&hc===c))cell.classList.add('hint');if(revB[r][c]){const pc=document.createElement('div');pc.className='rev-piece '+(revB[r][c]===2?'black2':'white');cell.appendChild(pc);}cell.addEventListener('click',()=>revClick(r,c));bd.appendChild(cell);}}
+
+// ===== WAR CARDS =====
+const SUITS2=['♠','♥','♦','♣'];
+const RANKS2=['2','3','4','5','6','7','8','9','10','J','Q','K','A'];
+const RV2={2:2,3:3,4:4,5:5,6:6,7:7,8:8,9:9,10:10,J:11,Q:12,K:13,A:14};
+let warYD=[],warCD=[],warAnim=false;
+function warNew(){const d=[];SUITS2.forEach(s=>RANKS2.forEach(r=>d.push({r,s,red:['♥','♦'].includes(s)})));d.sort(()=>Math.random()-0.5);warYD=d.slice(0,26);warCD=d.slice(26);warAnim=false;document.getElementById('warYC').textContent=26;document.getElementById('warCC').textContent=26;const yc=document.getElementById('warYCard');yc.className='playing-card back';yc.innerHTML='🂠';const cc=document.getElementById('warCCard');cc.className='playing-card back';cc.innerHTML='🂠';document.getElementById('warMsg').textContent='';document.getElementById('warMsg').style.color='';document.getElementById('warBtn').disabled=false;}
+function warDraw(){if(warAnim||!warYD.length||!warCD.length)return;warAnim=true;const yc=warYD.shift(),cc=warCD.shift();const yEl=document.getElementById('warYCard');yEl.className='playing-card '+(yc.red?'red':'black-card');yEl.innerHTML=`<div style="font-size:1.2rem">${yc.r}</div><div style="font-size:1.6rem">${yc.s}</div>`;const cEl=document.getElementById('warCCard');cEl.className='playing-card '+(cc.red?'red':'black-card');cEl.innerHTML=`<div style="font-size:1.2rem">${cc.r}</div><div style="font-size:1.6rem">${cc.s}</div>`;const yv=RV2[yc.r],cv=RV2[cc.r];const msgEl=document.getElementById('warMsg');if(yv>cv){warYD.push(yc,cc);msgEl.textContent='✅ '+t('warWin');msgEl.style.color='var(--green)';}else if(cv>yv){warCD.push(yc,cc);msgEl.textContent='❌ '+t('warLose');msgEl.style.color='var(--red)';}else{warYD.push(yc);warCD.push(cc);msgEl.textContent='🤝 '+t('warDraw');msgEl.style.color='var(--gold)';}document.getElementById('warYC').textContent=warYD.length;document.getElementById('warCC').textContent=warCD.length;setTimeout(()=>{warAnim=false;if(!warYD.length){showResult('😔',t('lose'),t('warLost'));document.getElementById('warBtn').disabled=true;}else if(!warCD.length){showResult('🏆',t('win'),t('warWon'));document.getElementById('warBtn').disabled=true;}},400);}
+
+// ===== SNAKES AND LADDERS =====
+const SNAKES={16:6,47:26,49:11,56:53,62:19,64:60,87:24,93:73,95:75,99:78};
+const LADDERS={4:14,9:31,20:38,28:84,40:59,51:67,63:81,71:91};
+const DICE_F=['⚀','⚁','⚂','⚃','⚄','⚅'];
+let slPos,slTurn2,slDone,slBusy;
+function slNew(){slPos=[1,1];slTurn2=0;slDone=false;slBusy=false;document.getElementById('slP1').textContent=1;document.getElementById('slP2').textContent=1;document.getElementById('slDie').textContent='🎲';document.getElementById('slBtn').disabled=false;document.getElementById('slStatus').textContent=t('slYour');renderSL();}
+function slRoll(){if(slDone||slBusy)return;slBusy=true;document.getElementById('slBtn').disabled=true;doRoll(slTurn2,()=>{if(slDone)return;slTurn2=1-slTurn2;if(slTurn2===1){document.getElementById('slStatus').textContent=t('slCpu');setTimeout(()=>doRoll(1,()=>{if(!slDone){slTurn2=0;document.getElementById('slStatus').textContent=t('slYour');document.getElementById('slBtn').disabled=false;slBusy=false;}}),600);}else{document.getElementById('slStatus').textContent=t('slYour');document.getElementById('slBtn').disabled=false;slBusy=false;}});}
+function doRoll(player,cb){const roll=Math.ceil(Math.random()*6);document.getElementById('slDie').textContent=DICE_F[roll-1];let pos=slPos[player]+roll;if(pos>100)pos=slPos[player];let msg='';if(SNAKES[pos]){pos=SNAKES[pos];msg=t('slSnake');}else if(LADDERS[pos]){pos=LADDERS[pos];msg=t('slLadder');}setTimeout(()=>{slPos[player]=pos;document.getElementById('slP1').textContent=slPos[0];document.getElementById('slP2').textContent=slPos[1];if(msg)document.getElementById('slStatus').textContent=msg;renderSL();if(pos>=100){slDone=true;showResult('🏆',player===0?t('slYouWin'):t('slCpuWin'),'🎉');return;}setTimeout(cb,msg?600:100);},500);}
+function renderSL(){const bd=document.getElementById('slBoard');bd.innerHTML='';const cells=[];for(let row=9;row>=0;row--){const base=row*10;for(let col=0;col<10;col++)cells.push(row%2===0?base+10-col:base+col+1);}cells.forEach(num=>{const cell=document.createElement('div');cell.className='sl-cell';const sn=Object.keys(SNAKES).map(Number).includes(num);const ld=Object.keys(LADDERS).map(Number).includes(num);const h=(num%10)*36;cell.style.background=isDark?`hsl(${h},18%,${sn?8:ld?10:12}%)`:`hsl(${h},28%,${sn?75:ld?78:83}%)`;if(sn){cell.textContent='🐍';}else if(ld){cell.textContent='🪜';}const ne=document.createElement('span');ne.className='sl-num';ne.textContent=num;cell.appendChild(ne);const pw=document.createElement('div');pw.className='sl-pieces';[0,1].forEach(p=>{if(slPos[p]===num){const pc=document.createElement('div');pc.className='sl-piece p'+(p+1);pc.textContent=p===0?'1':'2';pw.appendChild(pc);}});if(pw.children.length)cell.appendChild(pw);bd.appendChild(cell);});}
+
+applyT();
+</script>
+</body>
+</html>
