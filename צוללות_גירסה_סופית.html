@@ -1,0 +1,1452 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Naval Strike - Special Ammo Edition</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#050b14;--ocean:#081526;--deep:#02050a;
+  --cyan:#00e5ff;--cyan2:#00b8cc;--gold:#ffd700;--gold2:#e6b800;
+  --green:#00ff88;--red-neon:#ff3366;--red-dim:#cc1144;--orange:#ff6b35;
+  
+  --accent: var(--cyan);
+  --accent-dim: var(--cyan2);
+  --bg-card: rgba(0, 229, 255, 0.04);
+  --border-card: rgba(0, 229, 255, 0.15);
+  
+  --grid-size: clamp(28px, 8.5vw, 34px);
+}
+
+body.p2-turn-theme {
+  --accent: var(--red-neon);
+  --accent-dim: var(--red-dim);
+  --bg-card: rgba(255, 51, 102, 0.05);
+  --border-card: rgba(255, 51, 102, 0.2);
+  background: #140508;
+}
+
+html,body{background:var(--navy);font-family:'Rajdhani',sans-serif;color:#c8d8f0;min-height:100vh;overflow-x:hidden;transition: background 0.4s ease;}
+#app{max-width:1000px;margin:0 auto;padding:10px}
+
+.screen{display:none}
+.screen.active{display:block}
+
+/* ===== MENU ===== */
+.logo{font-family:'Share Tech Mono',monospace;font-size:26px;color:var(--cyan);letter-spacing:3px}
+.logo span{color:var(--red-neon)}
+.hdr{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(0,229,255,.1);margin-bottom:10px}
+.status-bar{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--cyan2);letter-spacing:1px}
+.menu-title{font-family:'Share Tech Mono',monospace;font-size:38px;color:var(--cyan);letter-spacing:4px;text-align:center;text-shadow:0 0 20px rgba(0,229,255,.4);margin-top:15px;margin-bottom:2px}
+.menu-sub{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--gold);letter-spacing:2px;text-align:center;margin-bottom:20px}
+
+.mode-select{display:flex;gap:12px;justify-content:center;margin-bottom:20px}
+.mode-btn{
+  background:rgba(0,229,255,.05);border:2px solid rgba(0,229,255,.2);
+  border-radius:6px;padding:12px 20px;font-size:16px;font-weight:700;
+  color:#fff;cursor:pointer;transition:all .2s;font-family:'Rajdhani',sans-serif;
+}
+.mode-btn.active{background:var(--cyan);color:#000;border-color:var(--cyan);box-shadow:0 0 15px rgba(0,229,255,.4)}
+
+.diff-grid{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin:15px 0}
+.diff-btn{
+  background:rgba(0,229,255,.02);border:1px solid rgba(0,229,255,.15);
+  border-radius:6px;padding:16px;cursor:pointer;transition:all .2s;
+  text-align:center;min-width:140px;color:#c8d8f0;
+}
+.diff-btn:hover{transform:translateY(-2px);background:rgba(0,229,255,.06)}
+.diff-btn.easy:hover{border-color:var(--green)}
+.diff-btn.medium:hover{border-color:var(--gold)}
+.diff-btn.hard:hover{border-color:var(--red-neon)}
+.diff-name{font-size:18px;font-weight:700}
+.easy .diff-name{color:var(--green)}
+.medium .diff-name{color:var(--gold)}
+.hard .diff-name{color:var(--red-neon)}
+
+/* ===== AMMO SELECTOR ===== */
+.ammo-panel {
+  display: flex; gap: 6px; justify-content: center; width: 100%; max-width: 390px; margin-bottom: 8px;
+}
+.ammo-btn {
+  flex: 1; background: rgba(0,0,0,0.4); border: 1px solid var(--border-card); border-radius: 4px;
+  padding: 6px; font-size: 11px; font-weight: 600; color: #fff; cursor: pointer; transition: all 0.2s;
+  text-align: center; font-family: 'Rajdhani', sans-serif;
+}
+.ammo-btn:hover:not(:disabled) { border-color: var(--accent); background: rgba(255,255,255,0.05); }
+.ammo-btn.selected { background: var(--accent); color: #000; border-color: var(--accent); box-shadow: 0 0 8px var(--accent); }
+.ammo-btn:disabled { opacity: 0.25; cursor: not-allowed; text-decoration: line-through; }
+.ammo-count { display: block; font-family: 'Share Tech Mono', monospace; font-size: 13px; font-weight: 700; margin-top: 2px; }
+
+/* ===== TRACKER ===== */
+.tracker-panel{
+  background:var(--bg-card);border:1px solid var(--border-card);
+  border-radius:6px;padding:8px;margin-bottom:12px;
+  display:flex;flex-direction:column;gap:6px;transition:all 0.3s;
+}
+.tracker-title{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--gold);letter-spacing:1px;text-align:center}
+.tracker-row{display:flex;justify-content:center;gap:10px;flex-wrap:wrap}
+.tracker-item{
+  display:flex;align-items:center;gap:4px;background:rgba(0,0,0,.4);
+  padding:4px 8px;border-radius:4px;border:1px solid rgba(255,255,255,.05);
+  font-family:'Share Tech Mono',monospace;font-size:12px;
+}
+.tracker-item.sunk{opacity:0.25;text-decoration:line-through;border-color:var(--red-neon)}
+.tracker-item .dots{display:flex;gap:2px}
+.tracker-item .dot{width:6px;height:6px;background:var(--accent);border-radius:50%}
+.tracker-item.mine-item .dot{background:var(--orange) !important}
+
+/* ===== PLACEMENT ===== */
+.place-layout{display:flex;gap:16px;align-items:flex-start;justify-content:center;flex-wrap:wrap}
+.ship-panel{min-width:210px;background:rgba(13,34,64,.3);padding:12px;border-radius:6px;border:1px solid rgba(0,229,255,.1)}
+.ship-item{display:flex;align-items:center;gap:6px;padding:6px 10px;margin-bottom:4px;border-radius:4px;cursor:pointer;font-size:13px;border:1px solid transparent}
+.ship-item.selected{border-color:var(--cyan);background:rgba(0,229,255,.1)}
+.ship-item.placed{opacity:.25;cursor:default;text-decoration:line-through}
+
+.btn-row{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;justify-content:center}
+.btn{font-family:'Rajdhani',sans-serif;font-size:12px;font-weight:600;padding:6px 14px;border-radius:4px;cursor:pointer;transition:all .15s;border:1px solid}
+.btn-cyan{background:rgba(0,229,255,.05);border-color:var(--cyan2);color:var(--cyan)}
+.btn-gold{background:rgba(255,215,0,.05);border-color:var(--gold2);color:var(--gold)}
+.btn-red{background:rgba(255,51,102,.05);border-color:var(--red-neon);color:var(--red-neon)}
+.btn-green{background:rgba(0,255,136,.08);border-color:var(--green);color:var(--green);font-weight:700}
+.btn-green:disabled{opacity:0.2;cursor:not-allowed}
+
+/* ===== GRIDS ===== */
+.grid-wrap{display:flex;flex-direction:column;align-items:center;width:100%}
+.grid-container{position:relative;margin-right:20px}
+.col-labels{display:flex;font-family:'Share Tech Mono',monospace;font-size:11px;color:#5a7690;margin-right:22px;margin-bottom:2px}
+.col-labels span{width:var(--grid-size);text-align:center;display:block}
+.row-labels{display:flex;flex-direction:column;position:absolute;right:0;top:0;font-family:'Share Tech Mono',monospace;font-size:11px;color:#5a7690}
+.row-labels span{height:var(--grid-size);width:20px;display:flex;align-items:center;justify-content:center}
+.grid{display:grid;grid-template-columns:repeat(10,var(--grid-size));grid-template-rows:repeat(10,var(--grid-size));gap:1px;margin-right:22px;border:1px solid rgba(0,229,255,.1);background:rgba(0,0,0,.4)}
+
+.cell{width:var(--grid-size);height:var(--grid-size);background:rgba(10,25,48,.5);border:1px solid rgba(0,150,200,.6);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px;user-select:none}
+.cell:hover{background:rgba(0,229,255,.1)}
+.cell.ship-p1{background:rgba(0,80,130,.5);border:1px solid var(--cyan)}
+.cell.ship-p2{background:rgba(130,20,40,.4);border:1px solid var(--red-neon)}
+.cell.mine-p1, .cell.mine-p2{background:rgba(180,80,0,.2);border:1px solid var(--orange)}
+.cell.hit{background:rgba(180,10,40,.6);box-shadow:inset 0 0 6px rgba(255,0,0,.5)}
+.cell.miss{background:rgba(15,30,50,.7);color:#4a6680}
+.cell.sunk{background:rgba(80,5,20,.85);border-color:var(--red-neon);position:relative}
+.cell.sunk::after{content:'✕';position:absolute;font-size:18px;color:rgba(255,100,100,.95);font-weight:bold}
+.cell.mine-hit{background:rgba(140,60,0,.85);border-color:var(--orange)}
+.cell.scanned{background:rgba(255,215,0,0.15);border:1px solid var(--gold);color:var(--gold);font-weight:bold}
+.cell.hover-ok{background:rgba(0,229,255,.2)}
+.cell.hover-bad{background:rgba(255,51,102,.2)}
+.cell.hover-ammo{background:rgba(255,215,0,0.25)}
+
+/* ===== GAME ACTION SCREEN ===== */
+.hud{display:flex;gap:8px;justify-content:center;margin-bottom:10px;flex-wrap:wrap}
+.hud-box{background:var(--bg-card);border:1px solid var(--border-card);border-radius:4px;padding:6px 12px;text-align:center;min-width:85px;transition:all 0.3s}
+.hud-box.active-turn{border-color:var(--accent);box-shadow:0 0 8px var(--accent);background:rgba(0,0,0,0.3)}
+.hud-val{font-family:'Share Tech Mono',monospace;font-size:18px;font-weight:700;color:var(--accent)}
+
+.game-layout-vertical{display:flex;flex-direction:column;gap:16px;align-items:center}
+.board-section{display:flex;flex-direction:column;align-items:center;background:rgba(5,12,24,.7);padding:10px;border-radius:8px;border:1px solid var(--border-card);width:100%;max-width:390px;transition:all 0.3s}
+.board-title{font-family:'Share Tech Mono',monospace;font-size:12px;letter-spacing:1px;margin-bottom:6px;font-weight:600;color:var(--accent)}
+
+.scroll-hint{font-size:12px;color:var(--gold);animation:bounce 1.5s infinite;margin:4px 0;font-family:monospace}
+@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(3px)}}
+
+.log-panel-wide{width:100%;max-width:390px}
+.log-box{background:rgba(3,6,12,.95);border:1px solid var(--border-card);border-radius:4px;height:80px;overflow-y:auto;padding:6px;font-size:11px;font-family:monospace}
+
+/* ===== PASS SCREEN ===== */
+#pass-screen{position:fixed;inset:0;background:#030710;z-index:500;display:none;flex-direction:column;align-items:center;justify-content:center;padding:20px;text-align:center}
+#pass-screen.active{display:flex}
+.pass-box{background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.1);padding:30px;border-radius:8px;max-width:400px}
+
+/* ===== OVERLAYS ===== */
+.end-overlay{position:fixed;inset:0;background:rgba(0,0,0,.9);display:none;align-items:center;justify-content:center;z-index:600}
+.end-overlay.show{display:flex}
+.end-box{border-radius:8px;padding:30px;text-align:center;max-width:360px;border:1px solid var(--accent)}
+
+.scanning-effect::before{
+  content:'';position:absolute;right:22px;top:0;left:0;height:3px;
+  background:var(--accent);box-shadow:0 0 8px var(--accent);
+  z-index:10;animation:scan 1s linear infinite;pointer-events:none;
+}
+@keyframes scan{0%{top:0}50%{top:100%}100%{top:0}}
+
+/* ANIMATIONS */
+@keyframes explode{0%{transform:scale(1);opacity:1}50%{transform:scale(1.8);opacity:.8}100%{transform:scale(0);opacity:0}}
+@keyframes splash{0%{transform:scale(1);box-shadow:inset 0 0 0 transparent}50%{transform:scale(1.2);box-shadow:inset 0 0 10px rgba(0,100,200,.6)}100%{transform:scale(1);box-shadow:none}}
+@keyframes mineBlast{0%{background:rgba(255,100,0,.8)}30%{background:rgba(255,200,0,.9)}100%{background:rgba(140,60,0,.85)}}
+@keyframes radarSweep{0%{box-shadow:inset 0 0 0 transparent}50%{box-shadow:inset 0 0 12px var(--gold)}100%{box-shadow:inset 0 0 0 transparent}}
+.anim-hit{animation:explode .5s ease forwards}
+.anim-miss{animation:splash .4s ease}
+.anim-mine{animation:mineBlast .6s ease}
+.anim-scan{animation:radarSweep .8s ease}
+
+/* STATS & TIMER */
+.timer-box{font-family:'Share Tech Mono',monospace;font-size:13px;color:var(--cyan2);text-align:center;margin:4px 0}
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0;text-align:center}
+.stat-item{background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.1);border-radius:6px;padding:8px}
+.stat-val{font-family:'Share Tech Mono',monospace;font-size:20px;font-weight:700;color:var(--cyan)}
+.stat-label{font-size:10px;opacity:.5;margin-top:2px}
+
+/* HIGH SCORES */
+.hs-table{width:100%;border-collapse:collapse;margin:10px 0}
+.hs-table.rtl{direction:rtl;text-align:right}
+.hs-table.ltr{direction:ltr;text-align:left}
+.hs-table th{font-size:10px;opacity:.5;padding:4px 6px;border-bottom:1px solid rgba(0,229,255,.15)}
+.hs-table td{font-size:11px;padding:5px 6px;border-bottom:1px solid rgba(255,255,255,.05)}
+.hs-table .rank{color:var(--gold);font-weight:900;text-align:center}
+.hs-table .hs-name{font-weight:700}.hs-table .hs-score{color:var(--cyan);font-weight:700}
+.name-input{background:rgba(0,229,255,.05);border:1px solid rgba(0,229,255,.3);border-radius:4px;padding:8px 12px;color:#fff;font-size:14px;font-weight:600;text-align:center;width:180px;outline:none;font-family:'Rajdhani',sans-serif}
+.name-input:focus{border-color:var(--cyan)}
+.lang-row{display:flex;gap:6px;justify-content:center;margin-bottom:10px}
+.lang-btn{font-size:18px;background:rgba(0,229,255,.05);border:2px solid transparent;border-radius:6px;padding:3px 8px;cursor:pointer;opacity:.5;transition:all .2s;font-family:'Rajdhani',sans-serif;line-height:1.3}
+.lang-btn.sel{opacity:1;border-color:var(--cyan);background:rgba(0,229,255,.15)}
+
+/* WATER BG EFFECT */
+.grid{position:relative;overflow:hidden}
+.water-shimmer{position:absolute;inset:0;background:linear-gradient(45deg,transparent 40%,rgba(0,150,255,.03) 50%,transparent 60%);animation:shimmer 3s infinite linear;pointer-events:none;z-index:0}
+@keyframes shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+
+</style>
+</head>
+<body>
+<div id="app">
+
+<!-- PASS SCREEN OVERLAY -->
+<div id="pass-screen">
+  <div class="pass-box">
+    <div style="font-size:48px;margin-bottom:10px">🔄</div>
+    <h2 id="pass-title" data-i="passTurnTitle" style="font-family:'Share Tech Mono';color:var(--cyan);margin-bottom:10px">החלפת תור</h2>
+    <p id="pass-msg" data-i="passDefaultMsg" style="font-size:15px;color:#8aaac0;margin-bottom:20px">העבר את המכשיר לשחקן הבא.</p>
+    <button class="btn btn-green" style="font-size:14px;padding:8px 20px" onclick="dismissPassScreen()" data-i="passReadyBtn">אני מוכן, הצג מגרש</button>
+  </div>
+</div>
+
+<!-- MENU -->
+<div id="menu-screen" class="screen active">
+  <div class="hdr">
+    <div class="logo">Naval <span>Strike</span></div>
+    <div class="status-bar">SPECIAL AMMO v6.0</div>
+  </div>
+  <div class="menu-title">Naval Strike</div>
+  <div class="lang-row" id="langRow">
+    <button class="lang-btn" data-lang="he">🇮🇱</button>
+    <button class="lang-btn" data-lang="en">🇬🇧</button>
+    <button class="lang-btn" data-lang="ru">🇷🇺</button>
+    <button class="lang-btn" data-lang="es">🇪🇸</button>
+    <button class="lang-btn" data-lang="ar">🇸🇦</button>
+  </div>
+  <div class="menu-sub" data-i="menuSub">⚡ מהדורת פגזים מיוחדים ואסטרטגיים ⚡</div>
+  
+  <div style="text-align:center;margin-bottom:15px">
+    <p style="font-size:14px;color:#7090a8;margin-bottom:8px" data-i="chooseModeLabel">בחר מצב משחק:</p>
+    <div class="mode-select">
+      <button id="mode-pvc" class="mode-btn active" onclick="setMode('pvc')" data-i="modeVsComputer">👤 נגד המחשב</button>
+      <button id="mode-pvp" class="mode-btn" onclick="setMode('pvp')" data-i="modePvp">👥 שני שחקנים (1v1)</button>
+    </div>
+  </div>
+
+  <div id="diff-section" style="text-align:center">
+    <p style="font-size:14px;color:#7090a8;margin-bottom:4px" data-i="cpuDifficultyLabel">רמת המחשב:</p>
+    <div class="diff-grid">
+      <div class="diff-btn easy" onclick="initPlacement('easy')">
+        <div class="diff-name" data-i="diffEasy">קל</div>
+      </div>
+      <div class="diff-btn medium" onclick="initPlacement('medium')">
+        <div class="diff-name" data-i="diffMedium">בינוני</div>
+      </div>
+      <div class="diff-btn hard" onclick="initPlacement('hard')">
+        <div class="diff-name" data-i="diffHard">קשה</div>
+      </div>
+    </div>
+  </div>
+  
+  <div style="text-align:center;margin:10px 0">
+    <button class="btn btn-gold" onclick="showHighScores()" data-i="highScores">🏆 טבלת שיאים</button>
+    <button class="btn btn-cyan" onclick="document.getElementById('about-overlay').classList.add('show')" data-i="about">ℹ️ אודות</button>
+  </div>
+  <div id="menu-hs"></div>
+  <div id="pvp-start-section" style="text-align:center; display:none; margin:20px 0">
+    <button class="btn btn-green" style="font-size:16px;padding:12px 30px" onclick="initPlacement('medium')" data-i="startFleetSetup">התחל בהקמת הציים ⚔️</button>
+  </div>
+</div>
+
+<!-- PLACEMENT SCREEN -->
+<div id="place-screen" class="screen">
+  <div class="hdr">
+    <div class="logo">Naval <span>Strike</span></div>
+    <div id="setup-player-badge" style="font-family:'Share Tech Mono';color:var(--cyan)" data-i="player">שחקן 1</div>
+  </div>
+  <div style="text-align:center;margin-bottom:8px">
+    <div id="place-title" style="font-size:15px;font-weight:700;color:var(--gold)" data-i="placeShipsSuffix">📍 : מקם ספינות (שלב 1/2)</div>
+  </div>
+  
+  <div class="place-layout">
+    <div class="ship-panel">
+      <h3 style="font-family:'Share Tech Mono';font-size:12px;color:var(--cyan);margin-bottom:6px" data-i="shipyardLabel">🚢 מספנה זמינה</h3>
+      <div id="ship-list"></div>
+    </div>
+    
+    <div class="grid-wrap">
+      <div class="grid-container">
+        <div class="col-labels" id="place-col-labels"></div>
+        <div style="display:flex">
+          <div class="row-labels" id="place-row-labels"></div>
+          <div class="grid" id="place-grid"></div>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-cyan" onclick="rotateShip()" data-i="rotateBtn">↻ סובב (R)</button>
+        <button class="btn btn-gold" onclick="autoPlace()" data-i="randomBtn">⚡ אקראי</button>
+        <button class="btn btn-red" onclick="clearPlacement()" data-i="clearBtn">✕ נקה</button>
+        <button id="next-phase-btn" class="btn btn-green" onclick="nextPlacementPhase()" disabled data-i="nextPhaseBtn">המשך לשלב הבא ←</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- GAME SCREEN -->
+<div id="game-screen" class="screen">
+  <div class="tracker-panel">
+    <div class="tracker-title" data-i="enemyFleetStatus">📡 סטטוס צי האויב הנוכחי (מה נשאר לו?)</div>
+    <div class="tracker-row" id="enemy-ships-tracker"></div>
+  </div>
+
+  <div class="hud">
+    <div class="hud-box active-turn" id="hud-turn-box">
+      <div class="hud-val" id="hud-turn-text">שלך</div>
+    </div>
+    <div class="hud-box">
+      <div class="hud-val" id="hud-score-text">פגיעות: 0</div>
+    </div>
+    <div class="hud-box">
+      <div class="hud-val" id="hud-timer">00:00</div>
+      <div style="font-size:8px;opacity:.5" data-i="timeLabel">זמן</div>
+    </div>
+    <div class="hud-box">
+      <div class="hud-val" id="hud-accuracy">0%</div>
+      <div style="font-size:8px;opacity:.5" data-i="accuracyLabel">דיוק</div>
+    </div>
+  </div>
+  
+  <div class="game-layout-vertical">
+    <!-- ammo selector -->
+    <div class="ammo-panel" id="ammo-panel">
+      <button class="ammo-btn" id="ammo-radar" onclick="selectAmmo('radar')" data-i="ammoRadarLabel">📡 מכ"ם 3x3<span class="ammo-count" id="count-radar">1</span></button>
+      <button class="ammo-btn" id="ammo-cluster" onclick="selectAmmo('cluster')" data-i="ammoClusterLabel">💥 פגז מצרר (+)<span class="ammo-count" id="count-cluster">1</span></button>
+      <button class="ammo-btn" id="ammo-pierce" onclick="selectAmmo('pierce')" data-i="ammoPierceLabel">🎯 חודר שריון (I)<span class="ammo-count" id="count-pierce">1</span></button>
+    </div>
+
+    <!-- attack board -->
+    <div class="board-section" id="attack-section">
+      <div class="board-title" id="attack-board-title">🎯 לוח תקיפה</div>
+      <div class="grid-container">
+        <div class="col-labels" id="game-enemy-col-labels"></div>
+        <div style="display:flex">
+          <div class="row-labels" id="game-enemy-row-labels"></div>
+          <div class="grid" id="game-enemy-grid"></div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="scroll-hint" data-i="scrollHint">▼ גלול למטה לראות את הצי שלך ▼</div>
+    
+    <!-- defense board -->
+    <div class="board-section" id="defend-section">
+      <div class="board-title" id="defend-board-title" data-i="defendBoardYours">🛡 הצי ההגנתי שלך</div>
+      <div class="grid-container">
+        <div class="col-labels" id="game-player-col-labels"></div>
+        <div style="display:flex">
+          <div class="row-labels" id="game-player-row-labels"></div>
+          <div class="grid" id="game-player-grid"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- system log -->
+    <div class="log-panel-wide">
+      <div class="log-box" id="log-box"></div>
+    </div>
+    
+    <button class="btn btn-red" style="width:100%;max-width:390px" onclick="goMenu()" data-i="surrenderBtn">✕ כניעה ונסיגה לתפריט</button>
+  </div>
+</div>
+
+<!-- END OVERLAY -->
+<div class="end-overlay" id="end-overlay">
+  <div id="end-box" class="end-box">
+    <div id="end-icon" style="font-size:48px;margin-bottom:10px">🏆</div>
+    <h2 id="end-title" style="font-family:'Share Tech Mono';font-size:24px;margin-bottom:10px">הקרב הסתיים</h2>
+    <p id="end-sub" style="font-size:14px;color:#8aaac0;margin-bottom:10px"></p>
+    <div class="stats-grid" id="end-stats"></div>
+    <div id="end-name-entry" style="display:none;margin:10px 0">
+      <div style="font-size:12px;opacity:.6;margin-bottom:6px" data-i="newHighScoreEntry">🏆 שיא חדש! הכנס שם:</div>
+      <input class="name-input" id="ns-player-name" data-i="namePlaceholder" placeholder="שם..." maxlength="10">
+      <button class="btn btn-gold" onclick="saveHighScore()" style="margin-top:6px" data-i="saveBtn">שמור</button>
+    </div>
+    <div id="end-hs"></div>
+    <button class="btn btn-green" onclick="goMenu()" style="margin-top:10px" data-i="backToHQ">חזרה למפקדה הראשית</button>
+  </div>
+</div>
+
+<div class="end-overlay" id="about-overlay">
+  <div class="end-box">
+    <div style="font-size:48px;margin-bottom:10px">🚢</div>
+    <h2 style="font-family:'Share Tech Mono';font-size:24px;margin-bottom:10px">Naval Strike</h2>
+    <p style="font-size:14px;color:#8aaac0;margin-bottom:10px" data-i="aboutDesc">המשחק נוצר על ידי ברק אפללו במסגרת AppNest — קן האפליקציות</p>
+    <p style="font-size:13px;color:var(--gold);margin-bottom:14px" data-i="aboutCopyright">© 2026 · כל הזכויות שמורות לברק אפללו</p>
+    <div class="btn-row">
+      <a href="https://barakaflalo.github.io/appnest" target="_blank" rel="noopener" class="btn btn-gold" data-i="aboutLink" style="text-decoration:none;display:inline-block">🪺 AppNest — עוד משחקים בחינם</a>
+      <button class="btn btn-green" onclick="document.getElementById('about-overlay').classList.remove('show')" data-i="back">חזרה</button>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script>
+const GRID=10;
+const COLS=['A','B','C','D','E','F','G','H','I','J'];
+const ROWS=['1','2','3','4','5','6','7','8','9','10'];
+const SHIPS_DEF=[
+  {id:0,nameKey:'shipCarrier',size:5,emoji:'✈'},
+  {id:1,nameKey:'shipBattleship',size:4,emoji:'⚓'},
+  {id:2,nameKey:'shipDestroyerA',size:3,emoji:'🚢'},
+  {id:3,nameKey:'shipDestroyerB',size:3,emoji:'🚢'},
+  {id:4,nameKey:'shipSubA',size:2,emoji:'🤿'},
+  {id:5,nameKey:'shipSubB',size:2,emoji:'🤿'},
+  {id:6,nameKey:'shipCruiserA',size:2,emoji:'⚡'},
+  {id:7,nameKey:'shipCruiserB',size:2,emoji:'⚡'},
+];
+
+/* ===== i18n ===== */
+var curLang='he';
+try{var _sl=localStorage.getItem('navalLang');if(_sl)curLang=_sl;}catch(e){}
+function isRtl(lang){return lang==='he'||lang==='ar';}
+function pL(n){return T[curLang].player+' '+n;}
+function cN(n){return n===1?T[curLang].colorBlue:T[curLang].colorRed;}
+
+var T={
+  he:{
+    // ships
+    shipCarrier:"נושאת מטוסים",shipBattleship:"ספינת קרב",shipDestroyerA:"משחתת א",shipDestroyerB:"משחתת ב",
+    shipSubA:"צוללת א",shipSubB:"צוללת ב",shipCruiserA:"סיירת א",shipCruiserB:"סיירת ב",
+    // difficulty
+    diffEasy:"קל",diffMedium:"בינוני",diffHard:"קשה",
+    // pass screen
+    passTurnTitle:"החלפת תור",passDefaultMsg:"העבר את המכשיר לשחקן הבא.",passReadyBtn:"אני מוכן, הצג מגרש",
+    // menu
+    menuSub:"⚡ מהדורת פגזים מיוחדים ואסטרטגיים ⚡",chooseModeLabel:"בחר מצב משחק:",
+    modeVsComputer:"👤 נגד המחשב",modePvp:"👥 שני שחקנים (1v1)",cpuDifficultyLabel:"רמת המחשב:",
+    highScores:"🏆 טבלת שיאים",about:"ℹ️ אודות",startFleetSetup:"התחל בהקמת הציים ⚔️",
+    // placement
+    player:"שחקן",placeShipsSuffix:": מקם ספינות (שלב 1/2)",placeMinesSuffix:": הטמן מוקשים (שלב 2/2)",
+    shipyardLabel:"🚢 מספנה זמינה",rotateBtn:"↻ סובב (R)",randomBtn:"⚡ אקראי",clearBtn:"✕ נקה",
+    nextPhaseBtn:"המשך לשלב הבא ←",minesLabel:"מוקשים ימיים",remainingSuffix:" נותרו",
+    nextPlayerBtn:"עבור לשחקן 2 ←",launchOperationBtn:"🚀 שגר פקודת מבצע!",
+    // game screen
+    enemyFleetStatus:"📡 סטטוס צי האויב הנוכחי (מה נשאר לו?)",hitsLabel:"פגיעות",timeLabel:"זמן",accuracyLabel:"דיוק",
+    ammoRadarLabel:"📡 מכ\"ם 3x3",ammoClusterLabel:"💥 פגז מצרר (+)",ammoPierceLabel:"🎯 חודר שריון (I)",
+    scrollHint:"▼ גלול למטה לראות את הצי שלך ▼",surrenderBtn:"✕ כניעה ונסיגה לתפריט",mines:"מוקשים",
+    // end overlay
+    newHighScoreEntry:"🏆 שיא חדש! הכנס שם:",namePlaceholder:"שם...",saveBtn:"שמור",backToHQ:"חזרה למפקדה הראשית",
+    // about
+    aboutDesc:"המשחק נוצר על ידי ברק אפללו במסגרת AppNest — קן האפליקציות",
+    aboutCopyright:"© 2026 · כל הזכויות שמורות לברק אפללו",aboutLink:"🪺 AppNest — עוד משחקים בחינם",back:"חזרה",
+    // high score table
+    noScores:"אין שיאים עדיין",thRank:"#",thName:"שם",scoreLabel:"ניקוד",thDiff:"רמה",anonymous:"אנונימי",
+    // turn / board titles
+    turnPrefix:"תור: ",aiScanningSuffix:"המחשב סורק...",
+    attackBoardP1:"🎯 לוח תקיפה של שחקן 1 (אש על האדום)",attackBoardP2:"🎯 לוח תקיפה של שחקן 2 (אש על הכחול)",
+    attackBoardAI:"⚠️ המחשב תוקף את הצי שלך",defendBoardPrefix:"🛡 הצי ההגנתי של ",defendBoardYours:"🛡 הצי ההגנתי שלך",
+    colorBlue:"כחול",colorRed:"אדום",
+    // combat log
+    logWeaponsOnline:"⚓ מערכות נשק הופעלו. פגזים מיוחדים מוכנים!",
+    logRadarUsed:"📡 מכ\"ם הופעל ב-",logRadarFound:": אותרו ",logRadarShips:" ספינות ו-",logRadarMinesFound:" מוקשים!",
+    logFiredPrefix:"🚀 שוגר פגז מסוג [",ammoClusterShort:"מצרר",ammoPierceShort:"חודר שריון",logFiredMid:"] אל ",
+    logHitPrefix:"💥 פגיעה! ב-",logSunkPrefix:"⚓ יעד חוסל! ה",logSunkSuffix:" טובעה!",
+    logMinePrefix:"💣 מוקש! פיצוץ במשבצת ",
+    passToPlayerPrefix:"העבר את המכשיר לשחקן ",
+    logAISpecialAmmo:"⚠️ המחשב משגר עליך פגז מיוחד!",logAIHitPrefix:"🔴 המחשב פגע לך ב-",
+    logAISunkPrefix:"💀 ספינה שלך טובעה: ",logAIMinePrefix:"💣 המחשב פוצץ מוקד שלך ב-",
+    // end game
+    winSuffix:" ניצח!",enemyFleetSunkMsg:"כל מערך הצי של היריב טובע בים.",
+    totalVictory:"ניצחון מוחלט! 🏆",defeatedTitle:"הובסת בקרב... 💀",
+    destroyedAIMsg:"השמדת את כל ספינות הבינה המלאכותית!",aiSunkYourFleetMsg:"המחשב הצליח להטביע את כל הצי שלך.",
+    shotsLabel:"יריות",finalScoreLabel:"ניקוד סופי",
+    // pvp placement transition
+    fleetOfP2Red:"הצי של שחקן 2 (אדום)",passNoLookMsg:"שחקן 1, העבר את המכשיר לשחקן 2 בלי להציץ!"
+  },
+  en:{
+    shipCarrier:"Aircraft Carrier",shipBattleship:"Battleship",shipDestroyerA:"Destroyer A",shipDestroyerB:"Destroyer B",
+    shipSubA:"Submarine A",shipSubB:"Submarine B",shipCruiserA:"Patrol Boat A",shipCruiserB:"Patrol Boat B",
+    diffEasy:"Easy",diffMedium:"Medium",diffHard:"Hard",
+    passTurnTitle:"Turn Change",passDefaultMsg:"Pass the device to the next player.",passReadyBtn:"I'm ready, show the board",
+    menuSub:"⚡ Special Ammo Strategic Edition ⚡",chooseModeLabel:"Choose game mode:",
+    modeVsComputer:"👤 Vs Computer",modePvp:"👥 Two Players (1v1)",cpuDifficultyLabel:"Computer level:",
+    highScores:"🏆 High Scores",about:"ℹ️ About",startFleetSetup:"Start Fleet Setup ⚔️",
+    player:"Player",placeShipsSuffix:": Place Ships (Step 1/2)",placeMinesSuffix:": Plant Mines (Step 2/2)",
+    shipyardLabel:"🚢 Available Shipyard",rotateBtn:"↻ Rotate (R)",randomBtn:"⚡ Random",clearBtn:"✕ Clear",
+    nextPhaseBtn:"Next Step ←",minesLabel:"Sea Mines",remainingSuffix:" left",
+    nextPlayerBtn:"To Player 2 ←",launchOperationBtn:"🚀 Launch Operation!",
+    enemyFleetStatus:"📡 Current Enemy Fleet Status (what's left)",hitsLabel:"Hits",timeLabel:"Time",accuracyLabel:"Accuracy",
+    ammoRadarLabel:"📡 Radar 3x3",ammoClusterLabel:"💥 Cluster Shell (+)",ammoPierceLabel:"🎯 Armor Piercing (I)",
+    scrollHint:"▼ Scroll down to see your fleet ▼",surrenderBtn:"✕ Surrender to Menu",mines:"Mines",
+    newHighScoreEntry:"🏆 New high score! Enter name:",namePlaceholder:"Name...",saveBtn:"Save",backToHQ:"Back to HQ",
+    aboutDesc:"Created by Barak Aflalo as part of AppNest — the App Nest",
+    aboutCopyright:"© 2026 · All rights reserved to Barak Aflalo",aboutLink:"🪺 AppNest — More free games",back:"Back",
+    noScores:"No scores yet",thRank:"#",thName:"Name",scoreLabel:"Score",thDiff:"Difficulty",anonymous:"Anonymous",
+    turnPrefix:"Turn: ",aiScanningSuffix:"Computer scanning...",
+    attackBoardP1:"🎯 Player 1's attack board (fire on red)",attackBoardP2:"🎯 Player 2's attack board (fire on blue)",
+    attackBoardAI:"⚠️ The computer is attacking your fleet",defendBoardPrefix:"🛡 Defense fleet of ",defendBoardYours:"🛡 Your defense fleet",
+    colorBlue:"Blue",colorRed:"Red",
+    logWeaponsOnline:"⚓ Weapon systems online. Special ammo ready!",
+    logRadarUsed:"📡 Radar activated at ",logRadarFound:": detected ",logRadarShips:" ships and ",logRadarMinesFound:" mines!",
+    logFiredPrefix:"🚀 Firing [",ammoClusterShort:"Cluster",ammoPierceShort:"Armor-Piercing",logFiredMid:"] shell at ",
+    logHitPrefix:"💥 Hit at ",logSunkPrefix:"⚓ Target eliminated! ",logSunkSuffix:" sunk!",
+    logMinePrefix:"💣 Mine! Explosion at ",
+    passToPlayerPrefix:"Pass the device to Player ",
+    logAISpecialAmmo:"⚠️ The computer fires special ammo at you!",logAIHitPrefix:"🔴 The computer hit you at ",
+    logAISunkPrefix:"💀 Your ship was sunk: ",logAIMinePrefix:"💣 The computer detonated your mine at ",
+    winSuffix:" wins!",enemyFleetSunkMsg:"The enemy's entire fleet sank.",
+    totalVictory:"Total Victory! 🏆",defeatedTitle:"Defeated in battle... 💀",
+    destroyedAIMsg:"You destroyed all of the AI's ships!",aiSunkYourFleetMsg:"The computer sank your entire fleet.",
+    shotsLabel:"Shots",finalScoreLabel:"Final Score",
+    fleetOfP2Red:"Player 2's fleet (red)",passNoLookMsg:"Player 1, pass the device to Player 2 without looking!"
+  },
+  ru:{
+    shipCarrier:"Авианосец",shipBattleship:"Линкор",shipDestroyerA:"Эсминец A",shipDestroyerB:"Эсминец B",
+    shipSubA:"Подлодка A",shipSubB:"Подлодка B",shipCruiserA:"Патрульный катер A",shipCruiserB:"Патрульный катер B",
+    diffEasy:"Лёгкий",diffMedium:"Средний",diffHard:"Сложный",
+    passTurnTitle:"Смена хода",passDefaultMsg:"Передайте устройство следующему игроку.",passReadyBtn:"Я готов, показать поле",
+    menuSub:"⚡ Стратегическое издание со спецснарядами ⚡",chooseModeLabel:"Выберите режим игры:",
+    modeVsComputer:"👤 Против компьютера",modePvp:"👥 Два игрока (1v1)",cpuDifficultyLabel:"Уровень компьютера:",
+    highScores:"🏆 Таблица рекордов",about:"ℹ️ О игре",startFleetSetup:"Начать расстановку флота ⚔️",
+    player:"Игрок",placeShipsSuffix:": расстановка кораблей (шаг 1/2)",placeMinesSuffix:": установка мин (шаг 2/2)",
+    shipyardLabel:"🚢 Доступная верфь",rotateBtn:"↻ Повернуть (R)",randomBtn:"⚡ Случайно",clearBtn:"✕ Очистить",
+    nextPhaseBtn:"Далее ←",minesLabel:"Морские мины",remainingSuffix:" осталось",
+    nextPlayerBtn:"К игроку 2 ←",launchOperationBtn:"🚀 Начать операцию!",
+    enemyFleetStatus:"📡 Текущий статус флота врага (что осталось)",hitsLabel:"Попадания",timeLabel:"Время",accuracyLabel:"Точность",
+    ammoRadarLabel:"📡 Радар 3x3",ammoClusterLabel:"💥 Шрапнельный снаряд (+)",ammoPierceLabel:"🎯 Бронебойный (I)",
+    scrollHint:"▼ Прокрутите вниз, чтобы увидеть свой флот ▼",surrenderBtn:"✕ Сдаться в меню",mines:"Мины",
+    newHighScoreEntry:"🏆 Новый рекорд! Введите имя:",namePlaceholder:"Имя...",saveBtn:"Сохранить",backToHQ:"Назад в штаб",
+    aboutDesc:"Создано Бараком Афлало в рамках AppNest — гнезда приложений",
+    aboutCopyright:"© 2026 · Все права защищены, Барак Афлало",aboutLink:"🪺 AppNest — больше бесплатных игр",back:"Назад",
+    noScores:"Пока нет рекордов",thRank:"#",thName:"Имя",scoreLabel:"Очки",thDiff:"Сложность",anonymous:"Аноним",
+    turnPrefix:"Ход: ",aiScanningSuffix:"Компьютер сканирует...",
+    attackBoardP1:"🎯 Поле атаки Игрока 1 (огонь по красным)",attackBoardP2:"🎯 Поле атаки Игрока 2 (огонь по синим)",
+    attackBoardAI:"⚠️ Компьютер атакует ваш флот",defendBoardPrefix:"🛡 Флот обороны: ",defendBoardYours:"🛡 Ваш флот обороны",
+    colorBlue:"синие",colorRed:"красные",
+    logWeaponsOnline:"⚓ Системы вооружения активированы. Спецснаряды готовы!",
+    logRadarUsed:"📡 Радар активирован в ",logRadarFound:": обнаружено ",logRadarShips:" кораблей и ",logRadarMinesFound:" мин!",
+    logFiredPrefix:"🚀 Выстрел [",ammoClusterShort:"Шрапнель",ammoPierceShort:"Бронебойный",logFiredMid:"] снарядом по ",
+    logHitPrefix:"💥 Попадание по ",logSunkPrefix:"⚓ Цель уничтожена! Потоплен корабль: ",logSunkSuffix:"!",
+    logMinePrefix:"💣 Мина! Взрыв в клетке ",
+    passToPlayerPrefix:"Передайте устройство Игроку ",
+    logAISpecialAmmo:"⚠️ Компьютер стреляет по вам спецснарядом!",logAIHitPrefix:"🔴 Компьютер попал по вам в ",
+    logAISunkPrefix:"💀 Ваш корабль потоплен: ",logAIMinePrefix:"💣 Компьютер взорвал вашу мину в ",
+    winSuffix:" победил!",enemyFleetSunkMsg:"Весь флот противника потоплен.",
+    totalVictory:"Полная победа! 🏆",defeatedTitle:"Поражение в бою... 💀",
+    destroyedAIMsg:"Вы уничтожили весь флот ИИ!",aiSunkYourFleetMsg:"Компьютер потопил весь ваш флот.",
+    shotsLabel:"Выстрелы",finalScoreLabel:"Итоговый счёт",
+    fleetOfP2Red:"Флот Игрока 2 (красные)",passNoLookMsg:"Игрок 1, передайте устройство Игроку 2, не подглядывая!"
+  },
+  es:{
+    shipCarrier:"Portaaviones",shipBattleship:"Acorazado",shipDestroyerA:"Destructor A",shipDestroyerB:"Destructor B",
+    shipSubA:"Submarino A",shipSubB:"Submarino B",shipCruiserA:"Patrullera A",shipCruiserB:"Patrullera B",
+    diffEasy:"Fácil",diffMedium:"Medio",diffHard:"Difícil",
+    passTurnTitle:"Cambio de turno",passDefaultMsg:"Pasa el dispositivo al siguiente jugador.",passReadyBtn:"Listo, mostrar tablero",
+    menuSub:"⚡ Edición estratégica de munición especial ⚡",chooseModeLabel:"Elige el modo de juego:",
+    modeVsComputer:"👤 Contra la computadora",modePvp:"👥 Dos jugadores (1v1)",cpuDifficultyLabel:"Nivel de la computadora:",
+    highScores:"🏆 Puntuaciones",about:"ℹ️ Acerca de",startFleetSetup:"Iniciar despliegue de flota ⚔️",
+    player:"Jugador",placeShipsSuffix:": Coloca barcos (Paso 1/2)",placeMinesSuffix:": Coloca minas (Paso 2/2)",
+    shipyardLabel:"🚢 Astillero disponible",rotateBtn:"↻ Rotar (R)",randomBtn:"⚡ Aleatorio",clearBtn:"✕ Borrar",
+    nextPhaseBtn:"Siguiente paso ←",minesLabel:"Minas marinas",remainingSuffix:" restantes",
+    nextPlayerBtn:"Al jugador 2 ←",launchOperationBtn:"🚀 ¡Lanzar operación!",
+    enemyFleetStatus:"📡 Estado actual de la flota enemiga (lo que queda)",hitsLabel:"Impactos",timeLabel:"Tiempo",accuracyLabel:"Precisión",
+    ammoRadarLabel:"📡 Radar 3x3",ammoClusterLabel:"💥 Proyectil racimo (+)",ammoPierceLabel:"🎯 Perforante (I)",
+    scrollHint:"▼ Desplázate para ver tu flota ▼",surrenderBtn:"✕ Rendirse al menú",mines:"Minas",
+    newHighScoreEntry:"🏆 ¡Nuevo récord! Ingresa tu nombre:",namePlaceholder:"Nombre...",saveBtn:"Guardar",backToHQ:"Volver al cuartel",
+    aboutDesc:"Creado por Barak Aflalo como parte de AppNest — el nido de apps",
+    aboutCopyright:"© 2026 · Todos los derechos reservados a Barak Aflalo",aboutLink:"🪺 AppNest — más juegos gratis",back:"Volver",
+    noScores:"Aún no hay puntuaciones",thRank:"#",thName:"Nombre",scoreLabel:"Puntos",thDiff:"Dificultad",anonymous:"Anónimo",
+    turnPrefix:"Turno: ",aiScanningSuffix:"La computadora está escaneando...",
+    attackBoardP1:"🎯 Tablero de ataque del Jugador 1 (fuego sobre rojo)",attackBoardP2:"🎯 Tablero de ataque del Jugador 2 (fuego sobre azul)",
+    attackBoardAI:"⚠️ La computadora ataca tu flota",defendBoardPrefix:"🛡 Flota defensiva de ",defendBoardYours:"🛡 Tu flota defensiva",
+    colorBlue:"azul",colorRed:"rojo",
+    logWeaponsOnline:"⚓ Sistemas de armas activados. ¡Munición especial lista!",
+    logRadarUsed:"📡 Radar activado en ",logRadarFound:": detectados ",logRadarShips:" barcos y ",logRadarMinesFound:" minas!",
+    logFiredPrefix:"🚀 Disparando proyectil [",ammoClusterShort:"Racimo",ammoPierceShort:"Perforante",logFiredMid:"] hacia ",
+    logHitPrefix:"💥 Impacto en ",logSunkPrefix:"⚓ ¡Objetivo eliminado! Barco hundido: ",logSunkSuffix:"!",
+    logMinePrefix:"💣 ¡Mina! Explosión en ",
+    passToPlayerPrefix:"Pasa el dispositivo al Jugador ",
+    logAISpecialAmmo:"⚠️ ¡La computadora dispara munición especial contra ti!",logAIHitPrefix:"🔴 La computadora te impactó en ",
+    logAISunkPrefix:"💀 Tu barco se hundió: ",logAIMinePrefix:"💣 La computadora detonó tu mina en ",
+    winSuffix:" gana!",enemyFleetSunkMsg:"Toda la flota enemiga se hundió en el mar.",
+    totalVictory:"¡Victoria total! 🏆",defeatedTitle:"Derrotado en combate... 💀",
+    destroyedAIMsg:"¡Destruiste todos los barcos de la IA!",aiSunkYourFleetMsg:"La computadora hundió toda tu flota.",
+    shotsLabel:"Disparos",finalScoreLabel:"Puntuación final",
+    fleetOfP2Red:"Flota del Jugador 2 (rojo)",passNoLookMsg:"Jugador 1, pasa el dispositivo al Jugador 2 sin mirar!"
+  },
+  ar:{
+    shipCarrier:"حاملة طائرات",shipBattleship:"بارجة حربية",shipDestroyerA:"مدمرة A",shipDestroyerB:"مدمرة B",
+    shipSubA:"غواصة A",shipSubB:"غواصة B",shipCruiserA:"زورق دورية A",shipCruiserB:"زورق دورية B",
+    diffEasy:"سهل",diffMedium:"متوسط",diffHard:"صعب",
+    passTurnTitle:"تبديل الدور",passDefaultMsg:"مرر الجهاز إلى اللاعب التالي.",passReadyBtn:"أنا جاهز، أظهر اللوحة",
+    menuSub:"⚡ النسخة الاستراتيجية بالذخيرة الخاصة ⚡",chooseModeLabel:"اختر نمط اللعبة:",
+    modeVsComputer:"👤 ضد الكمبيوتر",modePvp:"👥 لاعبان (1v1)",cpuDifficultyLabel:"مستوى الكمبيوتر:",
+    highScores:"🏆 لوحة الصدارة",about:"ℹ️ حول",startFleetSetup:"بدء تجهيز الأسطول ⚔️",
+    player:"اللاعب",placeShipsSuffix:": ترتيب السفن (الخطوة 1/2)",placeMinesSuffix:": زرع الألغام (الخطوة 2/2)",
+    shipyardLabel:"🚢 الترسانة المتاحة",rotateBtn:"↻ تدوير (R)",randomBtn:"⚡ عشوائي",clearBtn:"✕ مسح",
+    nextPhaseBtn:"الخطوة التالية ←",minesLabel:"ألغام بحرية",remainingSuffix:" متبقية",
+    nextPlayerBtn:"إلى اللاعب 2 ←",launchOperationBtn:"🚀 ابدأ العملية!",
+    enemyFleetStatus:"📡 حالة أسطول العدو الحالية (ما تبقى منه)",hitsLabel:"الإصابات",timeLabel:"الوقت",accuracyLabel:"الدقة",
+    ammoRadarLabel:"📡 رادار 3x3",ammoClusterLabel:"💥 قذيفة عنقودية (+)",ammoPierceLabel:"🎯 خارقة للدروع (I)",
+    scrollHint:"▼ مرّر للأسفل لرؤية أسطولك ▼",surrenderBtn:"✕ الاستسلام والعودة للقائمة",mines:"ألغام",
+    newHighScoreEntry:"🏆 رقم قياسي جديد! أدخل اسمك:",namePlaceholder:"اسم...",saveBtn:"حفظ",backToHQ:"العودة للقيادة",
+    aboutDesc:"صنع بواسطة باراك أفللو كجزء من AppNest — عش التطبيقات",
+    aboutCopyright:"© 2026 · جميع الحقوق محفوظة لباراك أفللو",aboutLink:"🪺 AppNest — ألعاب مجانية أخرى",back:"رجوع",
+    noScores:"لا توجد نتائج بعد",thRank:"#",thName:"الاسم",scoreLabel:"النتيجة",thDiff:"الصعوبة",anonymous:"مجهول",
+    turnPrefix:"الدور: ",aiScanningSuffix:"الكمبيوتر يفحص...",
+    attackBoardP1:"🎯 لوحة هجوم اللاعب 1 (إطلاق على الأحمر)",attackBoardP2:"🎯 لوحة هجوم اللاعب 2 (إطلاق على الأزرق)",
+    attackBoardAI:"⚠️ الكمبيوتر يهاجم أسطولك",defendBoardPrefix:"🛡 أسطول الدفاع: ",defendBoardYours:"🛡 أسطول دفاعك",
+    colorBlue:"الأزرق",colorRed:"الأحمر",
+    logWeaponsOnline:"⚓ أنظمة الأسلحة جاهزة. الذخيرة الخاصة مستعدة!",
+    logRadarUsed:"📡 تم تفعيل الرادار في ",logRadarFound:": تم اكتشاف ",logRadarShips:" سفن و",logRadarMinesFound:" ألغام!",
+    logFiredPrefix:"🚀 إطلاق قذيفة [",ammoClusterShort:"عنقودية",ammoPierceShort:"خارقة للدروع",logFiredMid:"] إلى ",
+    logHitPrefix:"💥 إصابة في ",logSunkPrefix:"⚓ تم تدمير الهدف! غرقت السفينة: ",logSunkSuffix:"!",
+    logMinePrefix:"💣 لغم! انفجار في الموقع ",
+    passToPlayerPrefix:"مرر الجهاز إلى اللاعب ",
+    logAISpecialAmmo:"⚠️ يطلق الكمبيوتر عليك ذخيرة خاصة!",logAIHitPrefix:"🔴 أصابك الكمبيوتر في ",
+    logAISunkPrefix:"💀 غرقت سفينتك: ",logAIMinePrefix:"💣 فجّر الكمبيوتر لغمك في ",
+    winSuffix:" فاز!",enemyFleetSunkMsg:"غرق أسطول العدو بالكامل في البحر.",
+    totalVictory:"نصر كامل! 🏆",defeatedTitle:"هُزمت في المعركة... 💀",
+    destroyedAIMsg:"دمّرت جميع سفن الذكاء الاصطناعي!",aiSunkYourFleetMsg:"تمكن الكمبيوتر من إغراق أسطولك بالكامل.",
+    shotsLabel:"الطلقات",finalScoreLabel:"النتيجة النهائية",
+    fleetOfP2Red:"أسطول اللاعب 2 (الأحمر)",passNoLookMsg:"اللاعب 1، مرر الجهاز إلى اللاعب 2 دون النظر!"
+  }
+};
+
+function applyLang(lang){
+  if(!T[lang])lang='he';
+  curLang=lang;
+  try{localStorage.setItem('navalLang',lang);}catch(e){}
+  document.documentElement.lang=lang;
+  var tt=T[lang];
+  var els=document.querySelectorAll('[data-i]');
+  for(var i=0;i<els.length;i++){
+    var k=els[i].getAttribute('data-i');if(tt[k]===undefined)continue;
+    if(els[i].tagName==='INPUT')els[i].placeholder=tt[k];else els[i].innerHTML=tt[k];
+  }
+  var lbtns=document.querySelectorAll('.lang-btn');
+  for(var i=0;i<lbtns.length;i++){lbtns[i].classList.toggle('sel',lbtns[i].getAttribute('data-lang')===lang);}
+  if(typeof renderNSScoreTable==='function')renderNSScoreTable('menu-hs');
+}
+
+let S={};
+let gameMode='pvc';
+
+
+// ===== AUDIO SYSTEM =====
+let audioCtx=null;
+function getAudio(){if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)();return audioCtx}
+function playTone(f,t,d,v,del){
+  del=del||0;if(!audioCtx)getAudio();
+  try{var a=getAudio(),o=a.createOscillator(),g=a.createGain();
+  o.connect(g);g.connect(a.destination);o.type=t;
+  o.frequency.setValueAtTime(f,a.currentTime+del);
+  g.gain.setValueAtTime(v,a.currentTime+del);
+  g.gain.exponentialRampToValueAtTime(.001,a.currentTime+del+d);
+  o.start(a.currentTime+del);o.stop(a.currentTime+del+d)}catch(e){}
+}
+function soundHit(){playTone(200,'sawtooth',.15,.3);playTone(150,'square',.2,.2,.05)}
+function soundMiss(){playTone(300,'sine',.1,.1);playTone(200,'sine',.15,.08,.05)}
+function soundSunk(){[523,659,784,1047].forEach(function(f,i){playTone(f,'sine',.2,.25,i*.08)})}
+function soundMine(){playTone(100,'sawtooth',.3,.35);playTone(80,'square',.35,.3,.05);playTone(60,'sawtooth',.4,.25,.1)}
+function soundRadar(){playTone(800,'sine',.1,.15);playTone(1200,'sine',.1,.12,.1);playTone(800,'sine',.1,.1,.2)}
+function soundServe(){playTone(500,'sine',.08,.15);playTone(720,'sine',.07,.1,.04)}
+function soundWin(){[523,659,784,1047,1319].forEach(function(f,i){playTone(f,'sine',.25,.3,i*.1)})}
+function soundLose(){[400,320,240,160].forEach(function(f,i){playTone(f,'sawtooth',.3,.25,i*.12)})}
+function soundClick(){playTone(600,'sine',.05,.1)}
+
+// ===== TIMER SYSTEM =====
+let gameTimer=null, gameStartTime=0, gameElapsed=0;
+function startTimer(){
+  gameStartTime=Date.now();gameElapsed=0;
+  if(gameTimer)clearInterval(gameTimer);
+  gameTimer=setInterval(function(){
+    gameElapsed=Math.floor((Date.now()-gameStartTime)/1000);
+    var m=Math.floor(gameElapsed/60),s=gameElapsed%60;
+    var el=document.getElementById('hud-timer');
+    if(el)el.textContent=(m<10?'0':'')+m+':'+(s<10?'0':'')+s;
+  },1000);
+}
+function stopTimer(){if(gameTimer){clearInterval(gameTimer);gameTimer=null}}
+
+// ===== STATS TRACKING =====
+function getStats(){
+  var totalShots=0,totalHits=0;
+  var pShots=S.playerTurn===1||gameMode==='pvc'?S.p1Shot:S.p2Shot;
+  var enemyGrid=S.playerTurn===1||gameMode==='pvc'?S.p2Grid:S.p1Grid;
+  for(var i=0;i<GRID*GRID;i++){
+    if(S.p1Shot[i])totalShots++;
+    if(S.p1Shot[i]&&S.p2Grid[i]>0)totalHits++;
+  }
+  var accuracy=totalShots>0?Math.round(totalHits/totalShots*100):0;
+  var sunk=S.p2Ships.filter(function(s){return s.sunk}).length;
+  return{shots:totalShots,hits:totalHits,accuracy:accuracy,sunk:sunk,time:gameElapsed}
+}
+function updateAccuracy(){
+  var st=getStats();
+  var el=document.getElementById('hud-accuracy');
+  if(el)el.textContent=st.accuracy+'%';
+}
+
+// ===== CELL ANIMATION =====
+function animCell(gridEl,cellIdx,animClass){
+  if(!gridEl)return;
+  var cells=gridEl.querySelectorAll('.cell');
+  if(cells[cellIdx]){
+    cells[cellIdx].classList.add(animClass);
+    setTimeout(function(){cells[cellIdx].classList.remove(animClass)},600);
+  }
+}
+
+// ===== HIGH SCORES =====
+function getNSScores(){try{return JSON.parse(localStorage.getItem('ns_scores')||'[]')}catch(e){return[]}}
+function saveNSScores(s){localStorage.setItem('ns_scores',JSON.stringify(s))}
+function isNSTopScore(score){var s=getNSScores();return s.length<10||score>s[s.length-1].score}
+function addNSScore(name,score,diff,time,accuracy){
+  var scores=getNSScores();
+  scores.push({name:name,score:score,diff:diff,time:time,accuracy:accuracy,date:Date.now()});
+  scores.sort(function(a,b){return b.score-a.score});
+  if(scores.length>10)scores.length=10;
+  saveNSScores(scores);
+}
+function renderNSScoreTable(containerId){
+  var scores=getNSScores();var el=document.getElementById(containerId);
+  if(!el)return;
+  var tt=T[curLang];
+  if(!scores.length){el.innerHTML='<div style="opacity:.4;font-size:11px;margin:8px 0">'+tt.noScores+'</div>';return}
+  var medals=['🥇','🥈','🥉'];
+  var diffNames={easy:tt.diffEasy,medium:tt.diffMedium,hard:tt.diffHard};
+  var dirClass=isRtl(curLang)?'rtl':'ltr';
+  var h='<table class="hs-table '+dirClass+'"><tr><th>'+tt.thRank+'</th><th>'+tt.thName+'</th><th>'+tt.scoreLabel+'</th><th>'+tt.accuracyLabel+'</th><th>'+tt.timeLabel+'</th><th>'+tt.thDiff+'</th></tr>';
+  scores.forEach(function(s,i){
+    var tm=s.time||0;var mm=Math.floor(tm/60);var ss=tm%60;
+    h+='<tr><td class="rank">'+(medals[i]||(i+1))+'</td><td class="hs-name">'+(s.name||tt.anonymous)+'</td><td class="hs-score">'+s.score+'</td><td>'+(s.accuracy||0)+'%</td><td>'+mm+':'+('0'+ss).slice(-2)+'</td><td>'+(diffNames[s.diff]||s.diff)+'</td></tr>';
+  });
+  h+='</table>';el.innerHTML=h;
+}
+function showHighScores(){renderNSScoreTable('menu-hs')}
+function calcScore(){
+  var st=getStats();
+  return st.hits*100 + st.sunk*500 + Math.max(0,1000-gameElapsed*2) + st.accuracy*10;
+}
+var pendingNSScore=null;
+function saveHighScore(){
+  if(!pendingNSScore)return;
+  var name=(document.getElementById('ns-player-name').value||'').trim()||T[curLang].anonymous;
+  localStorage.setItem('ns_lastName',name);
+  addNSScore(name,pendingNSScore.score,pendingNSScore.diff,pendingNSScore.time,pendingNSScore.accuracy);
+  pendingNSScore=null;
+  document.getElementById('end-name-entry').style.display='none';
+  renderNSScoreTable('end-hs');
+}
+
+
+function setMode(m){
+  gameMode=m;
+  document.getElementById('mode-pvc').classList.toggle('active', m==='pvc');
+  document.getElementById('mode-pvp').classList.toggle('active', m==='pvp');
+  document.getElementById('diff-section').style.display = (m==='pvc') ? 'block' : 'none';
+  document.getElementById('pvp-start-section').style.display = (m==='pvp') ? 'block' : 'none';
+}
+
+function idx(r,c){return r*GRID+c}
+
+function initPlacement(diff){
+  S={
+    diff,
+    gameMode,
+    currentSetupPlayer:1,
+    setupPhase:'ships',
+    horizontal:true,
+    selectedShip:null,
+    selectedAmmo:'normal', // סוג הפגז הנבחר להתקפה
+    
+    p1Grid:Array(GRID*GRID).fill(0),
+    p1Mines:[],
+    p1Ships:[],
+    p1Shot:Array(GRID*GRID).fill(false),
+    p1Scanned:Array(GRID*GRID).fill(false), // לסימון משבצות שנסרקו במכ"ם ולא נורו
+    p1Ammo:{radar:1, cluster:1, pierce:1},  // 3 פגזים סה"כ לכל משחק
+    
+    p2Grid:Array(GRID*GRID).fill(0),
+    p2Mines:[],
+    p2Ships:[],
+    p2Shot:Array(GRID*GRID).fill(false),
+    p2Scanned:Array(GRID*GRID).fill(false),
+    p2Ammo:{radar:1, cluster:1, pierce:1},
+    
+    playerTurn:1,
+    gameOver:false,
+    log:[],
+    aiHitChain:[],
+    minesConfigCount: diff==='easy'?3:diff==='hard'?8:5
+  };
+  
+  openPlacementForPlayer(1);
+  showScreen('place-screen');
+}
+
+function openPlacementForPlayer(pNum){
+  S.currentSetupPlayer=pNum;
+  S.setupPhase='ships';
+  S.selectedShip=null;
+  
+  if(pNum===1) document.body.classList.remove('p2-turn-theme');
+  else document.body.classList.add('p2-turn-theme');
+  
+  const b=document.getElementById('setup-player-badge');
+  b.textContent = pL(pNum);
+  b.style.color = pNum===1 ? 'var(--cyan)' : 'var(--red-neon)';
+  
+  document.getElementById('place-title').textContent=`📍 ${pL(pNum)}${T[curLang].placeShipsSuffix}`;
+  document.getElementById('next-phase-btn').textContent=T[curLang].nextPhaseBtn;
+  document.getElementById('next-phase-btn').disabled=true;
+  
+  buildLabels('place-col-labels','place-row-labels');
+  renderPlaceGrid();
+  renderShipList();
+}
+
+function buildLabels(cId,rId){
+  const cl=document.getElementById(cId); const rl=document.getElementById(rId);
+  if(cl) { cl.innerHTML=''; COLS.forEach(c=>{const s=document.createElement('span');s.textContent=c;cl.appendChild(s);});}
+  if(rl) { rl.innerHTML=''; ROWS.forEach(r=>{const s=document.createElement('span');s.textContent=r;rl.appendChild(s);});}
+}
+
+function renderShipList(){
+  const el=document.getElementById('ship-list');
+  el.innerHTML='';
+  const ships = S.currentSetupPlayer===1 ? S.p1Ships : S.p2Ships;
+  const mines = S.currentSetupPlayer===1 ? S.p1Mines : S.p2Mines;
+  
+  if(S.setupPhase==='mines'){
+    const rem = S.minesConfigCount - mines.length;
+    el.innerHTML=`<div class="ship-item selected" style="border-color:var(--orange)"><span>💣</span><b>${T[curLang].minesLabel}</b> <small style="color:var(--orange)">${rem}${T[curLang].remainingSuffix}</small></div>`;
+    document.getElementById('next-phase-btn').disabled=(rem>0);
+    document.getElementById('next-phase-btn').textContent = (gameMode==='pvp' && S.currentSetupPlayer===1)? T[curLang].nextPlayerBtn : T[curLang].launchOperationBtn;
+    return;
+  }
+  
+  SHIPS_DEF.forEach(ship=>{
+    const placed = ships.some(s=>s.id===ship.id);
+    const sel = S.selectedShip && S.selectedShip.id===ship.id;
+    const d=document.createElement('div');
+    d.className='ship-item'+(placed?' placed':sel?' selected':'');
+    if(!placed) d.onclick=()=>{S.selectedShip=ship;renderShipList();};
+    d.innerHTML=`<span>${ship.emoji}</span> <span style="flex:1">${T[curLang][ship.nameKey]} (${ship.size})</span>`;
+    el.appendChild(d);
+  });
+}
+
+function renderPlaceGrid(){
+  const gridEl=document.getElementById('place-grid');
+  const data = S.currentSetupPlayer===1 ? S.p1Grid : S.p2Grid;
+  const mines = S.currentSetupPlayer===1 ? S.p1Mines : S.p2Mines;
+  
+  gridEl.innerHTML='';
+  for(let r=0;r<GRID;r++){
+    for(let c=0;c<GRID;c++){
+      const i=idx(r,c);
+      const cell=document.createElement('div');
+      cell.className='cell';
+      if(data[i]>0) cell.classList.add(S.currentSetupPlayer===1?'ship-p1':'ship-p2');
+      if(mines.includes(i)) cell.classList.add('mine-p'+S.currentSetupPlayer);
+      
+      cell.onclick=()=>placeClick(r,c,i);
+      cell.onmouseenter=()=>placeHover(r,c,i);
+      cell.onmouseleave=()=>renderPlaceGrid();
+      gridEl.appendChild(cell);
+    }
+  }
+}
+
+function placeClick(r,c,i){
+  const data = S.currentSetupPlayer===1 ? S.p1Grid : S.p2Grid;
+  const mines = S.currentSetupPlayer===1 ? S.p1Mines : S.p2Mines;
+  const ships = S.currentSetupPlayer===1 ? S.p1Ships : S.p2Ships;
+  
+  if(S.setupPhase==='mines'){
+    if(mines.length>=S.minesConfigCount || mines.includes(i) || data[i]>0) return;
+    mines.push(i);
+    renderPlaceGrid(); renderShipList();
+    return;
+  }
+  
+  if(!S.selectedShip)return;
+  const ship=S.selectedShip;
+  const cells=getShipCells(r,c,ship.size,S.horizontal);
+  if(!cells || !cells.every(ci=>data[ci]===0))return;
+  
+  cells.forEach(ci=>data[ci]=ship.id+1);
+  ships.push({id:ship.id, nameKey:ship.nameKey, size:ship.size, cells, sunk:false});
+  S.selectedShip=null;
+  renderPlaceGrid(); renderShipList();
+  if(ships.length===SHIPS_DEF.length) document.getElementById('next-phase-btn').disabled=false;
+}
+
+function placeHover(r,c,i){
+  if(S.setupPhase==='mines'||!S.selectedShip)return;
+  const cells=getShipCells(r,c,S.selectedShip.size,S.horizontal);
+  const data = S.currentSetupPlayer===1 ? S.p1Grid : S.p2Grid;
+  const valid = cells && cells.every(ci=>data[ci]===0);
+  const allCells=document.getElementById('place-grid').querySelectorAll('.cell');
+  if(cells) cells.forEach(ci=> {if(allCells[ci]) allCells[ci].classList.add(valid?'hover-ok':'hover-bad')});
+}
+
+function getShipCells(r,c,size,horiz){
+  const cells=[];
+  for(let i=0;i<size;i++){
+    const nr=horiz?r:r+i,nc=horiz?c+i:c;
+    if(nr>=GRID||nc>=GRID)return null;
+    cells.push(idx(nr,nc));
+  }
+  return cells;
+}
+
+function rotateShip(){S.horizontal=!S.horizontal;renderPlaceGrid()}
+function clearPlacement(){
+  if(S.currentSetupPlayer===1){ S.p1Grid.fill(0); S.p1Mines=[]; S.p1Ships=[]; }
+  else { S.p2Grid.fill(0); S.p2Mines=[]; S.p2Ships=[]; }
+  S.selectedShip=null;
+  if(S.setupPhase==='mines') S.setupPhase='ships';
+  openPlacementForPlayer(S.currentSetupPlayer);
+}
+
+function autoPlace(){
+  const data = S.currentSetupPlayer===1 ? S.p1Grid : S.p2Grid;
+  const ships = S.currentSetupPlayer===1 ? S.p1Ships : S.p2Ships;
+  const mines = S.currentSetupPlayer===1 ? S.p1Mines : S.p2Mines;
+  data.fill(0); ships.length=0; mines.length=0;
+  
+  SHIPS_DEF.forEach(ship=>{
+    let placed=false,tries=0;
+    while(!placed&&tries<300){
+      const horiz=Math.random()>.5;
+      const r=Math.floor(Math.random()*(horiz?GRID:GRID-ship.size+1));
+      const c=Math.floor(Math.random()*(horiz?GRID-ship.size+1:GRID));
+      const cells=getShipCells(r,c,ship.size,horiz);
+      if(cells && cells.every(ci=>data[ci]===0)){
+        cells.forEach(ci=>data[ci]=ship.id+1);
+        ships.push({id:ship.id, nameKey:ship.nameKey, size:ship.size, cells, sunk:false});
+        placed=true;
+      }
+      tries++;
+    }
+  });
+  while(mines.length<S.minesConfigCount){
+    const i=Math.floor(Math.random()*GRID*GRID);
+    if(data[i]===0 && !mines.includes(i)) mines.push(i);
+  }
+  S.selectedShip=null;
+  renderPlaceGrid(); renderShipList();
+  document.getElementById('next-phase-btn').disabled=false;
+}
+
+function nextPlacementPhase(){
+  if(S.setupPhase==='ships'){
+    S.setupPhase='mines';
+    document.getElementById('place-title').textContent=`💣 ${pL(S.currentSetupPlayer)}${T[curLang].placeMinesSuffix}`;
+    renderPlaceGrid(); renderShipList();
+    return;
+  }
+  if(gameMode==='pvp' && S.currentSetupPlayer===1){
+    triggerPassScreen(2, T[curLang].fleetOfP2Red, T[curLang].passNoLookMsg, ()=>{
+      openPlacementForPlayer(2);
+    });
+  } else {
+    if(gameMode==='pvc') setupAIOpponent();
+    beginBattle();
+  }
+}
+
+function setupAIOpponent(){
+  S.p2Grid.fill(0); S.p2Mines=[]; S.p2Ships=[];
+  SHIPS_DEF.forEach(ship=>{
+    let placed=false,tries=0;
+    while(!placed&&tries<300){
+      const horiz=Math.random()>.5;
+      const r=Math.floor(Math.random()*(horiz?GRID:GRID-ship.size+1));
+      const c=Math.floor(Math.random()*(horiz?GRID-ship.size+1:GRID));
+      const cells=getShipCells(r,c,ship.size,horiz);
+      if(cells && cells.every(ci=>S.p2Grid[ci]===0)){
+        cells.forEach(ci=>S.p2Grid[ci]=ship.id+1);
+        S.p2Ships.push({id:ship.id, nameKey:ship.nameKey, size:ship.size, cells, sunk:false});
+        placed=true;
+      }
+      tries++;
+    }
+  });
+  while(S.p2Mines.length<S.minesConfigCount){
+    const i=Math.floor(Math.random()*GRID*GRID);
+    if(S.p2Grid[i]===0 && !S.p2Mines.includes(i)) S.p2Mines.push(i);
+  }
+}
+
+// ---- AMMO SELECTION ----
+function selectAmmo(type){
+  if(S.gameOver || (gameMode==='pvc' && S.playerTurn===2)) return;
+  const ammoObj = S.playerTurn===1 ? S.p1Ammo : S.p2Ammo;
+  if(ammoObj[type] <= 0) return;
+
+  if(S.selectedAmmo === type) {
+    S.selectedAmmo = 'normal';
+  } else {
+    S.selectedAmmo = type;
+  }
+  updateAmmoUI();
+}
+
+function updateAmmoUI(){
+  const ammoObj = S.playerTurn===1 ? S.p1Ammo : S.p2Ammo;
+  ['radar','cluster','pierce'].forEach(t=>{
+    const btn = document.getElementById('ammo-'+t);
+    const cnt = document.getElementById('count-'+t);
+    if(cnt) cnt.textContent = ammoObj[t];
+    if(btn) btn.classList.toggle('selected', S.selectedAmmo === t);
+    if(btn) btn.disabled = (ammoObj[t] <= 0);
+  });
+}
+
+// ---- BATTLE CORE ----
+function beginBattle(){
+  S.phase='battle';
+  S.playerTurn=1;
+  S.selectedAmmo='normal';
+  S.log=[];
+  showScreen('game-screen');
+  buildLabels('game-enemy-col-labels','game-enemy-row-labels');
+  buildLabels('game-player-col-labels','game-player-row-labels');
+  addLog(T[curLang].logWeaponsOnline,'sys');
+  startTimer();
+  syncGameBoard();
+}
+
+function applyTurnTheme(){
+  const tt=T[curLang];
+  const hudText = document.getElementById('hud-turn-text');
+  const attackTitle = document.getElementById('attack-board-title');
+  const defendTitle = document.getElementById('defend-board-title');
+  const scoreText = document.getElementById('hud-score-text');
+  
+  if(S.playerTurn===1){
+    document.body.classList.remove('p2-turn-theme');
+    if(hudText) hudText.textContent = tt.turnPrefix+pL(1)+' ('+cN(1)+')';
+    if(attackTitle) attackTitle.textContent = tt.attackBoardP1;
+    if(defendTitle) defendTitle.textContent = tt.defendBoardPrefix+pL(1);
+  } else {
+    document.body.classList.add('p2-turn-theme');
+    if(hudText) hudText.textContent = gameMode==='pvp' ? (tt.turnPrefix+pL(2)+' ('+cN(2)+')') : (tt.turnPrefix+tt.aiScanningSuffix);
+    if(attackTitle) attackTitle.textContent = gameMode==='pvp' ? tt.attackBoardP2 : tt.attackBoardAI;
+    if(defendTitle) defendTitle.textContent = gameMode==='pvp' ? (tt.defendBoardPrefix+pL(2)) : tt.defendBoardYours;
+  }
+  const currentHits = S.playerTurn===1 ? S.p1Shot.filter((v,idx)=>v && S.p2Grid[idx]>0).length : S.p2Shot.filter((v,idx)=>v && S.p1Grid[idx]>0).length;
+  if(scoreText) scoreText.textContent = `${tt.hitsLabel}: ${currentHits}`;
+  updateAmmoUI();
+}
+
+function renderTracker(){
+  const el=document.getElementById('enemy-ships-tracker');
+  if(!el)return;
+  const enemyShips = S.playerTurn===1 ? S.p2Ships : S.p1Ships;
+  const enemyMines = S.playerTurn===1 ? S.p2Mines : S.p1Mines;
+  const pShots = S.playerTurn===1 ? S.p1Shot : S.p2Shot;
+  el.innerHTML='';
+  enemyShips.forEach(function(ship){
+    var hitsOnShip = ship.cells.filter(function(ci){return pShots[ci]}).length;
+    var d=document.createElement('div');
+    d.className='tracker-item'+(ship.sunk?' sunk':'');
+    var dots='';
+    for(var j=0;j<ship.size;j++){
+      dots+='<div class="dot" style="background:'+(j<hitsOnShip?'var(--red-neon)':'var(--accent)')+'"></div>';
+    }
+    d.innerHTML=ship.emoji+' <span style="margin:0 4px;font-size:11px">'+T[curLang][ship.nameKey]+'</span><div class="dots">'+dots+'</div>';
+    el.appendChild(d);
+  });
+  var minesHit=enemyMines.filter(function(mi){return pShots[mi]}).length;
+  var md=document.createElement('div');
+  md.className='tracker-item mine-item';
+  md.innerHTML='💣 <span style="margin:0 4px;font-size:11px">'+T[curLang].mines+'</span><div class="dots"><div class="dot"></div></div><span style="font-size:10px;opacity:.6">'+minesHit+'/'+enemyMines.length+'</span>';
+  el.appendChild(md);
+}
+
+function syncGameBoard(){
+  applyTurnTheme();
+  renderTracker();
+  
+  const enemyGridEl=document.getElementById('game-enemy-grid');
+  const playerGridEl=document.getElementById('game-player-grid');
+  
+  const enemyGridData = S.playerTurn===1 ? S.p2Grid : S.p1Grid;
+  const enemyMinesData = S.playerTurn===1 ? S.p2Mines : S.p1Mines;
+  const enemyShipsArr = S.playerTurn===1 ? S.p2Ships : S.p1Ships;
+  const pShotsOnEnemy = S.playerTurn===1 ? S.p1Shot : S.p2Shot;
+  const pScannedEnemy = S.playerTurn===1 ? S.p1Scanned : S.p2Scanned;
+  
+  const myGridData = S.playerTurn===1 ? S.p1Grid : S.p2Grid;
+  const myMinesData = S.playerTurn===1 ? S.p1Mines : S.p2Mines;
+  const myShipsArr = S.playerTurn===1 ? S.p1Ships : S.p2Ships;
+  const enemyShotsOnMe = S.playerTurn===1 ? S.p2Shot : S.p1Shot;
+
+  const isClickable = !S.gameOver && (gameMode==='pvp' || (gameMode==='pvc' && S.playerTurn===1));
+  renderGrid(enemyGridEl, enemyGridData, false, pShotsOnEnemy, enemyShipsArr, enemyMinesData, pScannedEnemy, isClickable?cellAttackClick:null);
+  renderGrid(playerGridEl, myGridData, true, enemyShotsOnMe, myShipsArr, myMinesData, null, null);
+  
+  document.getElementById('attack-section').classList.toggle('scanning-effect', gameMode==='pvc' && S.playerTurn===2);
+}
+
+function renderGrid(el, gridData, isMyOwnGrid, shotsArr, shipsArr, minesArr, scannedArr, clickFn){
+  el.innerHTML='';
+  for(let r=0;r<GRID;r++){
+    for(let c=0;c<GRID;c++){
+      const i=idx(r,c);
+      const cell=document.createElement('div');
+      cell.className='cell';
+      
+      const shot = shotsArr[i];
+      const hasShip = gridData[i]>0;
+      const hasMine = minesArr.includes(i);
+      const scanned = scannedArr ? scannedArr[i] : false;
+      
+      if(isMyOwnGrid){
+        if(hasShip) cell.classList.add(S.playerTurn===1?'ship-p1':'ship-p2');
+        if(hasMine) cell.classList.add('mine-p'+S.playerTurn);
+        if(shot){
+          if(hasShip) cell.classList.add('hit');
+          else if(hasMine) cell.classList.add('mine-hit');
+          else cell.classList.add('miss');
+            cell.style.background = 'rgba(255,215,0,0.2)';
+        }
+      } else {
+        if(shot){
+          if(hasShip){
+            const shipId = gridData[i]-1;
+            const ship = shipsArr.find(s=>s.id===shipId);
+            if(ship && ship.sunk) cell.classList.add('sunk');
+            else cell.classList.add('hit');
+          } else if(hasMine) {
+            cell.classList.add('mine-hit');
+          } else {
+            cell.classList.add('miss');
+            cell.style.background = 'rgba(255,215,0,0.2)';
+          }
+        } else if(scanned) {
+          cell.classList.add('scanned');
+          cell.textContent = hasShip ? '🚢' : hasMine ? '💣' : '🌊';
+        } else if(S.gameOver) {
+          if(hasShip) cell.style.background = "rgba(255,255,255,0.08)";
+          if(hasMine) cell.innerHTML = "💣";
+        }
+      }
+      
+      if(clickFn) {
+        cell.onclick=()=>clickFn(r,c,i);
+        cell.onmouseenter=()=>hoverAttackCell(r,c);
+      }
+      el.appendChild(cell);
+    }
+  }
+}
+
+function hoverAttackCell(r,c){
+  if(S.selectedAmmo === 'normal') return;
+  // ניקוי הוברים קודמים
+  document.querySelectorAll('#game-enemy-grid .cell').forEach(el=>el.classList.remove('hover-ammo'));
+  const targetCells = getAmmoImpactCells(r,c,S.selectedAmmo);
+  const allCells = document.getElementById('game-enemy-grid').querySelectorAll('.cell');
+  targetCells.forEach(ci => { if(allCells[ci]) allCells[ci].classList.add('hover-ammo'); });
+}
+
+function getAmmoImpactCells(r,c,type){
+  const cells = [];
+  if(type === 'radar' || type === 'cluster') {
+    let range = type==='radar' ? [-1,0,1] : [0];
+    for(let dr of range){
+      for(let dc of range){
+        if(type==='cluster' && Math.abs(dr)+Math.abs(dc) > 1) continue; // רק פלוס למצרר
+        let nr=r+dr, nc=c+dc;
+        if(nr>=0 && nr<GRID && nc>=0 && nc<GRID) cells.push(idx(nr,nc));
+      }
+    }
+    if(type==='cluster') { // הוספת צלחת מצרר
+      [[-1,0],[1,0],[0,-1],[0,1]].forEach(([dr,dc])=>{
+        let nr=r+dr, nc=c+dc;
+        if(nr>=0 && nr<GRID && nc>=0 && nc<GRID) cells.push(idx(nr,nc));
+      });
+      cells.push(idx(r,c));
+    }
+  } else if(type === 'pierce') {
+    for(let dr of [-1,0,1]) {
+      let nr=r+dr;
+      if(nr>=0 && nr<GRID) cells.push(idx(nr,c));
+    }
+  }
+  return [...new Set(cells)]; // החזרת משבצות ייחודיות
+}
+
+function cellAttackClick(r,c,i){
+  if(S.gameOver)return;
+  const pShots = S.playerTurn===1 ? S.p1Shot : S.p2Shot;
+  const pScanned = S.playerTurn===1 ? S.p1Scanned : S.p2Scanned;
+  const ammoObj = S.playerTurn===1 ? S.p1Ammo : S.p2Ammo;
+
+  if(S.selectedAmmo === 'normal' && pShots[i]) return;
+
+  let getBonusTurn = false;
+
+  if(S.selectedAmmo === 'radar') {
+    // activate radar - not counted as a direct shot and doesn't trigger mines
+    const targets = getAmmoImpactCells(r,c,'radar');
+    let foundShips = 0, foundMines = 0;
+    targets.forEach(ci => {
+      pScanned[ci] = true;
+      const enemyGridData = S.playerTurn===1 ? S.p2Grid : S.p1Grid;
+      const enemyMinesData = S.playerTurn===1 ? S.p2Mines : S.p1Mines;
+      if(enemyGridData[ci]>0) foundShips++;
+      if(enemyMinesData.includes(ci)) foundMines++;
+    });
+    soundRadar();
+    addLog(`${T[curLang].logRadarUsed}${COLS[c]}${r+1}${T[curLang].logRadarFound}${foundShips}${T[curLang].logRadarShips}${foundMines}${T[curLang].logRadarMinesFound}`, 'sys');
+    ammoObj['radar']--;
+    S.selectedAmmo = 'normal';
+    switchTurn();
+    return;
+  }
+
+  // attack with normal / cluster / armor-piercing shells
+  const targets = S.selectedAmmo === 'normal' ? [i] : getAmmoImpactCells(r,c,S.selectedAmmo);
+  if(S.selectedAmmo !== 'normal') {
+    addLog(`${T[curLang].logFiredPrefix}${S.selectedAmmo==='cluster'?T[curLang].ammoClusterShort:T[curLang].ammoPierceShort}${T[curLang].logFiredMid}${COLS[c]}${r+1}!`, 'sys');
+    ammoObj[S.selectedAmmo]--;
+  }
+
+  S.selectedAmmo = 'normal';
+  let hitRegistered = false;
+
+  targets.forEach(ci => {
+    if(pShots[ci]) return; // already-fired cells are skipped
+    pShots[ci] = true;
+
+    const enemyGridData = S.playerTurn===1 ? S.p2Grid : S.p1Grid;
+    const enemyMinesData = S.playerTurn===1 ? S.p2Mines : S.p1Mines;
+    const enemyShipsArr = S.playerTurn===1 ? S.p2Ships : S.p1Ships;
+    
+    const cr = Math.floor(ci/GRID), cc = ci%GRID;
+    const isHit = enemyGridData[ci]>0;
+    const isMine = enemyMinesData.includes(ci);
+
+    if(isHit){
+      hitRegistered = true;
+      const shipId = enemyGridData[ci]-1;
+      const ship = enemyShipsArr.find(s=>s.id===shipId);
+      addLog(`${T[curLang].logHitPrefix}${COLS[cc]}${cr+1}`, 'hit');
+      soundHit();animCell(document.getElementById('game-enemy-grid'),ci,'anim-hit');
+      if(ship && ship.cells.every(cx => pShots[cx])){
+        ship.sunk = true;
+        addLog(`${T[curLang].logSunkPrefix}${T[curLang][ship.nameKey]}${T[curLang].logSunkSuffix}`, 'sunk');
+        soundSunk();
+      }
+    } else if(isMine){
+      addLog(`${T[curLang].logMinePrefix}${COLS[cc]}${cr+1}!`, 'mine');
+      soundMine();animCell(document.getElementById('game-enemy-grid'),ci,'anim-mine');
+    }
+  });
+
+  if(hitRegistered) getBonusTurn = true;
+  else soundMiss();
+  updateAccuracy();
+
+  syncGameBoard();
+  if(checkEndGameConditions()) return;
+  if(!getBonusTurn) switchTurn();
+}
+
+function switchTurn(){
+  const nextPlayer = S.playerTurn===1 ? 2 : 1;
+  S.playerTurn = nextPlayer;
+  S.selectedAmmo = 'normal';
+  
+  if(gameMode==='pvp'){
+    triggerPassScreen(nextPlayer, T[curLang].turnPrefix+pL(nextPlayer)+' ('+cN(nextPlayer)+')', T[curLang].passToPlayerPrefix+nextPlayer+'.', ()=>{
+      syncGameBoard();
+      window.scrollTo({top:0, behavior:'smooth'});
+    });
+  } else {
+    syncGameBoard();
+    if(S.playerTurn===2) setTimeout(()=> doAITurn(), 1200);
+  }
+}
+
+function doAITurn(){
+  if(S.gameOver || S.gameMode!=='pvc') return;
+  
+  // בינה מלאכותית משתמשת בפגזים מיוחדים ברמת קושי קשה
+  let firedAmmo = 'normal';
+  if(S.diff==='hard' && Math.random() > 0.6) {
+    if(S.p2Ammo.cluster > 0) { firedAmmo = 'cluster'; S.p2Ammo.cluster--; }
+    else if(S.p2Ammo.pierce > 0) { firedAmmo = 'pierce'; S.p2Ammo.pierce--; }
+  }
+
+  let i = S.diff==='easy' ? aiRandomShot() : aiHuntingShot();
+  if(i < 0) { S.playerTurn=1; syncGameBoard(); return; }
+  
+  const r=Math.floor(i/GRID), c=i%GRID;
+  const targets = firedAmmo === 'normal' ? [i] : getAmmoImpactCells(r,c,firedAmmo);
+  
+  if(firedAmmo!=='normal') addLog(T[curLang].logAISpecialAmmo, 'enemy');
+
+  let hitRegistered = false;
+  targets.forEach(ci=>{
+    if(S.p2Shot[ci]) return;
+    S.p2Shot[ci] = true;
+    
+    const cr=Math.floor(ci/GRID), cc=ci%GRID;
+    const isHit = S.p1Grid[ci]>0;
+    const isMine = S.p1Mines.includes(ci);
+    
+    if(isHit){
+      hitRegistered = true;
+      S.aiHitChain.push(ci);
+      const shipId = S.p1Grid[ci]-1;
+      const ship = S.p1Ships.find(s=>s.id===shipId);
+      addLog(`${T[curLang].logAIHitPrefix}${COLS[cc]}${cr+1}`, 'enemy');
+      soundHit();animCell(document.getElementById('game-player-grid'),ci,'anim-hit');
+      if(ship && ship.cells.every(cx => S.p2Shot[cx])){
+        ship.sunk = true;
+        addLog(`${T[curLang].logAISunkPrefix}${T[curLang][ship.nameKey]}`, 'enemy');
+        soundSunk();
+        S.aiHitChain = [];
+      }
+    } else if(isMine){
+      addLog(`${T[curLang].logAIMinePrefix}${COLS[cc]}${cr+1}!`, 'mine');
+      soundMine();animCell(document.getElementById('game-player-grid'),ci,'anim-mine');
+    }
+  });
+  
+  syncGameBoard();
+  if(checkEndGameConditions()) return;
+  if(hitRegistered) setTimeout(()=> doAITurn(), 1200);
+  else { S.playerTurn = 1; syncGameBoard(); }
+}
+
+function aiRandomShot(){
+  const avail=[];
+  for(let i=0;i<GRID*GRID;i++) if(!S.p2Shot[i]) avail.push(i);
+  return avail.length ? avail[Math.floor(Math.random()*avail.length)] : -1;
+}
+
+function aiHuntingShot(){
+  if(S.aiHitChain.length>0){
+    const last = S.aiHitChain[S.aiHitChain.length-1];
+    const r=Math.floor(last/GRID), c=last%GRID;
+    const dirs=[[-1,0],[1,0],[0,-1],[0,1]].sort(()=>Math.random()-.5);
+    for(const[dr,dc] of dirs){
+      const nr=r+dr, nc=c+dc;
+      if(nr>=0&&nr<GRID&&nc>=0&&nc<GRID){
+        const ni = idx(nr,nc);
+        if(!S.p2Shot[ni]) return ni;
+      }
+    }
+  }
+  return aiRandomShot();
+}
+
+function checkEndGameConditions(){
+  const p1Lost = S.p1Ships.every(s=>s.sunk);
+  const p2Lost = S.p2Ships.every(s=>s.sunk);
+  if(p1Lost || p2Lost){
+    S.gameOver = true;
+    let title="", msg="";
+    const tt=T[curLang];
+    if(gameMode==='pvp'){
+      title = p1Lost ? (pL(2)+' ('+cN(2)+')'+tt.winSuffix) : (pL(1)+' ('+cN(1)+')'+tt.winSuffix);
+      msg = tt.enemyFleetSunkMsg;
+    } else {
+      title = p2Lost ? tt.totalVictory : tt.defeatedTitle;
+      msg = p2Lost ? tt.destroyedAIMsg : tt.aiSunkYourFleetMsg;
+    }
+    document.getElementById('end-title').textContent = title;
+    document.getElementById('end-sub').textContent = msg;
+    stopTimer();
+    var st=getStats();
+    var finalScore=calcScore();
+    var statsEl=document.getElementById('end-stats');
+    if(statsEl){
+      statsEl.innerHTML='<div class="stat-item"><div class="stat-val">'+st.shots+'</div><div class="stat-label">'+tt.shotsLabel+'</div></div>'
+        +'<div class="stat-item"><div class="stat-val">'+st.accuracy+'%</div><div class="stat-label">'+tt.accuracyLabel+'</div></div>'
+        +'<div class="stat-item"><div class="stat-val">'+Math.floor(gameElapsed/60)+':'+('0'+gameElapsed%60).slice(-2)+'</div><div class="stat-label">'+tt.timeLabel+'</div></div>'
+        +'<div class="stat-item"><div class="stat-val" style="color:var(--gold)">'+finalScore+'</div><div class="stat-label">'+tt.finalScoreLabel+'</div></div>';
+    }
+    pendingNSScore={score:finalScore,diff:S.diff,time:gameElapsed,accuracy:st.accuracy};
+    var isTop=isNSTopScore(finalScore);
+    var ne=document.getElementById('end-name-entry');
+    if(ne)ne.style.display=(isTop&&p2Lost)?'block':'none';
+    var pn=document.getElementById('ns-player-name');
+    if(pn)pn.value=localStorage.getItem('ns_lastName')||'';
+    if(!isTop||!p2Lost)renderNSScoreTable('end-hs');
+    document.getElementById('end-overlay').classList.add('show');
+    syncGameBoard();
+    if(p2Lost)soundWin();else soundLose();
+    return true;
+  }
+  return false;
+}
+
+let passCallback = null;
+function triggerPassScreen(targetPlayer, title, msg, cb){
+  document.getElementById('pass-title').textContent = title;
+  document.getElementById('pass-msg').textContent = msg;
+  document.getElementById('pass-screen').style.setProperty('--cyan', targetPlayer===1?'var(--cyan)':'var(--red-neon)');
+  document.getElementById('pass-screen').classList.add('active');
+  passCallback = cb;
+}
+function dismissPassScreen(){
+  document.getElementById('pass-screen').classList.remove('active');
+  if(passCallback) passCallback();
+}
+
+function addLog(msg,type){
+  S.log.unshift({msg,type});
+  const box=document.getElementById('log-box');
+  if(!box)return;
+  box.innerHTML='';
+  S.log.slice(0,25).forEach(e=>{
+    const d=document.createElement('div');
+    d.style.color = e.type==='hit'?'var(--red-neon)':e.type==='sunk'?'var(--gold)':e.type==='mine'?'var(--orange)':'#a0b0c8';
+    d.style.fontSize = '11px'; d.style.marginBottom = '2px';
+    d.textContent=e.msg;
+    box.appendChild(d);
+  });
+}
+
+function goMenu(){
+  if(pendingNSScore&&isNSTopScore(pendingNSScore.score))saveHighScore();
+  stopTimer();
+  S.gameOver=true;
+  document.body.classList.remove('p2-turn-theme');
+  document.getElementById('end-overlay').classList.remove('show');
+  showScreen('menu-screen');
+}
+
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+document.querySelectorAll('.lang-btn').forEach(b=>b.addEventListener('click',()=>applyLang(b.getAttribute('data-lang'))));
+applyLang(curLang);
+</script>
+</body>
+</html>

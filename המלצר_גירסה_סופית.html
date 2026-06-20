@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="he">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>המלצר העסוק 3D</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Rubik',sans-serif}
+html,body{width:100%;height:100%;overflow:hidden;background:#1a1a2e}
+canvas{display:block;width:100%;height:100%}
+#ui{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:10}
+#ui *{pointer-events:auto}
+.hud{position:absolute;top:12px;left:50%;transform:translateX(-50%);display:flex;gap:8px;align-items:center}
+.hud-box{background:rgba(0,0,0,.65);backdrop-filter:blur(6px);border-radius:12px;padding:6px 14px;text-align:center;color:#fff;border:1px solid rgba(255,255,255,.15)}
+.hud-val{font-weight:900;font-size:18px}.hud-label{font-size:8px;opacity:.6;font-weight:700;letter-spacing:1px;text-transform:uppercase}
+.hud-box.combo .hud-val{color:#ffdd44}.hud-box.lives .hud-val{font-size:14px}
+.overlay{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);z-index:50;padding:16px}
+.overlay.show{display:flex}
+.panel{background:rgba(20,20,40,.95);border:1px solid rgba(255,255,255,.15);border-radius:24px;padding:36px 44px;text-align:center;max-width:520px;width:100%;color:#fff;animation:popIn .3s ease}
+@keyframes popIn{from{opacity:0;transform:scale(.85)}to{opacity:1;transform:scale(1)}}
+.panel h1{font-size:32px;font-weight:900;margin-bottom:6px;background:linear-gradient(135deg,#ff6b9d,#ffdd44);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.panel .sub{font-size:13px;opacity:.6;margin-bottom:24px}
+.theme-grid{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:20px}
+.theme-card{background:rgba(255,255,255,.08);border:2px solid rgba(255,255,255,.1);border-radius:16px;padding:18px 16px;min-width:130px;cursor:pointer;transition:all .2s}
+.theme-card:hover{border-color:rgba(255,255,255,.4);transform:translateY(-4px);background:rgba(255,255,255,.15)}
+.theme-card .icon{font-size:40px;margin-bottom:8px}.theme-card .name{font-weight:800;font-size:13px}
+.theme-card .best{font-size:10px;opacity:.5;margin-top:6px}
+.howto{font-size:12px;opacity:.5;line-height:1.8;text-align:right;direction:rtl}
+.go-score{font-size:28px;font-weight:900;color:#ffdd44;margin:12px 0}
+.go-info{font-size:13px;opacity:.6;margin-bottom:16px}
+.btn-row{display:flex;gap:10px;justify-content:center}
+.btn{border:none;border-radius:12px;padding:12px 24px;font-weight:800;cursor:pointer;font-size:14px;transition:all .15s}
+.btn-primary{background:linear-gradient(135deg,#ff6b9d,#ff4466);color:#fff}
+.btn-secondary{background:rgba(255,255,255,.12);color:#fff;border:1px solid rgba(255,255,255,.2)}
+.btn:hover{transform:translateY(-2px)}.btn:active{transform:translateY(1px)}
+.cd-num{font-size:80px;font-weight:900;color:#ffdd44;line-height:1}.cd-title{font-size:14px;opacity:.6;margin-bottom:8px}
+.controls{position:absolute;bottom:16px;left:12px;transform:none;display:flex;gap:10px;flex-direction:column}
+.ctrl{font-size:22px;padding:12px 22px;border-radius:14px;border:none;background:rgba(0,0,0,.5);backdrop-filter:blur(4px);color:#fff;cursor:pointer;font-weight:800;border:1px solid rgba(255,255,255,.15)}
+.ctrl.serve{background:rgba(255,68,102,.6);font-size:14px;padding:12px 28px}
+.ctrl:active{transform:translateY(2px);background:rgba(255,255,255,.2)}
+.lane-ind{position:absolute;right:16px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:8px}
+.lane-dot{width:14px;height:14px;border-radius:50%;background:rgba(255,255,255,.2);border:2px solid rgba(255,255,255,.3);transition:all .2s}
+.lane-dot.active{background:#ffdd44;border-color:#ffdd44;box-shadow:0 0 12px rgba(255,221,68,.6)}
+.float-score{position:fixed;font-weight:900;color:#ffdd44;font-size:22px;animation:floatUp 1s ease forwards;pointer-events:none;z-index:30;text-shadow:0 2px 8px rgba(0,0,0,.6)}
+@keyframes floatUp{from{opacity:1;transform:translateY(0)}to{opacity:0;transform:translateY(-80px)}}
+.level-banner{position:fixed;top:20%;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#ff6b9d,#ffdd44);color:#fff;font-weight:900;font-size:22px;padding:12px 28px;border-radius:16px;box-shadow:0 8px 24px rgba(255,68,102,.4);animation:floatUp 1.6s ease forwards;z-index:30}
+
+.hs-table{width:100%;border-collapse:collapse;margin:12px 0}
+.hs-table.rtl{direction:rtl;text-align:right}
+.hs-table.ltr{direction:ltr;text-align:left}
+.hs-table th{font-size:10px;opacity:.5;padding:4px 8px;border-bottom:1px solid rgba(255,255,255,.15);font-weight:700}
+.hs-table td{font-size:12px;padding:6px 8px;border-bottom:1px solid rgba(255,255,255,.07)}
+.hs-table .rank{font-weight:900;color:#ffdd44;font-size:14px;text-align:center}
+.hs-table .hs-name{font-weight:700}.hs-table .hs-score{font-weight:900;color:#ff6b9d}
+.hs-table .hs-theme{font-size:16px;text-align:center}
+.name-input{background:rgba(255,255,255,.1);border:2px solid rgba(255,255,255,.3);border-radius:10px;padding:10px 16px;color:#fff;font-size:16px;font-weight:700;text-align:center;width:200px;outline:none;margin:10px auto;display:block;font-family:'Rubik',sans-serif}
+.name-input:focus{border-color:#ffdd44}
+.name-input::placeholder{color:rgba(255,255,255,.3)}
+.btn-gold{background:linear-gradient(135deg,#ffdd44,#ffaa00);color:#333}
+.lang-row{display:flex;gap:6px;justify-content:center;margin-bottom:14px}
+.lang-btn{font-size:20px;background:rgba(255,255,255,.08);border:2px solid transparent;border-radius:10px;padding:4px 8px;cursor:pointer;opacity:.5;transition:all .2s;line-height:1.3}
+.lang-btn:active{opacity:.8}
+.lang-btn.sel{opacity:1;border-color:#ffdd44;background:rgba(255,221,68,.15)}
+</style>
+</head>
+<body>
+<div id="ui">
+  <div class="hud" id="hud" style="display:none">
+    <div class="hud-box"><div class="hud-val" id="h-score">0</div><div class="hud-label" data-i="hudScore">ניקוד</div></div>
+    <div class="hud-box"><div class="hud-val" id="h-level">1</div><div class="hud-label" data-i="hudLevel">שלב</div></div>
+    <div class="hud-box combo"><div class="hud-val" id="h-combo">x1</div><div class="hud-label" data-i="hudCombo">קומבו</div></div>
+    <div class="hud-box lives"><div class="hud-val" id="h-lives">❤️❤️❤️</div><div class="hud-label" data-i="hudLives">חיים</div></div>
+  </div>
+  <div class="lane-ind" id="lane-ind" style="display:none">
+    <div class="lane-dot active" data-l="0"></div><div class="lane-dot" data-l="1"></div><div class="lane-dot" data-l="2"></div>
+  </div>
+  <div id="mobile-tip" data-i="mobileTip" style="display:none;position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.7);color:#ffdd44;padding:8px 16px;border-radius:8px;font-size:12px;z-index:15;pointer-events:none">💡 טיפ: גע ישירות על הדלפקים כדי לעבור ביניהם!</div>
+  <div class="controls" id="controls" style="display:none">
+    <button class="ctrl" onclick="moveLane(1)">⬆️</button>
+    <button class="ctrl serve" onclick="serve()" data-i="serveBtn">⚡ הגש</button>
+    <button class="ctrl" onclick="moveLane(-1)">⬇️</button>
+  </div>
+</div>
+<div class="overlay show" id="menu-ov">
+  <div class="panel">
+    <h1 data-i="gameTitle">🍽️ המלצר העסוק 3D</h1>
+    <div class="lang-row" id="langRow">
+      <button class="lang-btn" data-lang="he">🇮🇱</button>
+      <button class="lang-btn" data-lang="en">🇬🇧</button>
+      <button class="lang-btn" data-lang="ru">🇷🇺</button>
+      <button class="lang-btn" data-lang="es">🇪🇸</button>
+      <button class="lang-btn" data-lang="ar">🇸🇦</button>
+    </div>
+    <div class="sub" data-i="menuSub">בחר מקום עבודה והתחל לשרת!</div>
+    <div class="theme-grid">
+      <div class="theme-card" onclick="startGame('burger')"><div class="icon">🍔</div><div class="name" data-i="themeBurger">דיינר המבורגרים</div><div class="best" id="best-burger"></div></div>
+      <div class="theme-card" onclick="startGame('coffee')"><div class="icon">☕</div><div class="name" data-i="themeCoffee">בית קפה</div><div class="best" id="best-coffee"></div></div>
+      <div class="theme-card" onclick="startGame('icecream')"><div class="icon">🍦</div><div class="name" data-i="themeIcecream">גלידרייה</div><div class="best" id="best-icecream"></div></div>
+    </div>
+    <div class="howto" data-i="howto">⬆️⬇️ / W,S = מעבר בין דלפקים &nbsp;|&nbsp; רווח = הגשה<br>תפוס לקוחות לפני שמגיעים! 3 פספוסים = סיום</div>
+    <button class="btn btn-gold" onclick="showLeaderboard()" data-i="highScores" style="margin-bottom:8px">🏆 טבלת שיאים</button>
+    <button class="btn btn-secondary" onclick="document.getElementById('about-ov').classList.add('show')" data-i="about" style="margin-bottom:8px">ℹ️ אודות</button>
+    <div id="menu-hs"></div>
+  </div>
+</div>
+<div class="overlay" id="cd-ov"><div class="panel"><div class="cd-title" id="cd-title" data-i="getReady">מתחילים!</div><div class="cd-num" id="cd-num">3</div></div></div>
+<div class="overlay" id="go-ov">
+  <div class="panel">
+    <h1 id="go-title" data-i="gameOverTitle">😵 המשחק נגמר!</h1>
+    <div class="go-score" id="go-score">0 נקודות</div>
+    <div class="go-info" id="go-info"></div>
+    <div id="name-entry" style="display:none">
+      <div style="font-size:13px;opacity:.7;margin-bottom:4px" data-i="newScoreEntry">🏆 נכנסת לטבלת השיאים! הכנס שם:</div>
+      <input class="name-input" id="player-name" data-i="namePlaceholder" placeholder="השם שלך..." maxlength="12">
+      <button class="btn btn-gold" onclick="submitScore()" data-i="saveBtn" style="margin:8px 0">✅ שמור</button>
+    </div>
+    <div id="go-hs"></div>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="restartGame()" data-i="playAgain">🔁 שחק שוב</button>
+      <button class="btn btn-secondary" onclick="goMenu()" data-i="mainMenu">📋 תפריט</button>
+    </div>
+  </div>
+</div>
+<div class="overlay" id="lb-ov">
+  <div class="panel">
+    <h1 data-i="highScores">🏆 טבלת שיאים</h1>
+    <div class="lang-row" id="lbLangRow" style="margin-bottom:12px">
+      <button class="lang-btn" data-lang="he">🇮🇱</button>
+      <button class="lang-btn" data-lang="en">🇬🇧</button>
+      <button class="lang-btn" data-lang="ru">🇷🇺</button>
+      <button class="lang-btn" data-lang="es">🇪🇸</button>
+      <button class="lang-btn" data-lang="ar">🇸🇦</button>
+    </div>
+    <div id="lb-content"></div>
+    <div class="btn-row" style="margin-top:12px"><button class="btn btn-secondary" onclick="document.getElementById('lb-ov').classList.remove('show')" data-i="back">חזור</button></div>
+  </div>
+</div>
+<div class="overlay" id="about-ov">
+  <div class="panel">
+    <h1 data-i="gameTitle">🍽️ המלצר העסוק 3D</h1>
+    <div class="sub" data-i="aboutDesc">המשחק נוצר על ידי ברק אפללו במסגרת AppNest — קן האפליקציות</div>
+    <div class="sub" style="color:#ffdd44;opacity:1" data-i="aboutCopyright">© 2026 · כל הזכויות שמורות לברק אפללו</div>
+    <div class="btn-row" style="margin-top:12px">
+      <a href="https://barakaflalo.github.io/appnest" target="_blank" rel="noopener" class="btn btn-gold" data-i="aboutLink" style="text-decoration:none;display:inline-block">🪺 AppNest — עוד משחקים בחינם</a>
+      <button class="btn btn-secondary" onclick="document.getElementById('about-ov').classList.remove('show')" data-i="back">חזור</button>
+    </div>
+  </div>
+</div>
+<script>
+const THEMES={
+  burger:{nameKey:'themeBurger',item:'🍔',floor:0x8b7355,wall:0xffe8cc,counter:0xc0c0c0,counterEdge:0x999999,sky:0x87ceeb,
+    shirtColors:[0xe63946,0xff9f1c,0x2a9d8f,0x264653],pantsColors:[0x333333,0x1a1a2e,0x2d3436],hairColors:[0x6b4423,0x2c1810,0xffcc99,0x8b5a3c],
+    outdoor:'city'},
+  coffee:{nameKey:'themeCoffee',item:'☕',floor:0x8b6f47,wall:0xf5ece0,counter:0x6b4423,counterEdge:0x5a3a1a,sky:0xa8d8ea,
+    shirtColors:[0x6b4423,0xd4763a,0x2d5016,0x8b4513],pantsColors:[0x333333,0x1a1a1a,0x2c1810],hairColors:[0x2c1810,0x8b5a3c,0x6b4423,0xffcc99],
+    outdoor:'park'},
+  icecream:{nameKey:'themeIcecream',item:'🍦',floor:0xffe4e1,wall:0xfff0f5,counter:0xff69b4,counterEdge:0xff1493,sky:0x87ceeb,
+    shirtColors:[0xff69b4,0x87ceeb,0x98fb98,0xdda0dd],pantsColors:[0x4169e1,0x483d8b,0x2f4f4f],hairColors:[0xffcc99,0xff69b4,0x8b5a3c,0x2c1810],
+    outdoor:'beach'}
+};
+
+/* ===== i18n ===== */
+var curLang='he';
+try{var _sl=localStorage.getItem('waiterLang');if(_sl)curLang=_sl;}catch(e){}
+function isRtl(lang){return lang==='he'||lang==='ar';}
+
+var T={
+  he:{
+    gameTitle:"🍽️ המלצר העסוק 3D",menuSub:"בחר מקום עבודה והתחל לשרת!",
+    themeBurger:"דיינר המבורגרים",themeCoffee:"בית קפה",themeIcecream:"גלידרייה",
+    howto:"⬆️⬇️ / W,S = מעבר בין דלפקים &nbsp;|&nbsp; רווח = הגשה<br>תפוס לקוחות לפני שמגיעים! 3 פספוסים = סיום",
+    highScores:"🏆 טבלת שיאים",about:"ℹ️ אודות",
+    hudScore:"ניקוד",hudLevel:"שלב",hudCombo:"קומבו",hudLives:"חיים",
+    mobileTip:"💡 טיפ: גע ישירות על הדלפקים כדי לעבור ביניהם!",
+    serveBtn:"⚡ הגש",getReady:"מתחילים!",readySuffix:" — מוכנים?",
+    gameOverTitle:"😵 המשחק נגמר!",newHighScoreTitle:"🏆 שיא חדש!",pointsSuffix:" נקודות",
+    newScoreEntry:"🏆 נכנסת לטבלת השיאים! הכנס שם:",namePlaceholder:"השם שלך...",saveBtn:"✅ שמור",
+    playAgain:"🔁 שחק שוב",mainMenu:"📋 תפריט",back:"חזור",
+    aboutDesc:"המשחק נוצר על ידי ברק אפללו במסגרת AppNest — קן האפליקציות",
+    aboutCopyright:"© 2026 · כל הזכויות שמורות לברק אפללו",
+    aboutLink:"🪺 AppNest — עוד משחקים בחינם",
+    noScores:"אין שיאים עדיין",thRank:"#",thName:"שם",thPlace:"מקום",anonymous:"אנונימי",
+    levelUpPrefix:"⬆️ שלב ",bestScorePrefix:"🏆 שיא: "
+  },
+  en:{
+    gameTitle:"🍽️ Busy Waiter 3D",menuSub:"Choose a workplace and start serving!",
+    themeBurger:"Burger Diner",themeCoffee:"Coffee Shop",themeIcecream:"Ice Cream Parlor",
+    howto:"⬆️⬇️ / W,S = Switch counters &nbsp;|&nbsp; Space = Serve<br>Catch customers before they arrive! 3 misses = Game Over",
+    highScores:"🏆 High Scores",about:"ℹ️ About",
+    hudScore:"Score",hudLevel:"Level",hudCombo:"Combo",hudLives:"Lives",
+    mobileTip:"💡 Tip: Tap directly on the counters to switch between them!",
+    serveBtn:"⚡ Serve",getReady:"Get Ready!",readySuffix:" — Ready?",
+    gameOverTitle:"😵 Game Over!",newHighScoreTitle:"🏆 New High Score!",pointsSuffix:" points",
+    newScoreEntry:"🏆 You made the leaderboard! Enter your name:",namePlaceholder:"Your name...",saveBtn:"✅ Save",
+    playAgain:"🔁 Play Again",mainMenu:"📋 Menu",back:"Back",
+    aboutDesc:"Created by Barak Aflalo as part of AppNest — the App Nest",
+    aboutCopyright:"© 2026 · All rights reserved to Barak Aflalo",
+    aboutLink:"🪺 AppNest — More free games",
+    noScores:"No scores yet",thRank:"#",thName:"Name",thPlace:"Place",anonymous:"Anonymous",
+    levelUpPrefix:"⬆️ Level ",bestScorePrefix:"🏆 Best: "
+  },
+  ru:{
+    gameTitle:"🍽️ Занятый официант 3D",menuSub:"Выбери место работы и начни обслуживать!",
+    themeBurger:"Бургерная",themeCoffee:"Кофейня",themeIcecream:"Кафе-мороженое",
+    howto:"⬆️⬇️ / W,S = смена прилавков &nbsp;|&nbsp; Пробел = подача<br>Лови клиентов до того, как они подойдут! 3 промаха = конец игры",
+    highScores:"🏆 Таблица рекордов",about:"ℹ️ О игре",
+    hudScore:"Очки",hudLevel:"Уровень",hudCombo:"Комбо",hudLives:"Жизни",
+    mobileTip:"💡 Совет: нажимайте прямо на прилавки, чтобы переключаться между ними!",
+    serveBtn:"⚡ Подать",getReady:"Начинаем!",readySuffix:" — Готовы?",
+    gameOverTitle:"😵 Игра окончена!",newHighScoreTitle:"🏆 Новый рекорд!",pointsSuffix:" очков",
+    newScoreEntry:"🏆 Вы попали в таблицу рекордов! Введите имя:",namePlaceholder:"Ваше имя...",saveBtn:"✅ Сохранить",
+    playAgain:"🔁 Играть снова",mainMenu:"📋 Меню",back:"Назад",
+    aboutDesc:"Создано Бараком Афлало в рамках AppNest — гнезда приложений",
+    aboutCopyright:"© 2026 · Все права защищены, Барак Афлало",
+    aboutLink:"🪺 AppNest — больше бесплатных игр",
+    noScores:"Пока нет рекордов",thRank:"#",thName:"Имя",thPlace:"Место",anonymous:"Аноним",
+    levelUpPrefix:"⬆️ Уровень ",bestScorePrefix:"🏆 Рекорд: "
+  },
+  es:{
+    gameTitle:"🍽️ Camarero Ocupado 3D",menuSub:"¡Elige un lugar de trabajo y empieza a servir!",
+    themeBurger:"Restaurante de hamburguesas",themeCoffee:"Cafetería",themeIcecream:"Heladería",
+    howto:"⬆️⬇️ / W,S = Cambiar de mostrador &nbsp;|&nbsp; Espacio = Servir<br>¡Atiende a los clientes antes de que lleguen! 3 fallos = Fin del juego",
+    highScores:"🏆 Puntuaciones",about:"ℹ️ Acerca de",
+    hudScore:"Puntos",hudLevel:"Nivel",hudCombo:"Combo",hudLives:"Vidas",
+    mobileTip:"💡 Consejo: ¡toca directamente los mostradores para cambiar entre ellos!",
+    serveBtn:"⚡ Servir",getReady:"¡Prepárate!",readySuffix:" — ¿Listos?",
+    gameOverTitle:"😵 ¡Fin del juego!",newHighScoreTitle:"🏆 ¡Nuevo récord!",pointsSuffix:" puntos",
+    newScoreEntry:"🏆 ¡Entraste a la tabla de récords! Ingresa tu nombre:",namePlaceholder:"Tu nombre...",saveBtn:"✅ Guardar",
+    playAgain:"🔁 Jugar de nuevo",mainMenu:"📋 Menú",back:"Volver",
+    aboutDesc:"Creado por Barak Aflalo como parte de AppNest — el nido de apps",
+    aboutCopyright:"© 2026 · Todos los derechos reservados a Barak Aflalo",
+    aboutLink:"🪺 AppNest — más juegos gratis",
+    noScores:"Aún no hay puntuaciones",thRank:"#",thName:"Nombre",thPlace:"Lugar",anonymous:"Anónimo",
+    levelUpPrefix:"⬆️ Nivel ",bestScorePrefix:"🏆 Mejor: "
+  },
+  ar:{
+    gameTitle:"🍽️ النادل المشغول 3D",menuSub:"اختر مكان العمل وابدأ التقديم!",
+    themeBurger:"مطعم البرغر",themeCoffee:"مقهى",themeIcecream:"محل آيس كريم",
+    howto:"⬆️⬇️ / W,S = تبديل المنضدة &nbsp;|&nbsp; مسافة = تقديم<br>اخدم الزبائن قبل أن يصلوا! 3 أخطاء = نهاية اللعبة",
+    highScores:"🏆 لوحة الصدارة",about:"ℹ️ حول",
+    hudScore:"النتيجة",hudLevel:"المستوى",hudCombo:"تتابع",hudLives:"الأرواح",
+    mobileTip:"💡 نصيحة: اضغط مباشرة على المناضد للتبديل بينها!",
+    serveBtn:"⚡ قدّم",getReady:"استعد!",readySuffix:" — جاهز؟",
+    gameOverTitle:"😵 انتهت اللعبة!",newHighScoreTitle:"🏆 رقم قياسي جديد!",pointsSuffix:" نقطة",
+    newScoreEntry:"🏆 دخلت لوحة الصدارة! أدخل اسمك:",namePlaceholder:"اسمك...",saveBtn:"✅ حفظ",
+    playAgain:"🔁 العب مرة أخرى",mainMenu:"📋 القائمة",back:"رجوع",
+    aboutDesc:"صنع بواسطة باراك أفللو كجزء من AppNest — عش التطبيقات",
+    aboutCopyright:"© 2026 · جميع الحقوق محفوظة لباراك أفللو",
+    aboutLink:"🪺 AppNest — ألعاب مجانية أخرى",
+    noScores:"لا توجد نتائج بعد",thRank:"#",thName:"الاسم",thPlace:"المكان",anonymous:"مجهول",
+    levelUpPrefix:"⬆️ المستوى ",bestScorePrefix:"🏆 الأفضل: "
+  }
+};
+
+function applyLang(lang){
+  if(!T[lang])lang='he';
+  curLang=lang;
+  try{localStorage.setItem('waiterLang',lang);}catch(e){}
+  document.documentElement.lang=lang;
+  var tt=T[lang],rtl=isRtl(lang);
+  document.title=tt.gameTitle;
+  var els=document.querySelectorAll('[data-i]');
+  for(var i=0;i<els.length;i++){
+    var k=els[i].getAttribute('data-i');if(tt[k]===undefined)continue;
+    if(els[i].tagName==='INPUT')els[i].placeholder=tt[k];else els[i].innerHTML=tt[k];
+  }
+  var howtoEl=document.querySelector('.howto');
+  if(howtoEl){howtoEl.style.direction=rtl?'rtl':'ltr';howtoEl.style.textAlign=rtl?'right':'left';}
+  var lbtns=document.querySelectorAll('.lang-btn');
+  for(var i=0;i<lbtns.length;i++){lbtns[i].classList.toggle('sel',lbtns[i].getAttribute('data-lang')===lang);}
+  if(typeof refreshBests==='function')refreshBests();
+  if(typeof renderScoreTable==='function'){renderScoreTable('go-hs');renderScoreTable('lb-content');}
+}
+
+let G={theme:null,playerLane:0,score:0,misses:0,maxMisses:3,combo:1,level:1,nextLevel:150,over:false,
+  custSpeed:2.5,itemSpeed:12,lanes:[],items3d:[],customers3d:[],running:false};
+let nextId=0,scene,camera,renderer,clock,counters3d=[],bartender3d=null;
+const LANE_Z=[-6,0,6],COUNTER_LEN=28,BARTENDER_X=-COUNTER_LEN/2-1,SPAWN_X=COUNTER_LEN/2+1;
+
+// Audio
+let ac=null,soundOn=true;
+function ga(){if(!ac)ac=new(window.AudioContext||window.webkitAudioContext)();return ac}
+function tone(f,t,d,v,del=0){if(!soundOn)return;try{const a=ga(),o=a.createOscillator(),g=a.createGain();o.connect(g);g.connect(a.destination);o.type=t;o.frequency.setValueAtTime(f,a.currentTime+del);g.gain.setValueAtTime(v,a.currentTime+del);g.gain.exponentialRampToValueAtTime(.001,a.currentTime+del+d);o.start(a.currentTime+del);o.stop(a.currentTime+del+d)}catch(e){}}
+function sServe(){tone(500,'sine',.08,.18);tone(720,'sine',.07,.12,.05)}
+function sCatch(){tone(660,'sine',.08,.2);tone(990,'sine',.1,.18,.06)}
+function sMiss(){tone(160,'sawtooth',.25,.3);tone(110,'square',.3,.25,.05)}
+function sLevelUp(){[523,659,784,1047].forEach((f,i)=>tone(f,'sine',.18,.22,i*.07))}
+function sGameOver(){[400,320,240,160].forEach((f,i)=>tone(f,'sawtooth',.35,.3,i*.12))}
+function sMove(){tone(380,'sine',.04,.08)}
+
+function rand(a,b){return a+Math.random()*(b-a)}
+function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
+function getScores(){try{return JSON.parse(localStorage.getItem('bw3d_scores')||'[]')}catch(e){return[]}}
+function saveScores(s){localStorage.setItem('bw3d_scores',JSON.stringify(s))}
+function addScore(name,score,theme,level){var scores=getScores();scores.push({name:name,score:score,theme:theme,level:level});scores.sort(function(a,b){return b.score-a.score});if(scores.length>10)scores.length=10;saveScores(scores)}
+function isTopScore(score){var s=getScores();return s.length<10||score>s[s.length-1].score}
+function getBest(t){var s=getScores().filter(function(x){return x.theme===t});return s.length?s[0].score:0}
+function setBest(t,s){return false}
+function renderScoreTable(id){var scores=getScores();var el=document.getElementById(id);if(!el)return;var tt=T[curLang];if(!scores.length){el.innerHTML='<div style="opacity:.4;font-size:12px;margin:12px 0">'+tt.noScores+'</div>';return}var medals=['🥇','🥈','🥉'];var icons={burger:'🍔',coffee:'☕',icecream:'🍦'};var dirClass=isRtl(curLang)?'rtl':'ltr';var h='<table class="hs-table '+dirClass+'"><tr><th>'+tt.thRank+'</th><th>'+tt.thName+'</th><th>'+tt.hudScore+'</th><th>'+tt.hudLevel+'</th><th>'+tt.thPlace+'</th></tr>';scores.forEach(function(s,i){h+='<tr><td class="rank">'+(medals[i]||(i+1))+'</td><td class="hs-name">'+(s.name||tt.anonymous)+'</td><td class="hs-score">'+s.score+'</td><td>'+(s.level||'?')+'</td><td class="hs-theme">'+(icons[s.theme]||'🍽️')+'</td></tr>'});h+='</table>';el.innerHTML=h}
+function showLeaderboard(){document.getElementById('lb-ov').classList.add('show');renderScoreTable('lb-content')}
+var pendingScore=null;
+function submitScore(){if(!pendingScore)return;var name=document.getElementById('player-name').value.trim()||T[curLang].anonymous;localStorage.setItem('bw3d_lastName',name);addScore(name,pendingScore.score,pendingScore.theme,pendingScore.level);pendingScore=null;document.getElementById('name-entry').style.display='none';renderScoreTable('go-hs')}
+
+function initThree(){
+  scene=new THREE.Scene();clock=new THREE.Clock();
+  camera=new THREE.PerspectiveCamera(50,window.innerWidth/window.innerHeight,.1,200);
+function adjustCameraAndControls(){
+  const isLandscape = window.innerWidth > window.innerHeight;
+  if(isLandscape){
+    camera.position.set(15, 13, 15); // Closer for landscape
+  } else {
+    camera.position.set(12, 12, 12); // Portrait
+  }
+  camera.lookAt(0,0,0);
+  
+  const controls = document.getElementById('controls');
+  if(controls){
+    controls.style.left = '12px';
+    controls.style.right = 'auto';
+    controls.style.flexDirection = 'column';
+  }
+}
+
+adjustCameraAndControls();
+
+window.addEventListener('orientationchange', ()=>{
+  setTimeout(adjustCameraAndControls, 100);
+});
+window.addEventListener('resize', ()=>{
+  adjustCameraAndControls();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+  renderer=new THREE.WebGLRenderer({antialias:true});
+  renderer.setSize(window.innerWidth,window.innerHeight);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+  renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+  renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.2;
+  document.body.prepend(renderer.domElement);
+  window.addEventListener('pointerdown',onPointerDown,false);
+  window.addEventListener('resize',()=>{camera.aspect=window.innerWidth/window.innerHeight;camera.updateProjectionMatrix();renderer.setSize(window.innerWidth,window.innerHeight)});
+}
+
+// ===== BUILD OUTDOOR SCENE =====
+function buildOutdoor(type){
+  const outdoor=new THREE.Group();
+
+  // Ground plane outside (world z < -11, behind wall at z=-10)
+  const gGeo=new THREE.PlaneGeometry(80,50);
+  const gMat=new THREE.MeshStandardMaterial({color:type==='beach'?0xf5deb3:0x4a7c59,roughness:.9});
+  const ground=new THREE.Mesh(gGeo,gMat);
+  ground.rotation.x=-Math.PI/2;ground.position.set(0,-.1,-35);outdoor.add(ground);
+
+  function makeTree(x,z,h,leafColor){
+    const tg=new THREE.Group();
+    const trGeo=new THREE.CylinderGeometry(.15,.25,h*.4,8);
+    const trMat=new THREE.MeshStandardMaterial({color:0x8b6f47,roughness:.8});
+    const trunk=new THREE.Mesh(trGeo,trMat);trunk.position.y=h*.2;trunk.castShadow=true;tg.add(trunk);
+    const lvGeo=new THREE.SphereGeometry(h*.35,8,8);
+    const lvMat=new THREE.MeshStandardMaterial({color:leafColor,roughness:.7});
+    const leaves=new THREE.Mesh(lvGeo,lvMat);leaves.position.y=h*.55;leaves.castShadow=true;tg.add(leaves);
+    const lv2=new THREE.Mesh(new THREE.SphereGeometry(h*.25,8,8),lvMat);
+    lv2.position.set(h*.15,h*.7,h*.1);tg.add(lv2);
+    tg.position.set(x,0,z);
+    return tg;
+  }
+
+  if(type==='city'){
+    // Road at z=-16
+    const rGeo=new THREE.PlaneGeometry(60,4);
+    const rMat=new THREE.MeshStandardMaterial({color:0x444444,roughness:.8});
+    const road=new THREE.Mesh(rGeo,rMat);road.rotation.x=-Math.PI/2;road.position.set(0,.01,-16);outdoor.add(road);
+    for(let i=-25;i<25;i+=4){
+      const lGeo=new THREE.PlaneGeometry(2,.15);
+      const lMat=new THREE.MeshBasicMaterial({color:0xffff00});
+      const line=new THREE.Mesh(lGeo,lMat);line.rotation.x=-Math.PI/2;line.position.set(i,.02,-16);outdoor.add(line);
+    }
+    // Buildings at z=-22 to -30
+    for(let i=0;i<6;i++){
+      const bh=rand(4,10);const bw=rand(2,4);
+      const bGeo=new THREE.BoxGeometry(bw,bh,bw);
+      const bMat=new THREE.MeshStandardMaterial({color:[0x778899,0xa9a9a9,0x708090,0xb0c4de,0xdcdcdc,0x8899aa][i%6],roughness:.5});
+      const building=new THREE.Mesh(bGeo,bMat);
+      const bz=rand(-22,-30);
+      building.position.set(-22+i*8,bh/2,bz);building.castShadow=true;outdoor.add(building);
+      for(let wy=1;wy<bh-1;wy+=1.5){
+        for(let wx=-.5;wx<=.5;wx+=1){
+          const wGeo=new THREE.PlaneGeometry(.4,.6);
+          const wMat=new THREE.MeshBasicMaterial({color:Math.random()>.3?0xffdd88:0x88bbff});
+          const win=new THREE.Mesh(wGeo,wMat);
+          win.position.set(-22+i*8+wx,wy,bz+bw/2+.01);outdoor.add(win);
+        }
+      }
+    }
+    // Cars on road at z=-16
+    for(let i=0;i<3;i++){
+      const carG=new THREE.Group();
+      const cbGeo=new THREE.BoxGeometry(2,.6,1);
+      const cbMat=new THREE.MeshStandardMaterial({color:[0xe63946,0x0066cc,0x2d5016][i],metalness:.3,roughness:.4});
+      carG.add(new THREE.Mesh(cbGeo,cbMat));
+      const ctGeo=new THREE.BoxGeometry(1.2,.5,.9);
+      const ctMat=new THREE.MeshStandardMaterial({color:0x87ceeb,metalness:.5,roughness:.2});
+      const ct=new THREE.Mesh(ctGeo,ctMat);ct.position.y=.5;carG.add(ct);
+      for(let wx of[-.6,.6]){for(let wz of[-.5,.5]){
+        const whGeo=new THREE.CylinderGeometry(.2,.2,.1,12);
+        const whMat=new THREE.MeshStandardMaterial({color:0x222222});
+        const wh=new THREE.Mesh(whGeo,whMat);wh.rotation.x=Math.PI/2;wh.position.set(wx,-.2,wz);carG.add(wh);
+      }}
+      carG.position.set(-8+i*10,.5,-15.5);outdoor.add(carG);
+    }
+    // Street trees between road and buildings
+    [-15,-5,5,15].forEach(x=>outdoor.add(makeTree(x,-19,3,0x2d5016)));
+  } else if(type==='park'){
+    // Trees spread far behind window
+    for(let i=0;i<12;i++){
+      const lc=[0x228b22,0x2d5016,0x3cb371,0x6b8e23][i%4];
+      outdoor.add(makeTree(rand(-25,25),rand(-14,-30),rand(2.5,5),lc));
+    }
+    // Bench
+    const benchG=new THREE.Group();
+    benchG.add(new THREE.Mesh(new THREE.BoxGeometry(2,.1,.6),new THREE.MeshStandardMaterial({color:0x8b6f47})));
+    const bk=new THREE.Mesh(new THREE.BoxGeometry(2,.8,.08),new THREE.MeshStandardMaterial({color:0x8b6f47}));
+    bk.position.set(0,.4,-.26);benchG.add(bk);
+    for(let s of[-0.8,.8]){const l=new THREE.Mesh(new THREE.BoxGeometry(.1,.5,.5),new THREE.MeshStandardMaterial({color:0x444444}));l.position.set(s,-.25,0);benchG.add(l)}
+    benchG.position.set(0,.5,-16);outdoor.add(benchG);
+    // Flowers
+    for(let i=0;i<20;i++){
+      const fGeo=new THREE.SphereGeometry(.15,6,6);
+      const fMat=new THREE.MeshStandardMaterial({color:[0xff69b4,0xffdd44,0xff4466,0xdda0dd,0x87ceeb][i%5]});
+      const flower=new THREE.Mesh(fGeo,fMat);
+      flower.position.set(rand(-20,20),.15,rand(-13,-28));outdoor.add(flower);
+    }
+    // Path
+    const pGeo=new THREE.PlaneGeometry(2.5,30);
+    const pMat=new THREE.MeshStandardMaterial({color:0xd4a574,roughness:.9});
+    const path=new THREE.Mesh(pGeo,pMat);path.rotation.x=-Math.PI/2;path.position.set(0,.02,-22);outdoor.add(path);
+  } else { // beach
+    // Sand continues from wall
+    const sandGeo=new THREE.PlaneGeometry(80,15);
+    const sandMat=new THREE.MeshStandardMaterial({color:0xf5deb3,roughness:.9});
+    const sand=new THREE.Mesh(sandGeo,sandMat);sand.rotation.x=-Math.PI/2;sand.position.set(0,.01,-17);outdoor.add(sand);
+    // Water further back
+    const wGeo=new THREE.PlaneGeometry(80,25);
+    const wMat=new THREE.MeshStandardMaterial({color:0x1ca3ec,roughness:.2,metalness:.1,transparent:true,opacity:.85});
+    const water=new THREE.Mesh(wGeo,wMat);water.rotation.x=-Math.PI/2;water.position.set(0,.05,-32);outdoor.add(water);
+    // Waves
+    for(let i=0;i<4;i++){
+      const wvGeo=new THREE.PlaneGeometry(60,.3);
+      const wvMat=new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.3});
+      const wave=new THREE.Mesh(wvGeo,wvMat);wave.rotation.x=-Math.PI/2;wave.position.set(0,.08,-22-i*2);outdoor.add(wave);
+    }
+    // Palm trees on sand
+    function makePalm(x,z){
+      const pg=new THREE.Group();
+      const ptGeo=new THREE.CylinderGeometry(.12,.2,4,8);
+      const ptMat=new THREE.MeshStandardMaterial({color:0x8b6f47,roughness:.8});
+      const pt=new THREE.Mesh(ptGeo,ptMat);pt.position.y=2;pt.rotation.z=.15;pg.add(pt);
+      for(let a=0;a<6;a++){
+        const lfGeo=new THREE.ConeGeometry(.3,2.5,4);
+        const lfMat=new THREE.MeshStandardMaterial({color:0x228b22});
+        const leaf=new THREE.Mesh(lfGeo,lfMat);
+        leaf.position.set(Math.cos(a*1.05)*.3,4.2,Math.sin(a*1.05)*.3);
+        leaf.rotation.z=.8*Math.cos(a*1.05);leaf.rotation.x=.8*Math.sin(a*1.05);
+        pg.add(leaf);
+      }
+      pg.position.set(x,0,z);return pg;
+    }
+    [-12,-4,6,14].forEach(x=>outdoor.add(makePalm(x,rand(-13,-18))));
+    // Umbrella
+    const umbG=new THREE.Group();
+    umbG.add(new THREE.Mesh(new THREE.CylinderGeometry(.05,.05,2.5,8),new THREE.MeshStandardMaterial({color:0x888888})));
+    const top=new THREE.Mesh(new THREE.ConeGeometry(1.2,.6,12,1,true),new THREE.MeshStandardMaterial({color:0xff4466,side:THREE.DoubleSide}));
+    top.position.y=1.4;top.rotation.x=Math.PI;umbG.add(top);
+    umbG.position.set(3,.1,-15);outdoor.add(umbG);
+    // Surfboard
+    const sb=new THREE.Mesh(new THREE.BoxGeometry(.3,.08,2),new THREE.MeshStandardMaterial({color:0xffdd44}));
+    sb.position.set(-6,.1,-14);sb.rotation.y=.3;outdoor.add(sb);
+  }
+
+  return outdoor;
+}
+
+// ===== BUILD SCENE =====
+function buildScene(themeKey){
+  while(scene.children.length>0)scene.remove(scene.children[0]);
+  counters3d=[];
+  const T=THEMES[themeKey];
+
+  // Sky
+  scene.background=new THREE.Color(T.sky);
+  scene.fog=new THREE.FogExp2(T.sky,.008);
+
+  // Lights
+  scene.add(new THREE.AmbientLight(0xffffff,.5));
+  const dir=new THREE.DirectionalLight(0xffffff,.8);
+  dir.position.set(8,12,6);dir.castShadow=true;
+  dir.shadow.mapSize.set(1024,1024);dir.shadow.camera.near=.5;dir.shadow.camera.far=50;
+  dir.shadow.camera.left=-20;dir.shadow.camera.right=20;dir.shadow.camera.top=20;dir.shadow.camera.bottom=-20;
+  scene.add(dir);
+  scene.add(new THREE.PointLight(0xffaa44,.4,30).position&&new THREE.PointLight(0xffaa44,.4,30));
+  const warm=new THREE.PointLight(0xffaa44,.4,30);warm.position.set(-5,8,0);scene.add(warm);
+
+  // Floor
+  const floorMat=new THREE.MeshStandardMaterial({color:T.floor,roughness:.8});
+  const floor=new THREE.Mesh(new THREE.PlaneGeometry(40,30),floorMat);
+  floor.rotation.x=-Math.PI/2;floor.position.y=-.01;floor.receiveShadow=true;scene.add(floor);
+
+  // Side walls (left + right)
+  const swMat=new THREE.MeshStandardMaterial({color:T.wall,roughness:.9});
+  const lw=new THREE.Mesh(new THREE.PlaneGeometry(30,10),swMat);
+  lw.position.set(-20,5,0);lw.rotation.y=Math.PI/2;scene.add(lw);
+  const rw=new THREE.Mesh(new THREE.PlaneGeometry(30,10),swMat);
+  rw.position.set(20,5,0);rw.rotation.y=-Math.PI/2;scene.add(rw);
+
+  // BACK WALL with WINDOW (vitrine)
+  // Wall sections (left and right of window)
+  const wallSide=new THREE.MeshStandardMaterial({color:T.wall,roughness:.9});
+  const wl=new THREE.Mesh(new THREE.BoxGeometry(10,10,.3),wallSide);
+  wl.position.set(-15,5,-10);scene.add(wl);
+  const wr=new THREE.Mesh(new THREE.BoxGeometry(10,10,.3),wallSide);
+  wr.position.set(15,5,-10);scene.add(wr);
+  // Wall above window
+  const wa=new THREE.Mesh(new THREE.BoxGeometry(20,2,.3),wallSide);
+  wa.position.set(0,9,-10);scene.add(wa);
+  // Wall below window
+  const wb=new THREE.Mesh(new THREE.BoxGeometry(20,2,.3),wallSide);
+  wb.position.set(0,1,-10);scene.add(wb);
+
+  // Window frame
+  const frameMat=new THREE.MeshStandardMaterial({color:0x444444,metalness:.3});
+  // Horizontal bars
+  const fh1=new THREE.Mesh(new THREE.BoxGeometry(20.5,.15,.4),frameMat);fh1.position.set(0,2,-10);scene.add(fh1);
+  const fh2=new THREE.Mesh(new THREE.BoxGeometry(20.5,.15,.4),frameMat);fh2.position.set(0,8,-10);scene.add(fh2);
+  // Vertical bars
+  const fv1=new THREE.Mesh(new THREE.BoxGeometry(.15,6,.4),frameMat);fv1.position.set(-10,5,-10);scene.add(fv1);
+  const fv2=new THREE.Mesh(new THREE.BoxGeometry(.15,6,.4),frameMat);fv2.position.set(10,5,-10);scene.add(fv2);
+  const fv3=new THREE.Mesh(new THREE.BoxGeometry(.1,6,.35),frameMat);fv3.position.set(0,5,-10);scene.add(fv3);
+
+  // Glass (transparent)
+  const glassMat=new THREE.MeshPhysicalMaterial({color:0xaaddff,transparent:true,opacity:.15,roughness:0,metalness:.1,side:THREE.DoubleSide});
+  const glass=new THREE.Mesh(new THREE.PlaneGeometry(20,6),glassMat);
+  glass.position.set(0,5,-10.1);scene.add(glass);
+
+  // Outdoor scene behind the window
+  const outdoor=buildOutdoor(T.outdoor);
+  scene.add(outdoor);
+
+  // Outdoor sky backdrop (far away)
+  const skyGeo=new THREE.PlaneGeometry(120,40);
+  const skyMat=new THREE.MeshBasicMaterial({color:T.sky});
+  const skyPlane=new THREE.Mesh(skyGeo,skyMat);
+  skyPlane.position.set(0,15,-55);scene.add(skyPlane);
+
+  // Sun/clouds
+  const sunGeo=new THREE.SphereGeometry(2,16,16);
+  const sunMat=new THREE.MeshBasicMaterial({color:0xffdd44});
+  const sun=new THREE.Mesh(sunGeo,sunMat);sun.position.set(15,18,-50);scene.add(sun);
+  // Clouds
+  for(let i=0;i<4;i++){
+    const cg=new THREE.Group();
+    for(let j=0;j<3;j++){
+      const cGeo=new THREE.SphereGeometry(rand(.8,1.5),8,8);
+      const cMat=new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.8});
+      const c=new THREE.Mesh(cGeo,cMat);c.position.set(j*1.2,rand(-.3,.3),0);cg.add(c);
+    }
+    cg.position.set(-15+i*10,rand(12,16),rand(-45,-52));scene.add(cg);
+  }
+
+  // Interior decorations per theme
+  if(themeKey==='burger'){
+    // Neon sign
+    const signG=new THREE.Group();
+    const sGeo=new THREE.BoxGeometry(3,.8,.1);
+    const sMat=new THREE.MeshBasicMaterial({color:0xff4466});
+    signG.add(new THREE.Mesh(sGeo,sMat));
+    signG.position.set(-15,7,-9.5);scene.add(signG);
+    // Menu board
+    const mbGeo=new THREE.BoxGeometry(2.5,2,.1);
+    const mbMat=new THREE.MeshStandardMaterial({color:0x222222});
+    const mb=new THREE.Mesh(mbGeo,mbMat);mb.position.set(15,6,-9.5);scene.add(mb);
+    // Ceiling lights
+    for(let x of[-6,0,6]){
+      const lgGeo=new THREE.CylinderGeometry(.4,.4,.08,12);
+      const lgMat=new THREE.MeshBasicMaterial({color:0xffffcc});
+      const lg=new THREE.Mesh(lgGeo,lgMat);lg.position.set(x,9.5,0);scene.add(lg);
+      const plg=new THREE.PointLight(0xffeecc,.3,8);plg.position.set(x,9,0);scene.add(plg);
+    }
+  } else if(themeKey==='coffee'){
+    // Shelf with cups
+    const shGeo=new THREE.BoxGeometry(4,.15,1);
+    const shMat=new THREE.MeshStandardMaterial({color:0x8b6f47});
+    for(let y of[4,5.5,7]){
+      const sh=new THREE.Mesh(shGeo,shMat);sh.position.set(-17,y,-9.5);scene.add(sh);
+    }
+    // Coffee bags
+    for(let i=0;i<4;i++){
+      const bg=new THREE.BoxGeometry(.5,.7,.3);
+      const bm=new THREE.MeshStandardMaterial({color:[0x6b4423,0x8b4513,0x3e2723,0xd4763a][i]});
+      const b=new THREE.Mesh(bg,bm);b.position.set(-18+i*.8,4.5,-9.5);scene.add(b);
+    }
+    // Warm pendant lights
+    for(let x of[-4,4]){
+      const cord=new THREE.Mesh(new THREE.CylinderGeometry(.02,.02,2,4),new THREE.MeshStandardMaterial({color:0x333333}));
+      cord.position.set(x,9,0);scene.add(cord);
+      const bulb=new THREE.Mesh(new THREE.SphereGeometry(.2,8,8),new THREE.MeshBasicMaterial({color:0xffddaa}));
+      bulb.position.set(x,8,0);scene.add(bulb);
+      const pl=new THREE.PointLight(0xffaa66,.5,10);pl.position.set(x,8,0);scene.add(pl);
+    }
+  } else {
+    // Colorful wall stripes
+    const colors=[0xff69b4,0x87ceeb,0x98fb98,0xdda0dd,0xffdd44];
+    for(let i=0;i<5;i++){
+      const stripe=new THREE.Mesh(new THREE.BoxGeometry(.3,10,.1),new THREE.MeshBasicMaterial({color:colors[i],transparent:true,opacity:.3}));
+      stripe.position.set(-18+i*2,5,-9.5);scene.add(stripe);
+    }
+    // Ice cream cone decoration
+    const deco=new THREE.Group();
+    const dc=new THREE.Mesh(new THREE.ConeGeometry(.5,1.5,12),new THREE.MeshStandardMaterial({color:0xd4944e}));
+    dc.position.y=-.5;dc.rotation.x=Math.PI;deco.add(dc);
+    const ds=new THREE.Mesh(new THREE.SphereGeometry(.5,12,12),new THREE.MeshStandardMaterial({color:0xff69b4}));
+    ds.position.y=.5;deco.add(ds);
+    const ds2=new THREE.Mesh(new THREE.SphereGeometry(.4,12,12),new THREE.MeshStandardMaterial({color:0x87ceeb}));
+    ds2.position.set(.2,.9,0);deco.add(ds2);
+    deco.position.set(-16,6.5,-9.5);deco.scale.set(1.5,1.5,1.5);scene.add(deco);
+    // Bright lights
+    for(let x of[-5,0,5]){
+      const pl=new THREE.PointLight(0xffffff,.4,10);pl.position.set(x,9,0);scene.add(pl);
+    }
+  }
+
+  // Counters
+  for(let i=0;i<3;i++){
+    const z=LANE_Z[i];
+    const cGeo=new THREE.BoxGeometry(COUNTER_LEN,.4,2.2);
+    const cMat=new THREE.MeshStandardMaterial({color:T.counter,roughness:.3,metalness:.2});
+    const counter=new THREE.Mesh(cGeo,cMat);counter.position.set(0,1.2,z);counter.castShadow=true;counter.receiveShadow=true;counter.userData={isCounter:true,laneIdx:i};scene.add(counter);
+    const fGeo=new THREE.BoxGeometry(COUNTER_LEN,1.2,.15);
+    const fMat=new THREE.MeshStandardMaterial({color:T.counterEdge,roughness:.5});
+    const front=new THREE.Mesh(fGeo,fMat);front.position.set(0,.6,z+.9);front.castShadow=true;scene.add(front);
+    
+    const bk=new THREE.Mesh(fGeo,fMat.clone());bk.position.set(0,.6,z-.9);scene.add(bk);
+    const glowMat=new THREE.MeshBasicMaterial({color:0xffdd44,transparent:true,opacity:0});
+    const glow=new THREE.Mesh(new THREE.BoxGeometry(COUNTER_LEN+.2,.05,2.4),glowMat);
+    glow.position.set(0,1.42,z);scene.add(glow);
+    counters3d.push({mesh:counter,glow,z});
+  }
+
+  // Bartender
+  bartender3d=createCharacter(0x2d5016,0x1a1a1a,0xdaa520);
+  bartender3d.position.set(BARTENDER_X,0,LANE_Z[0]);scene.add(bartender3d);
+
+  // Shelf right side
+  const shelf=new THREE.Mesh(new THREE.BoxGeometry(1.5,6,8),new THREE.MeshStandardMaterial({color:0x5a4535,roughness:.7}));
+  shelf.position.set(BARTENDER_X-3,3,0);shelf.castShadow=true;scene.add(shelf);
+  for(let j=0;j<6;j++){
+    const bottle=new THREE.Mesh(new THREE.CylinderGeometry(.12,.15,.6,8),new THREE.MeshStandardMaterial({color:[0x448844,0x884444,0x444488,0x888844][j%4],roughness:.3,metalness:.3}));
+    bottle.position.set(BARTENDER_X-3,2+Math.floor(j/3)*1.5,(j%3-1)*1.5);scene.add(bottle);
+  }
+}
+
+function createCharacter(shirtColor,pantsColor,apronColor,hairColor){
+  const g=new THREE.Group();
+  const skinMat=new THREE.MeshStandardMaterial({color:0xf4b896,roughness:.6});
+  const head=new THREE.Mesh(new THREE.SphereGeometry(.45,16,16),skinMat);head.position.y=2.6;head.castShadow=true;g.add(head);
+  const hc=hairColor||0x6b4423;
+  const hairMat=new THREE.MeshStandardMaterial({color:hc,roughness:.8});
+  const hs=Math.floor(Math.random()*3);
+  if(hs===0){const h=new THREE.Mesh(new THREE.SphereGeometry(.48,16,16,0,Math.PI*2,0,Math.PI*.55),hairMat);h.position.y=2.7;g.add(h)}
+  else if(hs===1){const h=new THREE.Mesh(new THREE.SphereGeometry(.5,16,16,0,Math.PI*2,0,Math.PI*.45),hairMat);h.position.set(.05,2.72,0);g.add(h)}
+  else{const h=new THREE.Mesh(new THREE.SphereGeometry(.52,16,16,0,Math.PI*2,0,Math.PI*.6),hairMat);h.position.y=2.72;g.add(h)}
+  for(let s of[-1,1]){const ew=new THREE.Mesh(new THREE.SphereGeometry(.07,8,8),new THREE.MeshBasicMaterial({color:0xffffff}));ew.position.set(s*.16,2.62,.38);g.add(ew);const ep=new THREE.Mesh(new THREE.SphereGeometry(.04,8,8),new THREE.MeshBasicMaterial({color:0x222222}));ep.position.set(s*.16,2.62,.44);g.add(ep)}
+  const nose=new THREE.Mesh(new THREE.SphereGeometry(.06,6,6),new THREE.MeshStandardMaterial({color:0xe8a080}));nose.position.set(0,2.52,.44);g.add(nose);
+  const mouth=new THREE.Mesh(new THREE.TorusGeometry(.07,.02,6,8,Math.PI),new THREE.MeshBasicMaterial({color:0xcc4466}));mouth.position.set(0,2.43,.42);g.add(mouth);
+  const body=new THREE.Mesh(new THREE.CylinderGeometry(.35,.38,.85,12),new THREE.MeshStandardMaterial({color:shirtColor,roughness:.5}));body.position.y=1.75;body.castShadow=true;g.add(body);
+  if(apronColor){const ap=new THREE.Mesh(new THREE.BoxGeometry(.6,.45,.05),new THREE.MeshStandardMaterial({color:apronColor,roughness:.4}));ap.position.set(0,1.72,.36);g.add(ap)}
+  for(let s of[-1,1]){const arm=new THREE.Mesh(new THREE.CylinderGeometry(.1,.12,.7,8),skinMat.clone());arm.position.set(s*.5,1.7,.1);arm.rotation.z=s*.3;arm.castShadow=true;g.add(arm)}
+  const pants=new THREE.Mesh(new THREE.CylinderGeometry(.36,.28,.65,12),new THREE.MeshStandardMaterial({color:pantsColor,roughness:.6}));pants.position.y=1.05;pants.castShadow=true;g.add(pants);
+  for(let s of[-1,1]){const leg=new THREE.Mesh(new THREE.CylinderGeometry(.1,.1,.55,8),new THREE.MeshStandardMaterial({color:pantsColor}));leg.position.set(s*.14,.42,0);leg.castShadow=true;leg.userData={side:s,isLeg:true};g.add(leg)}
+  for(let s of[-1,1]){const shoe=new THREE.Mesh(new THREE.BoxGeometry(.16,.08,.28),new THREE.MeshStandardMaterial({color:0x222222}));shoe.position.set(s*.14,.08,.04);g.add(shoe)}
+  return g;
+}
+
+function createItem(themeKey){
+  const g=new THREE.Group();
+  if(themeKey==='burger'){
+    g.add(new THREE.Mesh(new THREE.CylinderGeometry(.3,.35,.12,12),new THREE.MeshStandardMaterial({color:0xd4944e,roughness:.5})));
+    const p=new THREE.Mesh(new THREE.CylinderGeometry(.32,.32,.08,12),new THREE.MeshStandardMaterial({color:0x6b3a1a,roughness:.7}));p.position.y=.1;g.add(p);
+    const t=new THREE.Mesh(new THREE.SphereGeometry(.3,12,8,0,Math.PI*2,0,Math.PI*.6),new THREE.MeshStandardMaterial({color:0xd4944e,roughness:.5}));t.position.y=.22;g.add(t);
+  } else if(themeKey==='coffee'){
+    g.add(new THREE.Mesh(new THREE.CylinderGeometry(.15,.2,.35,12),new THREE.MeshStandardMaterial({color:0xffffff,roughness:.3})));
+    const c=new THREE.Mesh(new THREE.CylinderGeometry(.14,.14,.02,12),new THREE.MeshStandardMaterial({color:0x6b4423}));c.position.y=.16;g.add(c);
+    // Handle
+    const h=new THREE.Mesh(new THREE.TorusGeometry(.1,.03,6,8,Math.PI),new THREE.MeshStandardMaterial({color:0xffffff}));
+    h.position.set(.22,.05,0);h.rotation.z=Math.PI/2;g.add(h);
+  } else {
+    const cone=new THREE.Mesh(new THREE.ConeGeometry(.15,.4,12),new THREE.MeshStandardMaterial({color:0xd4944e,roughness:.5}));cone.position.y=-.05;g.add(cone);
+    const sc=new THREE.Mesh(new THREE.SphereGeometry(.18,12,12),new THREE.MeshStandardMaterial({color:0xff69b4,roughness:.4}));sc.position.y=.25;g.add(sc);
+    const sc2=new THREE.Mesh(new THREE.SphereGeometry(.15,12,12),new THREE.MeshStandardMaterial({color:0x98fb98,roughness:.4}));sc2.position.set(.08,.38,0);g.add(sc2);
+  }
+  g.scale.set(1.2,1.2,1.2);return g;
+}
+
+// Game logic
+
+// ===== PARTICLES =====
+let particles=[];
+function spawnParticles(x,y,z,color){
+  for(let i=0;i<8;i++){
+    const geo=new THREE.SphereGeometry(0.08,6,6);
+    const mat=new THREE.MeshBasicMaterial({color:color,transparent:true,opacity:1});
+    const p=new THREE.Mesh(geo,mat);
+    p.position.set(x,y,z);
+    p.userData={vx:(Math.random()-.5)*.15,vy:Math.random()*.1+.05,vz:(Math.random()-.5)*.15,life:1};
+    scene.add(p);particles.push(p);
+  }
+}
+function updateParticles(){
+  for(let i=particles.length-1;i>=0;i--){
+    const p=particles[i];
+    p.position.x+=p.userData.vx;p.position.y+=p.userData.vy;p.position.z+=p.userData.vz;
+    p.userData.vy-=.005;p.userData.life-=.03;p.material.opacity=Math.max(0,p.userData.life);
+    if(p.userData.life<=0){scene.remove(p);particles.splice(i,1)}
+  }
+}
+
+
+// ===== ARROW INDICATOR =====
+let arrowMesh=null;
+function createArrow(){
+  const geo=new THREE.ConeGeometry(0.2,0.4,8);
+  const mat=new THREE.MeshBasicMaterial({color:0xffdd44,transparent:true,opacity:0.8});
+  arrowMesh=new THREE.Mesh(geo,mat);
+  arrowMesh.rotation.x=Math.PI;
+  scene.add(arrowMesh);
+}
+function updateArrow(time){
+  if(!arrowMesh||!bartender3d)return;
+  arrowMesh.position.set(bartender3d.position.x,3.2+Math.sin(time*3)*.15,bartender3d.position.z);
+  arrowMesh.rotation.y+=.03;
+}
+
+
+// ===== RAYCASTING - DIRECT COUNTER CLICK =====
+const raycaster=new THREE.Raycaster();
+const mouseVec=new THREE.Vector2();
+function onPointerDown(evt){
+  if(!G.running)return;
+  mouseVec.x=(evt.clientX/window.innerWidth)*2-1;
+  mouseVec.y=-(evt.clientY/window.innerHeight)*2+1;
+  raycaster.setFromCamera(mouseVec,camera);
+  const targets=[];
+  scene.traverse(function(child){if(child.userData&&child.userData.isCounter)targets.push(child)});
+  const hits=raycaster.intersectObjects(targets);
+  if(hits.length>0){
+    const lane=hits[0].object.userData.laneIdx;
+    if(lane!==undefined&&lane!==G.playerLane){G.playerLane=lane;sMove();updateLaneInd()}
+  }
+}
+
+function initGame(tk){
+  G={theme:tk,playerLane:0,score:0,misses:0,maxMisses:3,combo:1,level:1,nextLevel:150,over:false,
+    custSpeed:2.5,itemSpeed:12,lanes:[
+      {customers:[],item:null,spawnTimer:rand(1,2.5)},
+      {customers:[],item:null,spawnTimer:rand(1.5,3)},
+      {customers:[],item:null,spawnTimer:rand(2,3.5)}
+    ],items3d:[],customers3d:[],running:false};
+}
+function spawnInterval(){return Math.max(.8,2.4-(G.level-1)*.15)+Math.random()*.8}
+function spawnCustomer(li){
+  const T=THEMES[G.theme],sc=T.shirtColors[Math.floor(Math.random()*T.shirtColors.length)],pc=T.pantsColors[Math.floor(Math.random()*T.pantsColors.length)];
+  const ch=createCharacter(sc,pc,null);ch.position.set(SPAWN_X,0,LANE_Z[li]);ch.rotation.y=-Math.PI/2;scene.add(ch);
+  const cust={id:nextId++,laneIdx:li,x:SPAWN_X,state:'approach',mesh:ch};
+  G.lanes[li].customers.push(cust);G.customers3d.push(cust);
+}
+function serveItem(li){
+  if(G.lanes[li].item)return;
+  const item3d=createItem(G.theme);item3d.position.set(BARTENDER_X-1,1.55,LANE_Z[li]);scene.add(item3d);
+  const item={laneIdx:li,x:BARTENDER_X-1,mesh:item3d};G.lanes[li].item=item;G.items3d.push(item);sServe();
+}
+function tick(dt){
+  if(!G.running||G.over)return;
+  G.lanes.forEach((lane,li)=>{
+    lane.spawnTimer-=dt;
+    if(lane.spawnTimer<=0&&!lane.customers.some(c=>c.x<SPAWN_X+3&&c.state==='approach')){spawnCustomer(li);lane.spawnTimer=spawnInterval()}
+    if(lane.item){
+      lane.item.x+=G.itemSpeed*dt;lane.item.mesh.position.x=lane.item.x;lane.item.mesh.rotation.y+=dt*3;
+      const target=lane.customers.find(c=>c.state==='approach'&&Math.abs(c.x-lane.item.x)<1.2);
+      if(target){target.state='leaving';spawnParticles(lane.item.mesh.position.x,1.8,LANE_Z[li],0xffdd44);const pts=Math.round(20+Math.abs(target.x-BARTENDER_X)*2)*G.combo;G.score+=pts;G.combo=Math.min(G.combo+1,5);sCatch();showFloatScore(pts);checkLevelUp();scene.remove(lane.item.mesh);G.items3d=G.items3d.filter(i=>i!==lane.item);lane.item=null}
+      else if(lane.item&&lane.item.x>=SPAWN_X+1){scene.remove(lane.item.mesh);G.items3d=G.items3d.filter(i=>i!==lane.item);lane.item=null;registerMiss()}
+    }
+    lane.customers.forEach(c=>{
+      if(c.state==='approach'){c.x-=G.custSpeed*dt;if(c.x<=BARTENDER_X+.5){c.remove=true;registerMiss()}}
+      else if(c.state==='leaving'){c.x+=G.custSpeed*1.8*dt;if(c.x>=SPAWN_X+2)c.remove=true}
+      c.mesh.position.x=c.x;c.mesh.position.y=Math.sin(Date.now()*.003+c.id)*.05;
+    });
+    lane.customers.filter(c=>c.remove).forEach(c=>{scene.remove(c.mesh);G.customers3d=G.customers3d.filter(cc=>cc!==c)});
+    lane.customers=lane.customers.filter(c=>!c.remove);
+  });
+  bartender3d.position.z+=(LANE_Z[G.playerLane]-bartender3d.position.z)*.15;
+  counters3d.forEach((c,i)=>{c.glow.material.opacity+=(i===G.playerLane?.35:0-c.glow.material.opacity)*.1});
+  updateHUD();
+  if(G.over)setTimeout(endGame,400);
+}
+function registerMiss(){G.misses++;G.combo=1;sMiss();if(G.misses>=G.maxMisses)G.over=true}
+function checkLevelUp(){if(G.score>=G.nextLevel&&G.level<99){G.level++;G.custSpeed+=.3;G.itemSpeed+=1;G.nextLevel+=150+G.level*40;sLevelUp();showLevelBanner()}}
+function moveLane(dir){if(G.over||!G.running)return;const n=clamp(G.playerLane+dir,0,2);if(n!==G.playerLane){G.playerLane=n;sMove();updateLaneInd()}}
+function serve(){if(G.over||!G.running)return;serveItem(G.playerLane)}
+function updateHUD(){
+  document.getElementById('h-score').textContent=G.score;document.getElementById('h-level').textContent=G.level;
+  document.getElementById('h-combo').textContent=(G.combo>=3?'🔥':'')+'x'+G.combo;
+  document.getElementById('h-lives').textContent='❤️'.repeat(Math.max(0,G.maxMisses-G.misses))+'🖤'.repeat(G.misses);
+}
+function updateLaneInd(){document.querySelectorAll('.lane-dot').forEach((d,i)=>d.classList.toggle('active',i===G.playerLane))}
+function showFloatScore(pts){const el=document.createElement('div');el.className='float-score';el.textContent='+'+pts;el.style.left=Math.random()*30+35+'%';el.style.top=Math.random()*20+30+'%';document.body.appendChild(el);setTimeout(()=>el.remove(),1000)}
+function showLevelBanner(){const b=document.createElement('div');b.className='level-banner';b.textContent=T[curLang].levelUpPrefix+G.level+'!';document.body.appendChild(b);setTimeout(()=>b.remove(),1600)}
+function refreshBests(){['burger','coffee','icecream'].forEach(t=>{const b=getBest(t);const el=document.getElementById('best-'+t);if(el)el.textContent=b>0?T[curLang].bestScorePrefix+b:''})}
+function startGame(tk){
+  document.getElementById('menu-ov').classList.remove('show');initGame(tk);buildScene(tk);updateHUD();updateLaneInd();
+  const ov=document.getElementById('cd-ov'),numEl=document.getElementById('cd-num');
+  document.getElementById('cd-title').textContent=T[curLang][THEMES[tk].nameKey]+T[curLang].readySuffix;ov.classList.add('show');
+  let n=3;numEl.textContent=n;
+  const iv=setInterval(()=>{n--;if(n>0){numEl.textContent=n;tone(440,'sine',.08,.15)}else if(n===0){numEl.textContent='🚀';tone(660,'sine',.15,.2)}else{clearInterval(iv);ov.classList.remove('show');G.running=true;document.getElementById('hud').style.display='flex';
+      if(window.innerWidth<800){document.getElementById('mobile-tip').style.display='block';setTimeout(function(){document.getElementById('mobile-tip').style.display='none'},4000)}document.getElementById('lane-ind').style.display='flex';document.getElementById('controls').style.display='flex'}},650);
+}
+function endGame(){G.running=false;sGameOver();pendingScore={score:G.score,theme:G.theme,level:G.level};var top=isTopScore(G.score);var te=document.getElementById('go-title');if(te)te.textContent=top?T[curLang].newHighScoreTitle:T[curLang].gameOverTitle;document.getElementById('go-score').textContent=G.score+T[curLang].pointsSuffix;document.getElementById('go-info').textContent=T[curLang].hudLevel+' '+G.level+' | '+T[curLang][THEMES[G.theme].nameKey];var ne=document.getElementById('name-entry');if(ne)ne.style.display=top?'block':'none';var pn=document.getElementById('player-name');if(pn)pn.value=localStorage.getItem('bw3d_lastName')||'';if(!top){renderScoreTable('go-hs')}else{var gh=document.getElementById('go-hs');if(gh)gh.innerHTML=''}document.getElementById('go-ov').classList.add('show');if(top&&pn)setTimeout(function(){pn.focus()},400)}
+function restartGame(){if(pendingScore&&isTopScore(pendingScore.score))submitScore();document.getElementById('go-ov').classList.remove('show');G.customers3d.forEach(c=>scene.remove(c.mesh));G.items3d.forEach(i=>scene.remove(i.mesh));particles.forEach(p=>scene.remove(p));particles=[];startGame(G.theme)}
+function goMenu(){if(pendingScore&&isTopScore(pendingScore.score))submitScore();document.getElementById('go-ov').classList.remove('show');document.getElementById('hud').style.display='none';document.getElementById('lane-ind').style.display='none';document.getElementById('controls').style.display='none';G.running=false;refreshBests();document.getElementById('menu-ov').classList.add('show')}
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){document.getElementById('lb-ov').classList.remove('show');document.getElementById('about-ov').classList.remove('show')}else if(e.key==='ArrowUp'||e.key==='w'||e.key==='W'){e.preventDefault();moveLane(1)}else if(e.key==='ArrowDown'||e.key==='s'||e.key==='S'){e.preventDefault();moveLane(-1)}else if(e.key===' '||e.key==='Enter'){e.preventDefault();serve()}});
+function animate(){requestAnimationFrame(animate);const dt=Math.min(clock.getDelta(),.05);tick(dt);renderer.render(scene,camera)}
+document.querySelectorAll('.lang-btn').forEach(b=>b.addEventListener('click',()=>applyLang(b.getAttribute('data-lang'))));
+initThree();applyLang(curLang);animate();
+</script>
+</body>
+</html>

@@ -1,0 +1,1616 @@
+<!DOCTYPE html>
+<html lang="he">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Frogger 3D</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --neon: #39ff14;
+    --neon-dim: #1f8a0c;
+    --gold: #ffd54f;
+    --panel-bg: rgba(6, 10, 20, 0.94);
+    --danger: #ff4d4d;
+  }
+  *{ box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body{
+    margin:0; padding:0; width:100%; height:100%;
+    overflow:hidden; background:#05060c;
+    font-family: 'Press Start 2P', 'Courier New', monospace;
+    color:#fff; user-select:none;
+  }
+  #gameCanvas{ display:block; width:100vw; height:100vh; touch-action:none; }
+
+  /* ---------- HUD ---------- */
+  #hud{
+    position:fixed; top:0; left:0; right:0;
+    display:flex; justify-content:space-around; align-items:center;
+    padding: 8px 4px;
+    background: linear-gradient(to bottom, rgba(0,0,0,0.75), rgba(0,0,0,0));
+    pointer-events:none; z-index:10;
+  }
+  .hud-item{
+    text-align:center; font-size: 10px; color:var(--neon);
+    text-shadow: 0 0 6px var(--neon);
+    line-height:1.6;
+  }
+  .hud-item span{ font-size: 14px; color:#fff; text-shadow: 0 0 6px #fff; }
+  #livesVal{ font-size:16px; letter-spacing:2px; }
+
+  #muteBtn{
+    position:fixed; top:8px; left:8px; z-index:20;
+    width:36px; height:36px; border-radius:8px;
+    background: rgba(57,255,20,0.12); border:2px solid rgba(57,255,20,0.55);
+    color: var(--neon); font-size:16px;
+    display:flex; align-items:center; justify-content:center;
+    -webkit-user-select:none;
+  }
+  #muteBtn:active{ background: rgba(57,255,20,0.35); }
+
+  #pauseBtn{
+    position:fixed; top:8px; left:52px; z-index:20;
+    width:36px; height:36px; border-radius:8px;
+    background: rgba(57,255,20,0.12); border:2px solid rgba(57,255,20,0.55);
+    color: var(--neon); font-size:16px;
+    display:flex; align-items:center; justify-content:center;
+    -webkit-user-select:none;
+  }
+  #pauseBtn:active{ background: rgba(57,255,20,0.35); }
+
+  #aboutBtn{
+    position:fixed; top:8px; right:8px; z-index:60;
+    width:36px; height:36px; border-radius:8px;
+    background: rgba(255,213,79,0.12); border:2px solid rgba(255,213,79,0.55);
+    color: var(--gold); font-size:16px;
+    display:flex; align-items:center; justify-content:center;
+    -webkit-user-select:none;
+  }
+  #aboutBtn:active{ background: rgba(255,213,79,0.35); }
+
+  #pauseOverlay{
+    position:fixed; inset:0; z-index:25;
+    background: rgba(2,4,10,0.6);
+    display:flex; align-items:center; justify-content:center;
+    color: var(--neon); font-size:20px; text-align:center;
+    text-shadow:0 0 10px var(--neon);
+    font-family:'Press Start 2P', monospace;
+  }
+  #pauseOverlay.hidden{ display:none; }
+  #pauseOverlay .small{ font-size:9px; color:#9fd; margin-top:10px; }
+
+  #levelBanner{
+    position:fixed; top:32%; left:0; right:0; text-align:center;
+    font-size:20px; color:var(--gold); text-shadow:0 0 14px var(--gold);
+    z-index:30; pointer-events:none;
+  }
+  #levelBanner.hidden{ display:none; }
+  #levelBanner.show{ animation: bannerPop 1.6s ease-out forwards; }
+  @keyframes bannerPop{
+    0%{ opacity:0; transform: scale(0.5) translateY(20px); }
+    18%{ opacity:1; transform: scale(1.15) translateY(0); }
+    30%{ transform: scale(1); }
+    78%{ opacity:1; }
+    100%{ opacity:0; transform: scale(1) translateY(-14px); }
+  }
+
+  #timeVal.warning{
+    color: var(--danger) !important;
+    text-shadow: 0 0 8px var(--danger) !important;
+    animation: timeFlash 0.5s infinite alternate;
+  }
+  @keyframes timeFlash{
+    from{ opacity:1; }
+    to{ opacity:0.25; }
+  }
+
+  #playerScores{
+    position:fixed; top:50px; left:0; right:0; text-align:center;
+    font-size:10px; color:var(--gold); text-shadow:0 0 6px var(--gold);
+    pointer-events:none; z-index:10; display:none;
+  }
+  #playerScores .active{ color:#fff; text-shadow:0 0 8px var(--neon); }
+
+  /* ---------- Touch controls ---------- */
+  #touchControls{
+    position:fixed; bottom: 18px; right: 18px;
+    display:grid;
+    grid-template-areas: ". up ." "left down right";
+    grid-template-columns: 58px 58px 58px;
+    grid-template-rows: 58px 58px;
+    gap:8px; z-index:15;
+  }
+  .ctrl{
+    width:58px; height:58px;
+    background: rgba(57,255,20,0.12);
+    border: 2px solid rgba(57,255,20,0.55);
+    border-radius: 12px;
+    color: var(--neon);
+    font-size: 22px;
+    display:flex; align-items:center; justify-content:center;
+    backdrop-filter: blur(2px);
+    -webkit-user-select:none;
+  }
+  .ctrl:active{ background: rgba(57,255,20,0.35); }
+  #btnUp{ grid-area: up; }
+  #btnDown{ grid-area: down; }
+  #btnLeft{ grid-area: left; }
+  #btnRight{ grid-area: right; }
+
+  /* ---------- Overlays ---------- */
+  .overlay{
+    position:fixed; inset:0; z-index:50;
+    display:flex; align-items:center; justify-content:center;
+    background: rgba(2,4,10,0.78);
+  }
+  .overlay.hidden{ display:none; }
+  #aboutOverlay{ z-index:55; }
+  .panel{
+    background: var(--panel-bg);
+    border: 3px solid var(--neon);
+    box-shadow: 0 0 24px rgba(57,255,20,0.45), inset 0 0 14px rgba(57,255,20,0.15);
+    border-radius: 10px;
+    padding: 22px 26px;
+    max-width: 420px;
+    width: 90%;
+    max-height: 88vh;
+    overflow-y:auto;
+    text-align:center;
+    direction: rtl;
+  }
+  .panel h1{
+    color:var(--neon); font-size: 20px; margin: 0 0 14px 0;
+    text-shadow: 0 0 10px var(--neon);
+  }
+  .panel p{ font-size: 11px; line-height:1.9; color:#dcffe0; margin:8px 0; }
+  .panel .small{ font-size:9px; color:#9fd; opacity:0.85; }
+
+  .lb-table{
+    width:100%; border-collapse: collapse; margin: 12px 0;
+    font-size: 10px;
+  }
+  .lb-table.rtl{ direction: rtl; }
+  .lb-table.ltr{ direction: ltr; }
+  .lb-table th, .lb-table td{
+    padding: 5px 4px; border-bottom: 1px solid rgba(57,255,20,0.25);
+    color:#fff;
+  }
+  .lb-table th{ color:var(--gold); text-shadow:0 0 6px var(--gold); }
+  .lb-table tr:nth-child(odd) td{ background: rgba(57,255,20,0.04); }
+  .lb-table tr.highlight td{
+    background: rgba(255,213,79,0.18); color:var(--gold);
+    text-shadow:0 0 6px var(--gold);
+  }
+
+  .lang-row{ display:flex; gap:6px; justify-content:center; margin: 0 0 10px; direction:ltr; }
+  .lang-btn{
+    font-size:16px; background:rgba(57,255,20,0.06); border:2px solid transparent;
+    border-radius:6px; padding:3px 7px; cursor:pointer; opacity:0.5;
+    transition: all 0.2s; line-height:1.3;
+  }
+  .lang-btn.sel{ opacity:1; border-color:var(--neon); background:rgba(57,255,20,0.18); }
+
+  .arcade-btn{
+    font-family: inherit; font-size: 12px; cursor:pointer;
+    background: var(--neon); color:#04210a;
+    border:none; border-radius:6px; padding: 12px 18px;
+    margin-top: 10px; box-shadow: 0 0 14px rgba(57,255,20,0.6);
+    text-shadow:none; text-decoration:none; display:inline-block;
+  }
+  .arcade-btn:active{ transform: scale(0.97); }
+  .arcade-btn.secondary{
+    background: transparent; color: var(--neon);
+    border: 2px solid var(--neon);
+    box-shadow: none;
+  }
+
+  .btnRow{ display:flex; gap:10px; justify-content:center; flex-wrap:wrap; }
+
+  .playerSelect{ display:flex; gap:10px; justify-content:center; margin: 10px 0; }
+  .select-btn{
+    font-family: inherit; font-size: 10px; cursor:pointer;
+    background: transparent; color: var(--neon);
+    border: 2px solid var(--neon-dim); border-radius:6px;
+    padding: 10px 14px; opacity:0.6;
+  }
+  .select-btn.active{
+    opacity:1; border-color: var(--neon);
+    box-shadow: 0 0 10px rgba(57,255,20,0.6);
+    background: rgba(57,255,20,0.12);
+  }
+
+  #nameInput{
+    font-family:'Press Start 2P', monospace; font-size:16px;
+    width: 90px; text-align:center; letter-spacing:6px;
+    text-transform:uppercase; padding:8px 4px;
+    background:#000; color:var(--neon); border:2px solid var(--neon);
+    border-radius:6px; margin: 8px 0;
+  }
+  #nameEntry.hidden, #restartBtn.hidden{ display:none; }
+  #finalScore{ margin: 8px 0; }
+  #finalScore .gold{ color:var(--gold); text-shadow:0 0 8px var(--gold); }
+</style>
+</head>
+<body>
+
+<canvas id="gameCanvas"></canvas>
+
+<button id="muteBtn" data-i-title="muteTooltip" title="השתק / בטל השתקה">🔊</button>
+<button id="pauseBtn" data-i-title="pauseTooltip" title="הפסקה">⏸</button>
+<button id="aboutBtn" data-i-title="aboutTooltip" title="אודות AppNest">ℹ️</button>
+
+<div id="pauseOverlay" class="hidden">
+  <div><span data-i="pausedLabel">⏸ מושהה</span><br><span class="small" data-i="pausedHint">לחץ כדי להמשיך</span></div>
+</div>
+
+<div id="levelBanner" class="hidden"></div>
+
+<!-- HUD -->
+<div id="hud">
+  <div class="hud-item"><span data-i="hudScore">ניקוד</span><br><span id="scoreVal">0</span></div>
+  <div class="hud-item"><span data-i="hudLevel">שלב</span><br><span id="levelVal">1/3</span></div>
+  <div class="hud-item"><span data-i="hudTime">זמן</span><br><span id="timeVal">45</span></div>
+  <div class="hud-item"><span data-i="hudLives">חיים</span><br><span id="livesVal">🐸🐸🐸</span></div>
+</div>
+<div id="playerScores"></div>
+
+<!-- Touch controls -->
+<div id="touchControls">
+  <button class="ctrl" id="btnUp">▲</button>
+  <button class="ctrl" id="btnLeft">◀</button>
+  <button class="ctrl" id="btnDown">▼</button>
+  <button class="ctrl" id="btnRight">▶</button>
+</div>
+
+<!-- Start screen -->
+<div id="startScreen" class="overlay">
+  <div class="panel">
+    <h1>🐸 Frogger 3D 🐸</h1>
+    <div class="lang-row" id="langRow">
+      <button class="lang-btn" data-lang="he">🇮🇱</button>
+      <button class="lang-btn" data-lang="en">🇬🇧</button>
+      <button class="lang-btn" data-lang="ru">🇷🇺</button>
+      <button class="lang-btn" data-lang="es">🇪🇸</button>
+      <button class="lang-btn" data-lang="ar">🇸🇦</button>
+    </div>
+    <p data-i="introText">
+      עזרו לצפרדע לחצות את הכביש המהיר ולשחות על גבי בולי עץ וצבים בנהר,
+      עד שתגיע לאחת מ-5 נקודות היעד בראש המסך. 3 שלבים, כל שלב קשה מהקודם!
+    </p>
+    <p class="small" data-i="controlsText">
+      שליטה: מקשי החצים במחשב, או הכפתורים השקופים על המסך בנייד.<br>
+      פגיעה ברכב או טביעה במים = אובדן חיים. יש 3 חיים בלבד!
+    </p>
+    <p class="small" data-i="bonusText">💎 על הלוח יופיעו מדי פעם בונוסים זוהרים: צהוב = +100 נקודות, כחול = +5 שניות. בשלב 3 חלק מבולי העץ צוללים - שימו לב לאור הכתום המהבהב!</p>
+    <p class="small" data-i="landscapeTip">📱 טיפ: מומלץ לשחק במצב לרוחב (Landscape) לתצוגה רחבה יותר.</p>
+    <div class="playerSelect">
+      <button class="select-btn active" id="p1Btn" data-i="onePlayerBtn">🐸 שחקן אחד</button>
+      <button class="select-btn" id="p2Btn" data-i="twoPlayerBtn">🐸🐸 שני שחקנים</button>
+    </div>
+    <div id="startLeaderboard"></div>
+    <button class="arcade-btn" id="startBtn" data-i="startBtn">▶ התחל משחק</button>
+  </div>
+</div>
+
+<!-- Turn transition screen (2 players) -->
+<div id="turnScreen" class="overlay hidden">
+  <div class="panel">
+    <h1 id="turnTitle">תור לשחקן 2!</h1>
+    <p data-i="turnInstructions">הניחו לשחקן הבא לקחת שליטה, ואז לחצו "המשך".</p>
+    <button class="arcade-btn" id="turnContinueBtn" data-i="continueBtn">▶ המשך</button>
+  </div>
+</div>
+
+<!-- Game over screen -->
+<div id="gameOverScreen" class="overlay hidden">
+  <div class="panel">
+    <h1 id="gameOverTitle" data-i="gameOverTitle">תם המשחק</h1>
+    <div id="finalScore"></div>
+    <div id="nameEntry" class="hidden">
+      <p id="nameEntryLabel">🏆 שיא חדש! הכנס שם (3 אותיות):</p>
+      <input id="nameInput" maxlength="3" autocomplete="off">
+      <br>
+      <button class="arcade-btn" id="saveScoreBtn" data-i="saveScoreBtn">שמור שיא</button>
+    </div>
+    <div id="gameOverLeaderboard"></div>
+    <div class="btnRow">
+      <button class="arcade-btn hidden" id="restartBtn" data-i="restartBtn">🔄 שחק שוב</button>
+      <button class="arcade-btn secondary" id="homeBtn" data-i="homeBtn">🏠 מסך הבית</button>
+    </div>
+  </div>
+</div>
+
+<!-- About screen -->
+<div id="aboutOverlay" class="overlay hidden">
+  <div class="panel">
+    <h1>🐸 Frogger 3D</h1>
+    <p data-i="aboutDesc">המשחק נוצר על ידי ברק אפללו במסגרת AppNest — קן האפליקציות.</p>
+    <p class="small" data-i="aboutCopyright">© 2026 · כל הזכויות שמורות לברק אפללו</p>
+    <div class="btnRow">
+      <a class="arcade-btn" href="https://barakaflalo.github.io/appnest" target="_blank" rel="noopener" data-i="aboutLink">🪺 AppNest — עוד משחקים בחינם</a>
+      <button class="arcade-btn secondary" id="aboutCloseBtn" data-i="closeBtn">סגור</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+<script>
+(function(){
+  "use strict";
+
+  /* =========================================================
+     קבועים כלליים של הלוח (Grid)
+     ========================================================= */
+  const CELL = 1;
+  const COLS = 13;            // עמודות 0..12, מרכז = 6
+  const ROWS = 13;             // שורות 0..12
+  const HALF_COLS = (COLS - 1) / 2; // 6
+  const BOARD_EDGE = HALF_COLS + 0.5; // 6.5 - גבול הנהר לפני "טביעה בקצה"
+
+  // סוג כל שורה: 0=התחלה, 1-5=כביש, 6=אי-תיווך, 7-11=נהר, 12=יעד
+  const ROW_TYPES = ['start','road','road','road','road','road','median','river','river','river','river','river','goal'];
+  const GOAL_COLS = [1, 3, 6, 9, 11]; // 5 נקודות יעד
+
+  const JUMP_DURATION = 0.16;  // שניות לקפיצה אחת
+  const JUMP_HEIGHT = 0.7;
+  const FROG_HALF = 0.32;
+  const DYING_DURATION = 0.5;
+
+  /* =========================================================
+     i18n - תרגומים ל-5 שפות
+     ========================================================= */
+  const T = {
+    he:{
+      muteTooltip:"השתק / בטל השתקה",pauseTooltip:"הפסקה",aboutTooltip:"אודות AppNest",
+      pausedLabel:"⏸ מושהה",pausedHint:"לחץ כדי להמשיך",
+      hudScore:"ניקוד",hudLevel:"שלב",hudTime:"זמן",hudLives:"חיים",
+      bonusTimeMsg:"⏱️ +5 שניות!",bonusScoreMsg:"💰 +100 נקודות!",
+      introText:"עזרו לצפרדע לחצות את הכביש המהיר ולשחות על גבי בולי עץ וצבים בנהר, עד שתגיע לאחת מ-5 נקודות היעד בראש המסך. 3 שלבים, כל שלב קשה מהקודם!",
+      controlsText:"שליטה: מקשי החצים במחשב, או הכפתורים השקופים על המסך בנייד.<br>פגיעה ברכב או טביעה במים = אובדן חיים. יש 3 חיים בלבד!",
+      bonusText:"💎 על הלוח יופיעו מדי פעם בונוסים זוהרים: צהוב = +100 נקודות, כחול = +5 שניות. בשלב 3 חלק מבולי העץ צוללים - שימו לב לאור הכתום המהבהב!",
+      landscapeTip:"📱 טיפ: מומלץ לשחק במצב לרוחב (Landscape) לתצוגה רחבה יותר.",
+      onePlayerBtn:"🐸 שחקן אחד",twoPlayerBtn:"🐸🐸 שני שחקנים",startBtn:"▶ התחל משחק",
+      player:"שחקן",turnPrefix:"תור לשחקן ",turnSuffix:"!",
+      turnInstructions:'הניחו לשחקן הבא לקחת שליטה, ואז לחצו "המשך".',
+      continueBtn:"▶ המשך",gameOverTitle:"תם המשחק",victoryMsg:"🏆 ניצחת את המשחק!",
+      enterNameSuffix:"הכנס שם (3 אותיות):",
+      newHighScoreGeneric:"🏆 שיא חדש! ",
+      newHighScorePlayerPrefix:"🏆 שיא חדש לשחקן ",newHighScorePlayerSuffix:"! ",
+      saveScoreBtn:"שמור שיא",restartBtn:"🔄 שחק שוב",homeBtn:"🏠 מסך הבית",
+      aboutDesc:"המשחק נוצר על ידי ברק אפללו במסגרת AppNest — קן האפליקציות.",
+      aboutCopyright:"© 2026 · כל הזכויות שמורות לברק אפללו",
+      aboutLink:"🪺 AppNest — עוד משחקים בחינם",closeBtn:"סגור",
+      levelUpPrefix:"🎉 רמה ",
+      noScores:"אין שיאים עדיין - תהיה הראשון!",
+      thRank:"#",thName:"שם",
+      finalResultsTitle:"🏁 תוצאות סופיות",winSuffix:" מנצח!",tieMsg:"🤝 שוויון!",
+      yourFinalScorePrefix:"הניקוד הסופי שלך: "
+    },
+    en:{
+      muteTooltip:"Mute / Unmute",pauseTooltip:"Pause",aboutTooltip:"About AppNest",
+      pausedLabel:"⏸ Paused",pausedHint:"Tap to continue",
+      hudScore:"Score",hudLevel:"Level",hudTime:"Time",hudLives:"Lives",
+      bonusTimeMsg:"⏱️ +5 seconds!",bonusScoreMsg:"💰 +100 points!",
+      introText:"Help the frog cross the busy highway and swim across logs and turtles in the river, until it reaches one of the 5 goal pads at the top of the screen. 3 levels, each harder than the last!",
+      controlsText:"Controls: arrow keys on computer, or the transparent on-screen buttons on mobile.<br>Hitting a car or drowning in water = losing a life. You only have 3 lives!",
+      bonusText:"💎 Glowing bonuses occasionally appear on the board: yellow = +100 points, blue = +5 seconds. In level 3 some logs dive underwater - watch for the flashing orange light!",
+      landscapeTip:"📱 Tip: it's recommended to play in landscape mode for a wider view.",
+      onePlayerBtn:"🐸 One Player",twoPlayerBtn:"🐸🐸 Two Players",startBtn:"▶ Start Game",
+      player:"Player",turnPrefix:"Player ",turnSuffix:"'s turn!",
+      turnInstructions:'Let the next player take control, then press "Continue".',
+      continueBtn:"▶ Continue",gameOverTitle:"Game Over",victoryMsg:"🏆 You won the game!",
+      enterNameSuffix:"Enter name (3 letters):",
+      newHighScoreGeneric:"🏆 New high score! ",
+      newHighScorePlayerPrefix:"🏆 New high score for Player ",newHighScorePlayerSuffix:"! ",
+      saveScoreBtn:"Save Score",restartBtn:"🔄 Play Again",homeBtn:"🏠 Home Screen",
+      aboutDesc:"Created by Barak Aflalo as part of AppNest — the App Nest.",
+      aboutCopyright:"© 2026 · All rights reserved to Barak Aflalo",
+      aboutLink:"🪺 AppNest — More free games",closeBtn:"Close",
+      levelUpPrefix:"🎉 Level ",
+      noScores:"No scores yet - be the first!",
+      thRank:"#",thName:"Name",
+      finalResultsTitle:"🏁 Final Results",winSuffix:" wins!",tieMsg:"🤝 Tie!",
+      yourFinalScorePrefix:"Your final score: "
+    },
+    ru:{
+      muteTooltip:"Звук вкл/выкл",pauseTooltip:"Пауза",aboutTooltip:"О AppNest",
+      pausedLabel:"⏸ Пауза",pausedHint:"Нажмите, чтобы продолжить",
+      hudScore:"Очки",hudLevel:"Уровень",hudTime:"Время",hudLives:"Жизни",
+      bonusTimeMsg:"⏱️ +5 секунд!",bonusScoreMsg:"💰 +100 очков!",
+      introText:"Помогите лягушке перейти оживлённое шоссе и переплыть реку по бревнам и черепахам, пока она не достигнет одной из 5 целевых площадок наверху экрана. 3 уровня, каждый сложнее предыдущего!",
+      controlsText:"Управление: клавиши со стрелками на компьютере, или прозрачные кнопки на экране в мобильной версии.<br>Столкновение с машиной или утопление в воде = потеря жизни. У вас всего 3 жизни!",
+      bonusText:"💎 На поле периодически появляются светящиеся бонусы: жёлтый = +100 очков, синий = +5 секунд. На уровне 3 некоторые бревна уходят под воду - следите за мигающим оранжевым светом!",
+      landscapeTip:"📱 Совет: рекомендуется играть в горизонтальном режиме для более широкого обзора.",
+      onePlayerBtn:"🐸 Один игрок",twoPlayerBtn:"🐸🐸 Два игрока",startBtn:"▶ Начать игру",
+      player:"Игрок",turnPrefix:"Ход игрока ",turnSuffix:"!",
+      turnInstructions:'Передайте управление следующему игроку, затем нажмите "Продолжить".',
+      continueBtn:"▶ Продолжить",gameOverTitle:"Игра окончена",victoryMsg:"🏆 Вы выиграли игру!",
+      enterNameSuffix:"Введите имя (3 буквы):",
+      newHighScoreGeneric:"🏆 Новый рекорд! ",
+      newHighScorePlayerPrefix:"🏆 Новый рекорд игрока ",newHighScorePlayerSuffix:"! ",
+      saveScoreBtn:"Сохранить рекорд",restartBtn:"🔄 Играть снова",homeBtn:"🏠 Главный экран",
+      aboutDesc:"Создано Бараком Афлало в рамках AppNest — гнезда приложений.",
+      aboutCopyright:"© 2026 · Все права защищены, Барак Афлало",
+      aboutLink:"🪺 AppNest — больше бесплатных игр",closeBtn:"Закрыть",
+      levelUpPrefix:"🎉 Уровень ",
+      noScores:"Пока нет рекордов - станьте первым!",
+      thRank:"#",thName:"Имя",
+      finalResultsTitle:"🏁 Итоговые результаты",winSuffix:" победил!",tieMsg:"🤝 Ничья!",
+      yourFinalScorePrefix:"Ваш итоговый счёт: "
+    },
+    es:{
+      muteTooltip:"Silenciar / Activar sonido",pauseTooltip:"Pausa",aboutTooltip:"Acerca de AppNest",
+      pausedLabel:"⏸ Pausado",pausedHint:"Toca para continuar",
+      hudScore:"Puntos",hudLevel:"Nivel",hudTime:"Tiempo",hudLives:"Vidas",
+      bonusTimeMsg:"⏱️ +5 segundos!",bonusScoreMsg:"💰 +100 puntos!",
+      introText:"Ayuda a la rana a cruzar la autopista y a nadar sobre troncos y tortugas en el río, hasta llegar a una de las 5 metas en la parte superior de la pantalla. ¡3 niveles, cada uno más difícil que el anterior!",
+      controlsText:"Controles: teclas de flecha en la computadora, o los botones transparentes en pantalla en móvil.<br>Chocar con un coche o ahogarte en el agua = pierdes una vida. ¡Solo tienes 3 vidas!",
+      bonusText:"💎 En el tablero aparecen ocasionalmente bonus brillantes: amarillo = +100 puntos, azul = +5 segundos. En el nivel 3 algunos troncos se hunden bajo el agua - ¡presta atención a la luz naranja parpadeante!",
+      landscapeTip:"📱 Consejo: se recomienda jugar en modo horizontal para una vista más amplia.",
+      onePlayerBtn:"🐸 Un jugador",twoPlayerBtn:"🐸🐸 Dos jugadores",startBtn:"▶ Iniciar juego",
+      player:"Jugador",turnPrefix:"¡Turno del jugador ",turnSuffix:"!",
+      turnInstructions:'Deja que el siguiente jugador tome el control y luego pulsa "Continuar".',
+      continueBtn:"▶ Continuar",gameOverTitle:"Fin del juego",victoryMsg:"🏆 ¡Ganaste el juego!",
+      enterNameSuffix:"Ingresa tu nombre (3 letras):",
+      newHighScoreGeneric:"🏆 ¡Nuevo récord! ",
+      newHighScorePlayerPrefix:"🏆 ¡Nuevo récord del Jugador ",newHighScorePlayerSuffix:"! ",
+      saveScoreBtn:"Guardar puntuación",restartBtn:"🔄 Jugar de nuevo",homeBtn:"🏠 Pantalla principal",
+      aboutDesc:"Creado por Barak Aflalo como parte de AppNest — el nido de apps.",
+      aboutCopyright:"© 2026 · Todos los derechos reservados a Barak Aflalo",
+      aboutLink:"🪺 AppNest — más juegos gratis",closeBtn:"Cerrar",
+      levelUpPrefix:"🎉 Nivel ",
+      noScores:"Aún no hay puntuaciones - ¡sé el primero!",
+      thRank:"#",thName:"Nombre",
+      finalResultsTitle:"🏁 Resultados finales",winSuffix:" gana!",tieMsg:"🤝 ¡Empate!",
+      yourFinalScorePrefix:"Tu puntuación final: "
+    },
+    ar:{
+      muteTooltip:"كتم / إلغاء الكتم",pauseTooltip:"إيقاف مؤقت",aboutTooltip:"حول AppNest",
+      pausedLabel:"⏸ متوقف",pausedHint:"اضغط للمتابعة",
+      hudScore:"النتيجة",hudLevel:"المستوى",hudTime:"الوقت",hudLives:"الأرواح",
+      bonusTimeMsg:"⏱️ +5 ثوانٍ!",bonusScoreMsg:"💰 +100 نقطة!",
+      introText:"ساعد الضفدع على عبور الطريق السريع والسباحة على جذوع الأشجار والسلاحف في النهر، حتى يصل إلى أحد المواقع الخمسة في أعلى الشاشة. 3 مراحل، كل مرحلة أصعب من السابقة!",
+      controlsText:"التحكم: مفاتيح الأسهم على الكمبيوتر، أو الأزرار الشفافة على الشاشة في الهاتف.<br>الاصطدام بسيارة أو الغرق في الماء = خسارة حياة. لديك 3 أرواح فقط!",
+      bonusText:"💎 تظهر مكافآت متوهجة من وقت لآخر على اللوحة: الأصفر = +100 نقطة، الأزرق = +5 ثوانٍ. في المرحلة 3 بعض الجذوع تغرق تحت الماء - انتبه للضوء البرتقالي المتقطع!",
+      landscapeTip:"📱 نصيحة: يُفضّل اللعب في الوضع الأفقي للحصول على عرض أوسع.",
+      onePlayerBtn:"🐸 لاعب واحد",twoPlayerBtn:"🐸🐸 لاعبان",startBtn:"▶ بدء اللعبة",
+      player:"اللاعب",turnPrefix:"دور اللاعب ",turnSuffix:"!",
+      turnInstructions:'دع اللاعب التالي يتحكم، ثم اضغط على "متابعة".',
+      continueBtn:"▶ متابعة",gameOverTitle:"انتهت اللعبة",victoryMsg:"🏆 لقد فزت باللعبة!",
+      enterNameSuffix:"أدخل الاسم (3 أحرف):",
+      newHighScoreGeneric:"🏆 رقم قياسي جديد! ",
+      newHighScorePlayerPrefix:"🏆 رقم قياسي جديد للاعب ",newHighScorePlayerSuffix:"! ",
+      saveScoreBtn:"حفظ النتيجة",restartBtn:"🔄 العب مرة أخرى",homeBtn:"🏠 الشاشة الرئيسية",
+      aboutDesc:"صنع بواسطة باراك أفللو كجزء من AppNest — عش التطبيقات.",
+      aboutCopyright:"© 2026 · جميع الحقوق محفوظة لباراك أفللو",
+      aboutLink:"🪺 AppNest — ألعاب مجانية أخرى",closeBtn:"إغلاق",
+      levelUpPrefix:"🎉 المستوى ",
+      noScores:"لا توجد نتائج بعد - كن الأول!",
+      thRank:"#",thName:"الاسم",
+      finalResultsTitle:"🏁 النتائج النهائية",winSuffix:" فاز!",tieMsg:"🤝 تعادل!",
+      yourFinalScorePrefix:"نتيجتك النهائية: "
+    }
+  };
+  let curLang = localStorage.getItem('froggerLang') || 'he';
+  function isRtl(lang){ return lang==='he' || lang==='ar'; }
+  function pL(n){ return T[curLang].player+' '+n; }
+  function applyLang(lang){
+    curLang = lang;
+    localStorage.setItem('froggerLang', lang);
+    document.documentElement.lang = lang;
+    var tt = T[lang];
+    document.querySelectorAll('[data-i]').forEach(function(el){
+      var k = el.getAttribute('data-i');
+      if(tt[k]===undefined) return;
+      if(el.tagName==='INPUT') el.placeholder = tt[k];
+      else el.innerHTML = tt[k];
+    });
+    document.querySelectorAll('[data-i-title]').forEach(function(el){
+      var k = el.getAttribute('data-i-title');
+      if(tt[k]!==undefined) el.title = tt[k];
+    });
+    document.querySelectorAll('.lang-btn').forEach(function(b){
+      b.classList.toggle('sel', b.getAttribute('data-lang')===lang);
+    });
+    renderLeaderboard(document.getElementById('startLeaderboard'), -1);
+    if(!document.getElementById('gameOverScreen').classList.contains('hidden')){
+      renderLeaderboard(document.getElementById('gameOverLeaderboard'), -1);
+    }
+    updateHUD();
+  }
+
+  function colToX(col){ return (col - HALF_COLS) * CELL; }
+  function rowToZ(row){ return (HALF_COLS - row) * CELL; }
+  function getRowType(row){ return ROW_TYPES[row]; }
+  function clamp(v, lo, hi){ return Math.max(lo, Math.min(hi, v)); }
+
+  /* =========================================================
+     הגדרות 3 שלבים - כל שלב קשה יותר מהקודם.
+     רמה 1 קלה בכוונה (איטית, רפסודות גדולות) כדי שהמשחק
+     יהיה נגיש, ורמה 3 קרובה לקושי המקורי.
+     ========================================================= */
+  const CAR_COLORS   = [0xe53935,0xff7043,0xfdd835,0x29b6f6,0xab47bc,0x66bb6a,0xec407a,0x9ccc65];
+  const TRUCK_COLORS = [0x42a5f5,0x8d6e63,0xff8a65,0x90a4ae];
+
+  const LEVEL_CONFIGS = [
+    { // רמה 1 - קלה
+      timeLimit: 45,
+      roadLanes: [
+        { row:1, dir: 1, speed:0.9, type:'car',   count:2, halfWidth:0.45, colors:CAR_COLORS },
+        { row:2, dir:-1, speed:0.8, type:'truck', count:2, halfWidth:0.9,  colors:TRUCK_COLORS },
+        { row:3, dir: 1, speed:1.1, type:'car',   count:2, halfWidth:0.45, colors:CAR_COLORS },
+        { row:4, dir:-1, speed:1.0, type:'truck', count:1, halfWidth:0.9,  colors:TRUCK_COLORS },
+        { row:5, dir: 1, speed:1.2, type:'car',   count:2, halfWidth:0.45, colors:CAR_COLORS }
+      ],
+      riverLanes: [
+        { row:7,  dir:-1, speed:0.7, type:'log',    count:2, halfWidth:2.0, dive:false },
+        { row:8,  dir: 1, speed:0.6, type:'turtle', count:2, halfWidth:1.3, dive:false },
+        { row:9,  dir:-1, speed:0.9, type:'log',    count:2, halfWidth:1.8, dive:false },
+        { row:10, dir: 1, speed:0.7, type:'turtle', count:2, halfWidth:1.4, dive:false },
+        { row:11, dir:-1, speed:0.8, type:'log',    count:2, halfWidth:2.2, dive:false }
+      ]
+    },
+    { // רמה 2 - בינונית
+      timeLimit: 38,
+      roadLanes: [
+        { row:1, dir: 1, speed:1.4, type:'car',   count:3, halfWidth:0.45, colors:CAR_COLORS },
+        { row:2, dir:-1, speed:1.2, type:'truck', count:2, halfWidth:0.9,  colors:TRUCK_COLORS },
+        { row:3, dir: 1, speed:1.8, type:'car',   count:4, halfWidth:0.45, colors:CAR_COLORS },
+        { row:4, dir:-1, speed:1.5, type:'truck', count:2, halfWidth:0.9,  colors:TRUCK_COLORS },
+        { row:5, dir: 1, speed:2.0, type:'car',   count:3, halfWidth:0.45, colors:CAR_COLORS }
+      ],
+      riverLanes: [
+        { row:7,  dir:-1, speed:1.0, type:'log',    count:2, halfWidth:1.7, dive:false },
+        { row:8,  dir: 1, speed:0.8, type:'turtle', count:2, halfWidth:1.2, dive:true, diveThreshold:-0.75 },
+        { row:9,  dir:-1, speed:1.3, type:'log',    count:3, halfWidth:1.3, dive:false },
+        { row:10, dir: 1, speed:0.9, type:'turtle', count:2, halfWidth:1.3, dive:true, diveThreshold:-0.75 },
+        { row:11, dir:-1, speed:1.1, type:'log',    count:2, halfWidth:2.0, dive:false }
+      ]
+    },
+    { // רמה 3 - קשה
+      timeLimit: 32,
+      roadLanes: [
+        { row:1, dir: 1, speed:1.8, type:'car',   count:4, halfWidth:0.45, colors:CAR_COLORS },
+        { row:2, dir:-1, speed:1.5, type:'truck', count:3, halfWidth:0.9,  colors:TRUCK_COLORS },
+        { row:3, dir: 1, speed:2.4, type:'car',   count:5, halfWidth:0.45, colors:CAR_COLORS },
+        { row:4, dir:-1, speed:2.0, type:'truck', count:2, halfWidth:0.9,  colors:TRUCK_COLORS },
+        { row:5, dir: 1, speed:2.8, type:'car',   count:4, halfWidth:0.45, colors:CAR_COLORS }
+      ],
+      riverLanes: [
+        { row:7,  dir:-1, speed:1.3, type:'log',    count:2, halfWidth:1.5, dive:false },
+        { row:8,  dir: 1, speed:1.0, type:'turtle', count:3, halfWidth:1.0, dive:true, diveThreshold:-0.5 },
+        { row:9,  dir:-1, speed:1.7, type:'log',    count:3, halfWidth:1.1, dive:true, diveThreshold:-0.45 },
+        { row:10, dir: 1, speed:1.1, type:'turtle', count:2, halfWidth:1.2, dive:true, diveThreshold:-0.5 },
+        { row:11, dir:-1, speed:1.5, type:'log',    count:2, halfWidth:1.8, dive:false }
+      ]
+    }
+  ];
+  const MAX_LEVEL = LEVEL_CONFIGS.length; // 3
+
+  /* =========================================================
+     מצב המשחק
+     ========================================================= */
+  let numPlayers = 1;
+  let currentPlayerIndex = 0;
+  let pendingTurnIdx = 0;
+  let players = [
+    { score:0, lives:3, finished:false, won:false },
+    { score:0, lives:3, finished:false, won:false }
+  ];
+
+  let score = 0, level = 1, lives = 3, timeLeft = LEVEL_CONFIGS[0].timeLimit;
+  let currentTimeLimit = LEVEL_CONFIGS[0].timeLimit;
+  let padsFilled = GOAL_COLS.map(()=>false);
+  let gameRunning = false;
+  let paused = false;
+  let timeWarningPlayed = false;
+  let pendingLBQueue = [];
+
+  // בונוסים מתגלגלים (Pickups) - אובייקט פעיל אחד בלבד בכל זמן נתון
+  let pickup = null;
+  let pickupSpawnTimer = 0;
+
+  const frog = {
+    row:0, col:6, x:0,
+    isJumping:false, jumpT:0,
+    fromX:0, fromZ:0, toX:0, toZ:0, toCol:6, toRow:0,
+    maxRow:0,
+    ridingRaft:null,
+    dying:false, dyingT:0, dyingReason:'crash'
+  };
+
+  /* =========================================================
+     אודיו פשוט (Web Audio, בלי קבצים חיצוניים)
+     ========================================================= */
+  let audioCtx = null;
+  let muted = false;
+  function beep(freq, duration, type, vol){
+    if(muted) return;
+    try{
+      if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = type || 'sine';
+      osc.frequency.value = freq;
+      gain.gain.value = vol || 0.15;
+      osc.connect(gain); gain.connect(audioCtx.destination);
+      osc.start();
+      gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+      osc.stop(audioCtx.currentTime + duration);
+    }catch(e){ /* תקלת אודיו - לא קריטית */ }
+  }
+
+  // רטט קצר לטלפונים נתמכים (Vibration API) - לא קריטי אם לא נתמך
+  function vibrate(pattern){
+    try{
+      if(!muted && navigator.vibrate) navigator.vibrate(pattern);
+    }catch(e){ /* לא נתמך - לא קריטי */ }
+  }
+
+  /* =========================================================
+     Three.js - הקמת סצנה
+     ========================================================= */
+  const canvas = document.getElementById('gameCanvas');
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x05060c);
+  scene.fog = new THREE.Fog(0x05060c, 18, 32);
+
+  // המסך נחלק לרוחב (X, ~14.5 יח' כדי להכיל את כל 13 העמודות + שוליים)
+  // ולעומק (Z, ~13.5 יח' לאחר הטיית המצלמה). כדי שכל הלוח יהיה גלוי גם
+  // בטלפון במצב לאורך (portrait) וגם לרוחב (landscape), גודל התצוגה
+  // האורתוגונלית מחושב דינמית לפי יחס הגובה-רוחב של המסך.
+  const BOARD_VISIBLE_WIDTH = 11;
+  const BOARD_VISIBLE_HEIGHT = 10;
+  function computeViewSize(a){
+    return Math.max(BOARD_VISIBLE_HEIGHT, BOARD_VISIBLE_WIDTH / a);
+  }
+  let aspect = window.innerWidth / window.innerHeight;
+  let viewSize = computeViewSize(aspect);
+  const camera = new THREE.OrthographicCamera(
+    -viewSize * aspect / 2, viewSize * aspect / 2,
+    viewSize / 2, -viewSize / 2, 0.1, 100
+  );
+  camera.position.set(0, 8, 6);
+  camera.lookAt(0, 0, 0);
+
+  const renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+  // תאורה
+  const ambient = new THREE.AmbientLight(0xffffff, 0.55);
+  scene.add(ambient);
+
+  const sun = new THREE.DirectionalLight(0xffffff, 0.95);
+  sun.position.set(9, 18, 11);
+  sun.castShadow = true;
+  sun.shadow.mapSize.set(2048, 2048);
+  sun.shadow.camera.left = -11;
+  sun.shadow.camera.right = 11;
+  sun.shadow.camera.top = 11;
+  sun.shadow.camera.bottom = -11;
+  sun.shadow.camera.near = 0.5;
+  sun.shadow.camera.far = 50;
+  scene.add(sun);
+
+  window.addEventListener('resize', ()=>{
+    aspect = window.innerWidth / window.innerHeight;
+    viewSize = computeViewSize(aspect);
+    camera.left = -viewSize * aspect / 2;
+    camera.right = viewSize * aspect / 2;
+    camera.top = viewSize / 2;
+    camera.bottom = -viewSize / 2;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  });
+
+  /* =========================================================
+     בניית הקרקע (כביש / נהר / דשא) - נבנית פעם אחת בלבד
+     ========================================================= */
+  function createGround(){
+    for(let row = 0; row < ROWS; row++){
+      const type = getRowType(row);
+      let color;
+      switch(type){
+        case 'start':
+        case 'median': color = 0x2e7d32; break;
+        case 'road':   color = 0x2b2b2b; break;
+        case 'river':  color = 0x1565c0; break;
+        case 'goal':   color = 0x0d2b3e; break;
+      }
+      const geo = new THREE.PlaneGeometry(COLS + 0.4, 1.0);
+      const mat = new THREE.MeshStandardMaterial({ color: color, roughness: 0.92, metalness: 0.0 });
+      const plane = new THREE.Mesh(geo, mat);
+      plane.rotation.x = -Math.PI / 2;
+      plane.position.set(0, 0, rowToZ(row));
+      plane.receiveShadow = true;
+      scene.add(plane);
+    }
+  }
+
+  /* =========================================================
+     נקודות יעד (Lily pads)
+     ========================================================= */
+  const pads = [];
+  function createGoalPads(){
+    GOAL_COLS.forEach((col)=>{
+      const geo = new THREE.CylinderGeometry(0.42, 0.42, 0.12, 20);
+      const mat = new THREE.MeshStandardMaterial({ color: 0x66bb6a, roughness: 0.6, emissive: 0x000000 });
+      const mesh = new THREE.Mesh(geo, mat);
+      mesh.position.set(colToX(col), 0.06, rowToZ(12));
+      mesh.receiveShadow = true;
+      mesh.castShadow = true;
+      scene.add(mesh);
+      pads.push({ mesh: mesh });
+    });
+  }
+  function updatePadVisual(i){
+    const filled = padsFilled[i];
+    pads[i].mesh.material.color.setHex(filled ? 0xffd54f : 0x66bb6a);
+    pads[i].mesh.material.emissive.setHex(filled ? 0x664400 : 0x000000);
+  }
+
+  /* =========================================================
+     בונוסים מתגלגלים (Pickups) - "אבן חן" ניאון שמופיעה מדי פעם
+     על הלוח ומעניקה בונוס ניקוד או זמן. תמיד אובייקט יחיד פעיל
+     - כדי לשמור על צריכת זיכרון/הקצאות מינימלית.
+     ========================================================= */
+  function randomPickupDelay(){
+    return 6 + Math.random() * 5; // 6-11 שניות בין הופעות
+  }
+
+  function spawnPickup(){
+    // נמנעים מהשורות הראשונה/אחרונה (התחלה/יעד) - תא רנדומלי בכל שאר הלוח
+    const row = 1 + Math.floor(Math.random() * 11); // 1..11
+    const col = Math.floor(Math.random() * 13);     // 0..12
+    const isTimeBonus = Math.random() < 0.5;
+    const color = isTimeBonus ? 0x29b6f6 : 0xffd54f;
+
+    const mesh = new THREE.Mesh(
+      new THREE.IcosahedronGeometry(0.22, 0),
+      new THREE.MeshStandardMaterial({ color: color, emissive: color, emissiveIntensity: 0.9, roughness: 0.3 })
+    );
+    mesh.position.set(colToX(col), 0.5, rowToZ(row));
+    mesh.castShadow = true;
+    scene.add(mesh);
+
+    pickup = { mesh: mesh, row: row, col: col, isTimeBonus: isTimeBonus, life: 9, t: Math.random() * Math.PI * 2 };
+  }
+
+  function removePickup(){
+    if(!pickup) return;
+    scene.remove(pickup.mesh);
+    pickup.mesh.geometry.dispose();
+    pickup.mesh.material.dispose();
+    pickup = null;
+  }
+
+  function collectPickup(){
+    if(pickup.isTimeBonus){
+      timeLeft = Math.min(timeLeft + 5, currentTimeLimit + 10);
+      showBanner(T[curLang].bonusTimeMsg);
+      beep(660, 0.15, 'sine', 0.18);
+    } else {
+      score += 100;
+      showBanner(T[curLang].bonusScoreMsg);
+      beep(880, 0.15, 'square', 0.18);
+    }
+    vibrate(40);
+    removePickup();
+    pickupSpawnTimer = randomPickupDelay();
+    updateHUD();
+  }
+
+  function updatePickup(delta){
+    if(pickup){
+      // אנימציית ריחוף וסחרור עדינה
+      pickup.t += delta;
+      pickup.mesh.position.y = 0.5 + Math.sin(pickup.t * 4) * 0.08;
+      pickup.mesh.rotation.y += delta * 2.2;
+      pickup.mesh.rotation.x += delta * 1.3;
+
+      pickup.life -= delta;
+      if(pickup.life <= 0){
+        removePickup();
+        pickupSpawnTimer = randomPickupDelay();
+        return;
+      }
+
+      // איסוף - הצפרדע יושבת (לא באוויר) על אותה משבצת בדיוק
+      if(!frog.dying && !frog.isJumping && frog.row === pickup.row){
+        const dist = Math.abs(frog.x - colToX(pickup.col));
+        if(dist < 0.45) collectPickup();
+      }
+    } else {
+      pickupSpawnTimer -= delta;
+      if(pickupSpawnTimer <= 0) spawnPickup();
+    }
+  }
+
+  /* =========================================================
+     הצפרדע - מורכבת מכדורים ירוקים
+     ========================================================= */
+  let frogGroup;
+  function createFrog(){
+    const group = new THREE.Group();
+    const bodyMat  = new THREE.MeshStandardMaterial({ color: 0x4caf50, roughness: 0.55 });
+    const darkMat  = new THREE.MeshStandardMaterial({ color: 0x2e7d32, roughness: 0.6 });
+    const whiteMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.4 });
+    const blackMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.3 });
+
+    // גוף
+    const body = new THREE.Mesh(new THREE.SphereGeometry(0.32, 16, 16), bodyMat);
+    body.scale.set(1, 0.7, 1.15);
+    body.position.y = 0.22;
+    body.castShadow = true;
+    group.add(body);
+
+    // רגליים - 4 כדורים קטנים כהים
+    const legPositions = [
+      [-0.28, 0.07, -0.22], [0.28, 0.07, -0.22],
+      [-0.32, 0.07,  0.18], [0.32, 0.07,  0.18]
+    ];
+    legPositions.forEach((p)=>{
+      const leg = new THREE.Mesh(new THREE.SphereGeometry(0.14, 12, 12), darkMat);
+      leg.scale.set(1, 0.6, 1);
+      leg.position.set(p[0], p[1], p[2]);
+      leg.castShadow = true;
+      group.add(leg);
+    });
+
+    // עיניים (לבן + שחור) - פונות לכיוון התקדמות (Z שלילי)
+    [-0.14, 0.14].forEach((x)=>{
+      const eye = new THREE.Mesh(new THREE.SphereGeometry(0.11, 12, 12), whiteMat);
+      eye.position.set(x, 0.45, -0.18);
+      eye.castShadow = true;
+      group.add(eye);
+      const pupil = new THREE.Mesh(new THREE.SphereGeometry(0.055, 8, 8), blackMat);
+      pupil.position.set(x, 0.47, -0.26);
+      group.add(pupil);
+    });
+
+    group.position.set(colToX(6), 0, rowToZ(0));
+    scene.add(group);
+    return group;
+  }
+
+  /* =========================================================
+     רכבים / בולי עץ / צבים - מאגר אובייקטים (Pooling) לכל שלב.
+     בתוך שלב נתון, האובייקטים ממוחזרים (מועברים מצד לצד) -
+     כך שאין הקצאות זיכרון חדשות במהלך המשחק (0 GC נוסף).
+     במעבר שלב / מעבר תור אנחנו מוחקים (dispose) את כל
+     האובייקטים הישנים ובונים מערכת חדשה לשלב הבא.
+     ========================================================= */
+  let lanesData = [];
+
+  function createLaneObject(cfg, x){
+    let mesh;
+    let collisionHalf;
+    const z = rowToZ(cfg.row);
+    const halfWidth = cfg.halfWidth;
+
+    if(cfg.type === 'car' || cfg.type === 'truck'){
+      const isTruck = cfg.type === 'truck';
+      const color = cfg.colors[Math.floor(Math.random() * cfg.colors.length)];
+      const length = halfWidth * 2 * 0.92;
+      const height = isTruck ? 0.6 : 0.45;
+      const depth = 0.85;
+      const bodyY = height / 2;
+
+      mesh = new THREE.Group();
+
+      // גוף הרכב
+      const body = new THREE.Mesh(
+        new THREE.BoxGeometry(length, height, depth),
+        new THREE.MeshStandardMaterial({ color: color, roughness: 0.45, metalness: 0.35 })
+      );
+      body.position.y = bodyY;
+      body.castShadow = true;
+      mesh.add(body);
+
+      // פנסי ניאון: כתום-תכלת בקדמת הרכב, אדום-ניאון בעורף
+      const lightGeo = new THREE.BoxGeometry(0.07, height * 0.4, 0.1);
+      const headMat = new THREE.MeshStandardMaterial({
+        color: 0x66ffff, emissive: 0x00e5ff, emissiveIntensity: 1.4, roughness: 0.3
+      });
+      const tailMat = new THREE.MeshStandardMaterial({
+        color: 0xff5577, emissive: 0xff1744, emissiveIntensity: 1.4, roughness: 0.3
+      });
+      [depth * 0.27, -depth * 0.27].forEach((zOff)=>{
+        const head = new THREE.Mesh(lightGeo, headMat);
+        head.position.set(length / 2 - 0.025, bodyY, zOff);
+        mesh.add(head);
+
+        const tail = new THREE.Mesh(lightGeo, tailMat);
+        tail.position.set(-length / 2 + 0.025, bodyY, zOff);
+        mesh.add(tail);
+      });
+
+      mesh.position.set(x, 0, z);
+      collisionHalf = halfWidth * 0.92;
+    } else if(cfg.type === 'log'){
+      const logMat = new THREE.MeshStandardMaterial({ color: 0x8d5a3c, roughness: 0.85 });
+      if(cfg.dive){
+        // בולי עץ שוקעים מתחילים "להבהב" באור כתום-אזהרה לפני שהם צוללים
+        logMat.emissive = new THREE.Color(0xff8800);
+        logMat.emissiveIntensity = 0;
+      }
+      mesh = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.32, 0.32, halfWidth * 2, 12),
+        logMat
+      );
+      mesh.rotation.z = Math.PI / 2;
+      mesh.position.set(x, 0.15, z);
+      collisionHalf = halfWidth;
+    } else { // turtle
+      mesh = new THREE.Group();
+      const turtleCount = Math.max(2, Math.round((halfWidth * 2) / 0.7));
+      for(let j = 0; j < turtleCount; j++){
+        const shellMat = new THREE.MeshStandardMaterial({ color: 0x33691e, roughness: 0.7 });
+        if(cfg.dive){
+          shellMat.emissive = new THREE.Color(0xff8800);
+          shellMat.emissiveIntensity = 0;
+        }
+        const shell = new THREE.Mesh(new THREE.SphereGeometry(0.32, 12, 12), shellMat);
+        shell.scale.set(1, 0.55, 1.2);
+        const spread = turtleCount > 1 ? (halfWidth * 2 - 0.7) / (turtleCount - 1) : 0;
+        shell.position.set(-halfWidth + 0.35 + j * spread, 0.18, 0);
+        shell.castShadow = true;
+        mesh.add(shell);
+      }
+      mesh.position.set(x, 0, z);
+      collisionHalf = halfWidth;
+    }
+
+    // אוסף את כל החומרים בעלי "אור אזהרה" (לבולי עץ/צבים שצוללים)
+    let warnMaterials = null;
+    if(cfg.dive){
+      warnMaterials = [];
+      mesh.traverse((o)=>{ if(o.isMesh && o.material && o.material.emissive){ warnMaterials.push(o.material); } });
+    }
+
+    mesh.traverse((o)=>{ if(o.isMesh){ o.castShadow = true; } });
+    scene.add(mesh);
+
+    return {
+      mesh: mesh, x: x, halfWidth: halfWidth, collisionHalf: collisionHalf,
+      submerged: false,
+      warnMaterials: warnMaterials,
+      divePhase: Math.random() * 10,
+      phaseOffset: Math.random() * Math.PI * 2
+    };
+  }
+
+  function disposeLanes(){
+    lanesData.forEach((lane)=>{
+      lane.objects.forEach((obj)=>{
+        scene.remove(obj.mesh);
+        obj.mesh.traverse((o)=>{
+          if(o.isMesh){
+            o.geometry.dispose();
+            if(Array.isArray(o.material)) o.material.forEach((m)=> m.dispose());
+            else o.material.dispose();
+          }
+        });
+      });
+    });
+    lanesData = [];
+  }
+
+  function buildLanesForLevel(levelIdx){
+    disposeLanes();
+    const cfg = LEVEL_CONFIGS[levelIdx - 1];
+    cfg.roadLanes.concat(cfg.riverLanes).forEach((laneCfg)=>{
+      const lane = { config: laneCfg, objects: [] };
+      const spacing = 18 / laneCfg.count;
+      for(let i = 0; i < laneCfg.count; i++){
+        const x = -9 + spacing / 2 + i * spacing + (Math.random() - 0.5) * spacing * 0.3;
+        lane.objects.push(createLaneObject(laneCfg, x));
+      }
+      lanesData.push(lane);
+    });
+  }
+
+  function updateLanes(delta){
+    lanesData.forEach((lane)=>{
+      const cfg = lane.config;
+      lane.objects.forEach((obj)=>{
+        obj.x += cfg.dir * cfg.speed * delta;
+        // מחזור: כשהאובייקט יוצא מהמסך, מעבירים אותו לקצה השני
+        if(cfg.dir > 0 && obj.x - obj.halfWidth > 9){
+          obj.x -= 18;
+        } else if(cfg.dir < 0 && obj.x + obj.halfWidth < -9){
+          obj.x += 18;
+        }
+        obj.mesh.position.x = obj.x;
+
+        if(cfg.dive){
+          obj.divePhase += delta;
+          const wave = Math.sin(obj.divePhase * 0.9 + obj.phaseOffset);
+          const threshold = (cfg.diveThreshold !== undefined) ? cfg.diveThreshold : -0.5;
+          obj.submerged = wave < threshold;
+          obj.mesh.position.y = obj.submerged ? -0.45 : 0;
+
+          // אור אזהרה כתום שמתחזק לפני שהפלטפורמה צוללת מתחת למים
+          if(obj.warnMaterials){
+            const dangerZone = 0.35;
+            let warn = 0;
+            if(!obj.submerged && wave < threshold + dangerZone){
+              warn = clamp(1 - (wave - threshold) / dangerZone, 0, 1);
+            }
+            obj.warnMaterials.forEach((m)=>{ m.emissiveIntensity = warn * 1.3; });
+          }
+        }
+      });
+    });
+  }
+
+  /* =========================================================
+     לוגיקת הצפרדע - תנועה, קפיצה, התנגשויות
+     ========================================================= */
+  // מציג הודעת-בלורית קצרה במרכז המסך (לדוגמה "עלית לרמה 2!")
+  function showBanner(text){
+    const el = document.getElementById('levelBanner');
+    el.textContent = text;
+    el.classList.remove('hidden', 'show');
+    // לאלץ את הדפדפן "לאתחל" את האנימציה גם אם היא רצה כבר
+    void el.offsetWidth;
+    el.classList.add('show');
+    setTimeout(()=>{ el.classList.add('hidden'); el.classList.remove('show'); }, 1600);
+  }
+
+  function resetFrogPosition(){
+    frog.row = 0; frog.col = 6;
+    frog.x = colToX(6);
+    frog.maxRow = 0;
+    frog.ridingRaft = null;
+    frog.isJumping = false;
+    frog.dying = false;
+    frogGroup.scale.set(1, 1, 1);
+    frogGroup.position.set(frog.x, 0, rowToZ(0));
+    frogGroup.rotation.y = 0;
+  }
+
+  function updateHUD(){
+    document.getElementById('scoreVal').textContent = score;
+    document.getElementById('levelVal').textContent = level + '/' + MAX_LEVEL;
+
+    const timeEl = document.getElementById('timeVal');
+    const t = Math.max(0, Math.ceil(timeLeft));
+    timeEl.textContent = t;
+    if(gameRunning && !paused && timeLeft > 0 && timeLeft <= 5){
+      timeEl.classList.add('warning');
+      if(!timeWarningPlayed){ timeWarningPlayed = true; beep(220, 0.12, 'square', 0.1); }
+    } else {
+      timeEl.classList.remove('warning');
+      if(timeLeft > 5) timeWarningPlayed = false;
+    }
+
+    document.getElementById('livesVal').textContent = '🐸'.repeat(Math.max(0, lives));
+
+    const psEl = document.getElementById('playerScores');
+    if(numPlayers === 2){
+      psEl.style.display = 'block';
+      const s1 = (currentPlayerIndex === 0) ? score : players[0].score;
+      const s2 = (currentPlayerIndex === 1) ? score : players[1].score;
+      const c1 = (currentPlayerIndex === 0) ? ' class="active"' : '';
+      const c2 = (currentPlayerIndex === 1) ? ' class="active"' : '';
+      psEl.innerHTML = '<span' + c1 + '>' + pL(1) + ': ' + s1 + '</span>&nbsp;&nbsp;|&nbsp;&nbsp;<span' + c2 + '>' + pL(2) + ': ' + s2 + '</span>';
+    } else {
+      psEl.style.display = 'none';
+    }
+  }
+
+  function loseLife(reason){
+    if(frog.dying || !gameRunning) return;
+    frog.dying = true;
+    frog.dyingT = 0;
+    frog.dyingReason = reason;
+    frog.ridingRaft = null;
+    lives = Math.max(0, lives - 1);
+    updateHUD();
+    if(reason === 'drown'){
+      beep(180, 0.4, 'sine', 0.18);
+      vibrate([60, 40, 60]);
+    } else {
+      beep(90, 0.35, 'sawtooth', 0.2);
+      vibrate(200);
+    }
+  }
+
+  function checkRiverLanding(){
+    const lane = lanesData.find((l)=> l.config.row === frog.row);
+    if(!lane){ loseLife('drown'); return; }
+    for(let i = 0; i < lane.objects.length; i++){
+      const obj = lane.objects[i];
+      if(obj.submerged) continue;
+      if(Math.abs(frog.x - obj.x) <= obj.collisionHalf + 0.1){
+        frog.ridingRaft = { lane: lane, obj: obj };
+        return;
+      }
+    }
+    loseLife('drown');
+  }
+
+  function checkGoalLanding(){
+    const idx = GOAL_COLS.indexOf(frog.col);
+    if(idx !== -1 && !padsFilled[idx]){
+      padsFilled[idx] = true;
+      updatePadVisual(idx);
+      const timeBonus = Math.floor(timeLeft) * 2;
+      score += 50 + timeBonus;
+      beep(660, 0.18, 'square', 0.18);
+      setTimeout(()=>beep(880, 0.22, 'square', 0.18), 120);
+
+      if(padsFilled.every((p)=>p)){
+        if(level >= MAX_LEVEL){
+          score += 300; // בונוס ניצחון
+          updateHUD();
+          gameRunning = false;
+          showBanner(T[curLang].victoryMsg);
+          vibrate([60, 60, 60, 60, 150]);
+          setTimeout(()=> finishPlayer(true), 1500);
+          return;
+        } else {
+          levelUp();
+        }
+      } else {
+        resetFrogPosition();
+        timeLeft = currentTimeLimit;
+      }
+      updateHUD();
+    } else {
+      loseLife('crash');
+    }
+  }
+
+  function levelUp(){
+    level += 1;
+    currentTimeLimit = LEVEL_CONFIGS[level - 1].timeLimit;
+    padsFilled = padsFilled.map(()=>false);
+    pads.forEach((_, i)=> updatePadVisual(i));
+    score += 200;
+    buildLanesForLevel(level);
+    resetFrogPosition();
+    timeLeft = currentTimeLimit;
+    removePickup();
+    pickupSpawnTimer = randomPickupDelay();
+    showBanner(T[curLang].levelUpPrefix + level + '!');
+    vibrate([40, 40, 40]);
+    beep(523, 0.12, 'square', 0.2);
+    setTimeout(()=>beep(659, 0.12, 'square', 0.2), 110);
+    setTimeout(()=>beep(784, 0.2, 'square', 0.2), 220);
+  }
+
+  function onLand(){
+    if(frog.row > frog.maxRow){
+      score += 10 * (frog.row - frog.maxRow);
+      frog.maxRow = frog.row;
+      updateHUD();
+    }
+    const type = getRowType(frog.row);
+    if(type === 'river'){
+      checkRiverLanding();
+    } else if(type === 'goal'){
+      checkGoalLanding();
+    } else {
+      frog.ridingRaft = null;
+    }
+  }
+
+  function move(drow, dcol){
+    if(!gameRunning || paused || frog.isJumping || frog.dying) return;
+    const newRow = frog.row + drow;
+    const newCol = frog.col + dcol;
+    if(newRow < 0 || newRow > 12 || newCol < 0 || newCol > 12) return;
+
+    frog.isJumping = true;
+    frog.jumpT = 0;
+    frog.fromX = frog.x;
+    frog.fromZ = rowToZ(frog.row);
+    frog.toCol = newCol;
+    frog.toRow = newRow;
+    frog.toX = colToX(newCol);
+    frog.toZ = rowToZ(newRow);
+    frog.ridingRaft = null;
+
+    // סיבוב הצפרדע לכיוון הקפיצה
+    if(dcol > 0) frogGroup.rotation.y = -Math.PI / 2;
+    else if(dcol < 0) frogGroup.rotation.y = Math.PI / 2;
+    else if(drow > 0) frogGroup.rotation.y = 0;
+    else if(drow < 0) frogGroup.rotation.y = Math.PI;
+
+    beep(440, 0.06, 'square', 0.1);
+  }
+
+  function updateFrog(delta){
+    if(frog.dying){
+      frog.dyingT += delta;
+      const p = Math.min(frog.dyingT / DYING_DURATION, 1);
+      if(frog.dyingReason === 'drown'){
+        frogGroup.position.y = -p * 0.6;
+        frogGroup.scale.setScalar(1 - p * 0.6);
+      } else {
+        frogGroup.scale.set(1 + p * 0.6, Math.max(0.05, 1 - p * 0.85), 1 + p * 0.6);
+      }
+      if(p >= 1){
+        if(lives <= 0){
+          finishPlayer(false);
+        } else {
+          resetFrogPosition();
+          timeLeft = currentTimeLimit;
+        }
+      }
+      return;
+    }
+
+    if(frog.isJumping){
+      frog.jumpT += delta / JUMP_DURATION;
+      const t = Math.min(frog.jumpT, 1);
+      frog.x = THREE.MathUtils.lerp(frog.fromX, frog.toX, t);
+      const z = THREE.MathUtils.lerp(frog.fromZ, frog.toZ, t);
+      const y = Math.sin(t * Math.PI) * JUMP_HEIGHT;
+      frogGroup.position.set(frog.x, y, z);
+
+      // "מתיחה" (Stretch) בשיא הקפיצה - הצפרדע מתארכת לאורך כיוון התנועה
+      const stretch = Math.sin(t * Math.PI);
+      frogGroup.scale.set(1 - stretch * 0.18, 1 + stretch * 0.35, 1 - stretch * 0.18);
+
+      if(t >= 1){
+        frog.isJumping = false;
+        frog.row = frog.toRow;
+        frog.col = frog.toCol;
+        frogGroup.position.set(frog.x, 0, z);
+        // "מעיכה" (Squash) ברגע הנחיתה - תתחיל לדעוך לגודל רגיל בפריימים הבאים
+        frogGroup.scale.set(1.22, 0.68, 1.22);
+        onLand();
+      }
+      return;
+    }
+
+    // דעיכה חלקה (Lerp) חזרה לגודל הרגיל אחרי "מעיכת" הנחיתה
+    frogGroup.scale.x += (1 - frogGroup.scale.x) * 0.25;
+    frogGroup.scale.y += (1 - frogGroup.scale.y) * 0.25;
+    frogGroup.scale.z += (1 - frogGroup.scale.z) * 0.25;
+
+    // נהיגה על בול עץ / צב - שומרים על frog.col מסונכרן עם המיקום
+    // הרציף הנוכחי, כדי שקפיצה הבאה תחושב מהמקום הנכון (ולא "תקפוץ"
+    // למיקום ישן וגרמה לצפרדע "להיעלם" לצד השני של המסך)
+    if(frog.ridingRaft){
+      const obj = frog.ridingRaft.obj;
+      const cfg = frog.ridingRaft.lane.config;
+      if(obj.submerged){
+        loseLife('drown');
+        return;
+      }
+      frog.x += cfg.dir * cfg.speed * delta;
+      frogGroup.position.x = frog.x;
+      frog.col = clamp(Math.round(frog.x + HALF_COLS), 0, 12);
+      if(frog.x < -BOARD_EDGE || frog.x > BOARD_EDGE){
+        loseLife('drown');
+        return;
+      }
+    }
+
+    // בדיקת התנגשות עם רכבים
+    if(getRowType(frog.row) === 'road'){
+      const lane = lanesData.find((l)=> l.config.row === frog.row);
+      if(lane){
+        for(let i = 0; i < lane.objects.length; i++){
+          const obj = lane.objects[i];
+          if(Math.abs(frog.x - obj.x) < (obj.collisionHalf + FROG_HALF * 0.85)){
+            loseLife('crash');
+            break;
+          }
+        }
+      }
+    }
+  }
+
+  /* =========================================================
+     ניהול שחקנים ותורות (מצב 2 שחקנים)
+     ========================================================= */
+  function setupAttempt(){
+    score = 0; lives = 3; level = 1;
+    currentTimeLimit = LEVEL_CONFIGS[0].timeLimit;
+    timeLeft = currentTimeLimit;
+    padsFilled = GOAL_COLS.map(()=>false);
+    pads.forEach((_, i)=> updatePadVisual(i));
+    buildLanesForLevel(1);
+    resetFrogPosition();
+    paused = false;
+    timeWarningPlayed = false;
+    removePickup();
+    pickupSpawnTimer = randomPickupDelay();
+    document.getElementById('pauseBtn').textContent = '⏸';
+    document.getElementById('pauseOverlay').classList.add('hidden');
+    updateHUD();
+  }
+
+  function finishPlayer(won){
+    gameRunning = false;
+    removePickup();
+    players[currentPlayerIndex].score = score;
+    players[currentPlayerIndex].finished = true;
+    players[currentPlayerIndex].won = won;
+
+    const otherIdx = 1 - currentPlayerIndex;
+    if(numPlayers === 2 && !players[otherIdx].finished){
+      pendingTurnIdx = otherIdx;
+      document.getElementById('turnTitle').textContent = T[curLang].turnPrefix + (otherIdx + 1) + T[curLang].turnSuffix;
+      document.getElementById('turnScreen').classList.remove('hidden');
+    } else {
+      endGame();
+    }
+  }
+
+  document.getElementById('turnContinueBtn').addEventListener('click', ()=>{
+    document.getElementById('turnScreen').classList.add('hidden');
+    currentPlayerIndex = pendingTurnIdx;
+    setupAttempt();
+    gameRunning = true;
+    clock.getDelta();
+  });
+
+  /* =========================================================
+     Game Over + טבלת שיאים (LocalStorage)
+     ========================================================= */
+  const LB_KEY = 'frogger3d_top10';
+
+  function getLeaderboard(){
+    try{
+      const raw = localStorage.getItem(LB_KEY);
+      const arr = raw ? JSON.parse(raw) : [];
+      return Array.isArray(arr) ? arr : [];
+    }catch(e){ return []; }
+  }
+  function saveLeaderboard(arr){
+    try{ localStorage.setItem(LB_KEY, JSON.stringify(arr)); }catch(e){}
+  }
+  function qualifiesForLeaderboard(s){
+    if(s <= 0) return false;
+    const lb = getLeaderboard();
+    if(lb.length < 10) return true;
+    return s > lb[lb.length - 1].score;
+  }
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, function(c){
+      return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c];
+    });
+  }
+  function renderLeaderboard(container, highlightIdx){
+    const lb = getLeaderboard();
+    const tt = T[curLang];
+    const dirClass = isRtl(curLang) ? 'rtl' : 'ltr';
+    let html = '<table class="lb-table ' + dirClass + '"><thead><tr><th>' + tt.thRank + '</th><th>' + tt.thName + '</th><th>' + tt.hudScore + '</th></tr></thead><tbody>';
+    if(lb.length === 0){
+      html += '<tr><td colspan="3">' + tt.noScores + '</td></tr>';
+    } else {
+      lb.forEach((entry, i)=>{
+        const cls = (i === highlightIdx) ? ' class="highlight"' : '';
+        html += '<tr' + cls + '><td>' + (i+1) + '</td><td>' + escapeHtml(entry.name) + '</td><td>' + entry.score + '</td></tr>';
+      });
+    }
+    html += '</tbody></table>';
+    container.innerHTML = html;
+  }
+
+  function endGame(){
+    gameRunning = false;
+    const goScreen = document.getElementById('gameOverScreen');
+    goScreen.classList.remove('hidden');
+
+    const titleEl = document.getElementById('gameOverTitle');
+    const finalEl = document.getElementById('finalScore');
+
+    const tt = T[curLang];
+    if(numPlayers === 2){
+      titleEl.textContent = tt.finalResultsTitle;
+      const p1 = players[0], p2 = players[1];
+      let winnerText;
+      if(p1.score > p2.score) winnerText = '🏆 ' + pL(1) + tt.winSuffix;
+      else if(p2.score > p1.score) winnerText = '🏆 ' + pL(2) + tt.winSuffix;
+      else winnerText = tt.tieMsg;
+      finalEl.innerHTML =
+        '<p>' + pL(1) + ': <span class="gold">' + p1.score + '</span>' + (p1.won ? ' 🏁' : '') + '</p>' +
+        '<p>' + pL(2) + ': <span class="gold">' + p2.score + '</span>' + (p2.won ? ' 🏁' : '') + '</p>' +
+        '<p>' + winnerText + '</p>';
+    } else {
+      titleEl.textContent = players[0].won ? tt.victoryMsg : tt.gameOverTitle;
+      finalEl.innerHTML = '<p>' + tt.yourFinalScorePrefix + '<span class="gold">' + players[0].score + '</span></p>';
+    }
+
+    pendingLBQueue = [];
+    for(let i = 0; i < numPlayers; i++){
+      pendingLBQueue.push(i);
+    }
+    processNextLBEntry();
+  }
+
+  function processNextLBEntry(){
+    const nameEntry = document.getElementById('nameEntry');
+    const restartBtn = document.getElementById('restartBtn');
+
+    while(pendingLBQueue.length > 0 && !qualifiesForLeaderboard(players[pendingLBQueue[0]].score)){
+      pendingLBQueue.shift();
+    }
+
+    if(pendingLBQueue.length === 0){
+      nameEntry.classList.add('hidden');
+      restartBtn.classList.remove('hidden');
+      renderLeaderboard(document.getElementById('gameOverLeaderboard'), -1);
+      return;
+    }
+
+    const idx = pendingLBQueue[0];
+    nameEntry.classList.remove('hidden');
+    restartBtn.classList.add('hidden');
+    document.getElementById('nameEntryLabel').textContent =
+      (numPlayers === 2 ? (T[curLang].newHighScorePlayerPrefix + (idx + 1) + T[curLang].newHighScorePlayerSuffix) : T[curLang].newHighScoreGeneric) + T[curLang].enterNameSuffix;
+    renderLeaderboard(document.getElementById('gameOverLeaderboard'), -1);
+    const input = document.getElementById('nameInput');
+    input.value = '';
+    setTimeout(()=> input.focus(), 150);
+  }
+
+  function saveScoreAndShow(){
+    if(pendingLBQueue.length === 0) return;
+    const idx = pendingLBQueue.shift();
+    const input = document.getElementById('nameInput');
+    let name = (input.value || '').trim().toUpperCase().replace(/[^A-Zא-ת0-9]/g, '').slice(0, 3);
+    if(name.length === 0) name = 'AAA';
+    while(name.length < 3) name += 'A';
+
+    const lb = getLeaderboard();
+    lb.push({ name: name, score: players[idx].score });
+    lb.sort((a, b)=> b.score - a.score);
+    lb.length = Math.min(lb.length, 10);
+    saveLeaderboard(lb);
+
+    const newIdx = lb.findIndex((e)=> e.name === name && e.score === players[idx].score);
+    renderLeaderboard(document.getElementById('gameOverLeaderboard'), newIdx);
+    processNextLBEntry();
+  }
+
+  function initNewGame(){
+    players = [
+      { score:0, lives:3, finished:false, won:false },
+      { score:0, lives:3, finished:false, won:false }
+    ];
+    currentPlayerIndex = 0;
+    setupAttempt();
+    gameRunning = true;
+    clock.getDelta();
+  }
+
+  function goHome(){
+    document.getElementById('gameOverScreen').classList.add('hidden');
+    document.getElementById('turnScreen').classList.add('hidden');
+    renderLeaderboard(document.getElementById('startLeaderboard'), -1);
+    document.getElementById('startScreen').classList.remove('hidden');
+  }
+
+  /* =========================================================
+     קלט: מקלדת + כפתורי מסך
+     ========================================================= */
+  window.addEventListener('keydown', (e)=>{
+    switch(e.key){
+      case 'ArrowUp':    move(1, 0);  e.preventDefault(); break;
+      case 'ArrowDown':  move(-1, 0); e.preventDefault(); break;
+      case 'ArrowLeft':  move(0, -1); e.preventDefault(); break;
+      case 'ArrowRight': move(0, 1);  e.preventDefault(); break;
+    }
+  }, { passive:false });
+
+  function bindTouch(id, fn){
+    const el = document.getElementById(id);
+    const handler = (e)=>{ e.preventDefault(); fn(); };
+    el.addEventListener('touchstart', handler, { passive:false });
+    el.addEventListener('click', handler);
+  }
+  bindTouch('btnUp',    ()=> move(1, 0));
+  bindTouch('btnDown',  ()=> move(-1, 0));
+  bindTouch('btnLeft',  ()=> move(0, -1));
+  bindTouch('btnRight', ()=> move(0, 1));
+
+  // בחירת מספר שחקנים
+  document.getElementById('p1Btn').addEventListener('click', ()=>{
+    numPlayers = 1;
+    document.getElementById('p1Btn').classList.add('active');
+    document.getElementById('p2Btn').classList.remove('active');
+  });
+  document.getElementById('p2Btn').addEventListener('click', ()=>{
+    numPlayers = 2;
+    document.getElementById('p2Btn').classList.add('active');
+    document.getElementById('p1Btn').classList.remove('active');
+  });
+
+  document.getElementById('startBtn').addEventListener('click', ()=>{
+    document.getElementById('startScreen').classList.add('hidden');
+    initNewGame();
+  });
+  document.getElementById('saveScoreBtn').addEventListener('click', saveScoreAndShow);
+  document.getElementById('nameInput').addEventListener('keydown', (e)=>{
+    if(e.key === 'Enter') saveScoreAndShow();
+  });
+  document.getElementById('restartBtn').addEventListener('click', ()=>{
+    document.getElementById('gameOverScreen').classList.add('hidden');
+    initNewGame();
+  });
+  document.getElementById('homeBtn').addEventListener('click', goHome);
+  document.getElementById('muteBtn').addEventListener('click', ()=>{
+    muted = !muted;
+    document.getElementById('muteBtn').textContent = muted ? '🔇' : '🔊';
+  });
+
+  document.getElementById('aboutBtn').addEventListener('click', ()=>{
+    document.getElementById('aboutOverlay').classList.remove('hidden');
+  });
+  document.getElementById('aboutCloseBtn').addEventListener('click', ()=>{
+    document.getElementById('aboutOverlay').classList.add('hidden');
+  });
+  document.getElementById('aboutOverlay').addEventListener('click', (e)=>{
+    if(e.target.id === 'aboutOverlay') document.getElementById('aboutOverlay').classList.add('hidden');
+  });
+
+  function togglePause(){
+    if(!gameRunning) return; // אין מה להשהות מחוץ למשחק פעיל
+    paused = !paused;
+    document.getElementById('pauseBtn').textContent = paused ? '▶' : '⏸';
+    document.getElementById('pauseOverlay').classList.toggle('hidden', !paused);
+    if(paused) document.getElementById('timeVal').classList.remove('warning');
+  }
+  document.getElementById('pauseBtn').addEventListener('click', togglePause);
+  document.getElementById('pauseOverlay').addEventListener('click', togglePause);
+
+  /* =========================================================
+     אתחול
+     ========================================================= */
+  createGround();
+  createGoalPads();
+  buildLanesForLevel(1);
+  frogGroup = createFrog();
+  resetFrogPosition();
+  updateHUD();
+  renderLeaderboard(document.getElementById('startLeaderboard'), -1);
+
+  document.querySelectorAll('.lang-btn').forEach(function(b){
+    b.addEventListener('click', function(){ applyLang(b.getAttribute('data-lang')); });
+  });
+  applyLang(curLang);
+
+  /* =========================================================
+     לופ ראשי
+     ========================================================= */
+  const clock = new THREE.Clock();
+
+  function animate(){
+    requestAnimationFrame(animate);
+    const rawDelta = Math.min(clock.getDelta(), 0.05);
+    const delta = paused ? 0 : rawDelta;
+
+    updateLanes(delta);
+
+    if(gameRunning && !paused){
+      updateFrog(delta);
+      updatePickup(delta);
+      if(!frog.dying){
+        timeLeft -= delta;
+        if(timeLeft <= 0){
+          timeLeft = 0;
+          loseLife('crash');
+        }
+      }
+      updateHUD();
+    }
+
+    renderer.render(scene, camera);
+  }
+  animate();
+
+})();
+</script>
+</body>
+</html>
