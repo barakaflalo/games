@@ -1612,5 +1612,21 @@
 
 })();
 </script>
+
+<!-- AppNest floating back navigation -->
+<style>
+#anBackNav{position:fixed;top:50%;left:8px;transform:translateY(-50%);z-index:99999;font-family:sans-serif;}
+#anBackNav a{display:flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:50%;background:rgba(20,20,20,0.75);border:2px solid #C9A84C;color:#C9A84C;font-size:1.1rem;text-decoration:none;box-shadow:0 4px 14px rgba(0,0,0,0.45);opacity:0.6;transition:opacity .2s;}
+#anBackNav a:hover{opacity:1;}
+</style>
+<script>
+(function(){
+  try{
+    var nav=document.createElement('div');nav.id='anBackNav';
+    nav.innerHTML='<a href="https://barakaflalo.github.io/appnest/" title="AppNest">🏪</a>';
+    document.body.appendChild(nav);
+  }catch(e){}
+})();
+</script>
 </body>
 </html>

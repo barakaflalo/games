@@ -828,5 +828,26 @@ try{
   if(_ut){setTimeout(function(){try{startTool(_ut)}catch(e){}},80);}
 }catch(e){}
 </script>
+
+<!-- AppNest floating back navigation -->
+<style>
+#anBackNav{position:fixed;bottom:14px;left:14px;z-index:99999;display:flex;flex-direction:column;gap:8px;font-family:'Heebo',sans-serif;}
+#anBackNav a{display:flex;align-items:center;justify-content:center;width:46px;height:46px;border-radius:50%;background:rgba(20,20,20,0.88);border:2px solid #C9A84C;color:#C9A84C;font-size:1.25rem;text-decoration:none;box-shadow:0 4px 14px rgba(0,0,0,0.45);transition:transform .15s;}
+#anBackNav a:active{transform:scale(0.92);}
+</style>
+<script>
+(function(){
+  try{
+    var p=new URLSearchParams(location.search);
+    var from=p.get('from');
+    var nav=document.createElement('div');nav.id='anBackNav';
+    var h='';
+    if(from&&/^[a-z0-9-]+$/.test(from)){h+='<a href="'+from+'.html" title="Back">↩️</a>';}
+    h+='<a href="https://barakaflalo.github.io/appnest/" title="AppNest">🏪</a>';
+    nav.innerHTML=h;
+    document.body.appendChild(nav);
+  }catch(e){}
+})();
+</script>
 </body>
 </html>

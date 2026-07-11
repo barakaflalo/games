@@ -123,7 +123,7 @@ canvas#mc{width:100%;height:100%}
  <div class="heli-cards" id="hcards"></div>
  <button class="ab" id="sbtn" data-i="startBtn">התחל משחק</button>
  <div class="btn-row"><button class="ab2" id="hsBtn" data-i="highScores">🏆 טבלת שיאים</button><button class="ab2" id="aboBtn" data-i="about">ℹ️ אודות</button></div>
- <div class="inst" id="ides" data-i="desktopCtrl"><b>P1:</b> WASD+SPACE+Q &nbsp; <b>P2:</b> חצים+ENTER+B &nbsp; <b>P3:</b> IJKL+U+O</div>
+ <div class="inst" id="ides" data-i="desktopCtrl"><b>P1:</b> חצים+SPACE+Q &nbsp; <b>P2:</b> WASD+ENTER+B &nbsp; <b>P3:</b> IJKL+U+O</div>
  <div class="inst" id="imob" style="display:none" data-i="mobileCtrl"><b>ג'ויסטיק</b> — תזוזה &nbsp; <b>FIRE</b> — ירי &nbsp; <b>BOMB</b> — פצצה</div>
 </div>
 <!-- High Scores overlay -->
@@ -175,8 +175,8 @@ var HTYPES=[
   {id:'heavy',name:'Black Hawk',emoji:'🛡️',color:0x4d3d2e,spdX:26,spdZ:24,maxHp:160,bombs:5,fcd:0.45,rcd:0.18,lives:4,descKey:'descHeavy',spd:35,arm:95,fp:50}
 ];
 var PKEYS=[
-  {u:'KeyW',d:'KeyS',l:'KeyA',r:'KeyD',fire:'Space',bomb:'KeyQ',name:'P1'},
-  {u:'ArrowUp',d:'ArrowDown',l:'ArrowLeft',r:'ArrowRight',fire:'Enter',bomb:'KeyB',name:'P2'},
+  {u:'ArrowUp',d:'ArrowDown',l:'ArrowLeft',r:'ArrowRight',fire:'Space',bomb:'KeyQ',name:'P1'},
+  {u:'KeyW',d:'KeyS',l:'KeyA',r:'KeyD',fire:'Enter',bomb:'KeyB',name:'P2'},
   {u:'KeyI',d:'KeyK',l:'KeyJ',r:'KeyL',fire:'KeyU',bomb:'KeyO',name:'P3'}
 ];
 var PCOLORS=[0x33ff66,0x33ccff,0xff9933];
@@ -197,7 +197,7 @@ var T={
     players:"שחקנים:",p1:"1 שחקן",p2:"2 שחקנים",p3:"3 שחקנים",
     chooseHeli:"בחרו מסוקים:",startBtn:"התחל משחק",
     highScores:"🏆 טבלת שיאים",about:"ℹ️ אודות",back:"חזרה",
-    desktopCtrl:"<b>P1:</b> WASD+SPACE+Q &nbsp; <b>P2:</b> חצים+ENTER+B &nbsp; <b>P3:</b> IJKL+U+O",
+    desktopCtrl:"<b>P1:</b> חצים+SPACE+Q &nbsp; <b>P2:</b> WASD+ENTER+B &nbsp; <b>P3:</b> IJKL+U+O",
     mobileCtrl:"<b>ג'ויסטיק</b> — תזוזה &nbsp; <b>FIRE</b> — ירי &nbsp; <b>BOMB</b> — פצצה",
     finalScore:"ניקוד סופי: ",playAgain:"שחק שוב",mainMenu:"תפריט ראשי",
     newHighScore:"שיא חדש! 🏆",scoreLabel:"ניקוד: ",saveScore:"שמור שיא",
@@ -218,7 +218,7 @@ var T={
     players:"Players:",p1:"1 Player",p2:"2 Players",p3:"3 Players",
     chooseHeli:"Choose helicopters:",startBtn:"Start Game",
     highScores:"🏆 High Scores",about:"ℹ️ About",back:"Back",
-    desktopCtrl:"<b>P1:</b> WASD+SPACE+Q &nbsp; <b>P2:</b> Arrows+ENTER+B &nbsp; <b>P3:</b> IJKL+U+O",
+    desktopCtrl:"<b>P1:</b> Arrows+SPACE+Q &nbsp; <b>P2:</b> WASD+ENTER+B &nbsp; <b>P3:</b> IJKL+U+O",
     mobileCtrl:"<b>Joystick</b> — Move &nbsp; <b>FIRE</b> — Shoot &nbsp; <b>BOMB</b> — Bomb",
     finalScore:"Final Score: ",playAgain:"Play Again",mainMenu:"Main Menu",
     newHighScore:"New High Score! 🏆",scoreLabel:"Score: ",saveScore:"Save Score",
@@ -239,7 +239,7 @@ var T={
     players:"Игроки:",p1:"1 игрок",p2:"2 игрока",p3:"3 игрока",
     chooseHeli:"Выберите вертолёты:",startBtn:"Начать игру",
     highScores:"🏆 Таблица рекордов",about:"ℹ️ О игре",back:"Назад",
-    desktopCtrl:"<b>P1:</b> WASD+SPACE+Q &nbsp; <b>P2:</b> Стрелки+ENTER+B &nbsp; <b>P3:</b> IJKL+U+O",
+    desktopCtrl:"<b>P1:</b> Стрелки+SPACE+Q &nbsp; <b>P2:</b> WASD+ENTER+B &nbsp; <b>P3:</b> IJKL+U+O",
     mobileCtrl:"<b>Джойстик</b> — движение &nbsp; <b>FIRE</b> — огонь &nbsp; <b>BOMB</b> — бомба",
     finalScore:"Итоговый счёт: ",playAgain:"Играть снова",mainMenu:"Главное меню",
     newHighScore:"Новый рекорд! 🏆",scoreLabel:"Счёт: ",saveScore:"Сохранить",
@@ -260,7 +260,7 @@ var T={
     players:"Jugadores:",p1:"1 jugador",p2:"2 jugadores",p3:"3 jugadores",
     chooseHeli:"Elige helicópteros:",startBtn:"Empezar",
     highScores:"🏆 Puntuaciones",about:"ℹ️ Acerca de",back:"Volver",
-    desktopCtrl:"<b>P1:</b> WASD+SPACE+Q &nbsp; <b>P2:</b> Flechas+ENTER+B &nbsp; <b>P3:</b> IJKL+U+O",
+    desktopCtrl:"<b>P1:</b> Flechas+SPACE+Q &nbsp; <b>P2:</b> WASD+ENTER+B &nbsp; <b>P3:</b> IJKL+U+O",
     mobileCtrl:"<b>Joystick</b> — Mover &nbsp; <b>FIRE</b> — Disparar &nbsp; <b>BOMB</b> — Bomba",
     finalScore:"Puntuación final: ",playAgain:"Jugar de nuevo",mainMenu:"Menú principal",
     newHighScore:"¡Nuevo récord! 🏆",scoreLabel:"Puntos: ",saveScore:"Guardar",
@@ -281,7 +281,7 @@ var T={
     players:"اللاعبون:",p1:"لاعب واحد",p2:"لاعبان",p3:"3 لاعبين",
     chooseHeli:"اختر المروحيات:",startBtn:"ابدأ اللعبة",
     highScores:"🏆 لوحة الصدارة",about:"ℹ️ حول",back:"رجوع",
-    desktopCtrl:"<b>P1:</b> WASD+SPACE+Q &nbsp; <b>P2:</b> الأسهم+ENTER+B &nbsp; <b>P3:</b> IJKL+U+O",
+    desktopCtrl:"<b>P1:</b> الأسهم+SPACE+Q &nbsp; <b>P2:</b> WASD+ENTER+B &nbsp; <b>P3:</b> IJKL+U+O",
     mobileCtrl:"<b>عصا التحكم</b> — تحريك &nbsp; <b>FIRE</b> — إطلاق &nbsp; <b>BOMB</b> — قنبلة",
     finalScore:"النتيجة النهائية: ",playAgain:"العب مرة أخرى",mainMenu:"القائمة الرئيسية",
     newHighScore:"رقم قياسي جديد! 🏆",scoreLabel:"النتيجة: ",saveScore:"حفظ النتيجة",
@@ -445,7 +445,7 @@ function updHUD(){
 function drawMM(){if(!mmCtx)return;var w=80,h=110;mmCtx.clearRect(0,0,w,h);mmCtx.fillStyle='rgba(0,20,0,.3)';mmCtx.fillRect(0,0,w,h);var sx=w/(HW*2+20),sz=h/200,ox=HW+10,oz=20;for(var i=0;i<ens.length;i++){var e=ens[i];mmCtx.fillStyle=e.userData.type==='boss'?'#f00':'#f44';var s=e.userData.type==='boss'?4:2;var mx=(e.position.x+ox)*sx,my=(oz-e.position.z)*sz;if(my>=0&&my<=h)mmCtx.fillRect(mx-s/2,my-s/2,s,s);}for(var i=0;i<players.length;i++){if(players[i].dead)continue;mmCtx.fillStyle=PCOLCSS[i];var px=(players[i].mesh.position.x+ox)*sx,py=(oz-players[i].mesh.position.z)*sz;mmCtx.beginPath();mmCtx.arc(px,py,3,0,Math.PI*2);mmCtx.fill();}}
 
 function setupInput(){
-  window.addEventListener('keydown',function(e){keys[e.code]=true;if(e.code==='Space'||e.code==='Enter')e.preventDefault();});
+  window.addEventListener('keydown',function(e){keys[e.code]=true;if(e.code==='Space'||e.code==='Enter'||e.code.indexOf('Arrow')===0)e.preventDefault();});
   window.addEventListener('keyup',function(e){keys[e.code]=false;});
   var jz=document.getElementById('jz'),knob=document.getElementById('jk'),JR=50;var jtid=null,jcx=0,jcy=0;
   function uj(t){var dx=t.clientX-jcx,dy=t.clientY-jcy;var d=Math.sqrt(dx*dx+dy*dy);if(d>JR){dx=dx/d*JR;dy=dy/d*JR;}knob.style.transform='translate('+dx+'px,'+dy+'px)';inX=dx/JR;inZ=dy/JR;}
@@ -592,6 +592,22 @@ function init(){
 }
 init();
 }catch(e){document.getElementById('err').style.display='block';document.getElementById('err').textContent='ERR:'+e.message+'|'+e.stack;}
+</script>
+
+<!-- AppNest floating back navigation -->
+<style>
+#anBackNav{position:fixed;top:50%;left:8px;transform:translateY(-50%);z-index:99999;font-family:sans-serif;}
+#anBackNav a{display:flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:50%;background:rgba(20,20,20,0.75);border:2px solid #C9A84C;color:#C9A84C;font-size:1.1rem;text-decoration:none;box-shadow:0 4px 14px rgba(0,0,0,0.45);opacity:0.6;transition:opacity .2s;}
+#anBackNav a:hover{opacity:1;}
+</style>
+<script>
+(function(){
+  try{
+    var nav=document.createElement('div');nav.id='anBackNav';
+    nav.innerHTML='<a href="https://barakaflalo.github.io/appnest/" title="AppNest">🏪</a>';
+    document.body.appendChild(nav);
+  }catch(e){}
+})();
 </script>
 </body>
 </html>
