@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="he">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MindNest — אוסף לוח וחשיבה — AppNest</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Heebo:wght@300;400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --gold:#C9A84C;--gold-light:#F0C060;--gold-dim:#8A6A2A;
+  --bg:#0A0A0A;--dark:#111;--dark2:#1A1A1A;--dark3:#222;
+  --text:#E8E0D0;--text-dim:#888;
+}
+body.day{--bg:#F0EDE6;--dark:#E8E2D8;--dark2:#FFF;--dark3:#F0EDE6;--text:#1A1A1A;--text-dim:#888;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'Heebo',sans-serif;min-height:100vh;direction:rtl;transition:background 0.3s,color 0.3s;}
+body.ltr{direction:ltr;}
+
+.header{background:var(--dark);border-bottom:2px solid var(--gold-dim);padding:10px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+.logo-text{font-family:'Cinzel',serif;color:var(--gold);font-size:1.1rem;letter-spacing:1px;}
+.logo-sub{font-size:0.55rem;color:var(--gold-dim);letter-spacing:3px;display:block;}
+.hbtns{display:flex;gap:6px;align-items:center;position:relative;}
+.icon-btn{background:var(--dark3);border:1px solid var(--gold-dim);color:var(--gold);width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:0.9rem;display:flex;align-items:center;justify-content:center;}
+.lang-btn{background:var(--dark3);border:1px solid var(--gold-dim);color:var(--gold);padding:5px 9px;border-radius:16px;cursor:pointer;font-size:0.75rem;font-family:'Heebo',sans-serif;}
+.lang-drop{position:absolute;top:110%;left:0;background:var(--dark2);border:1px solid var(--gold-dim);border-radius:10px;display:none;min-width:130px;z-index:200;box-shadow:0 4px 20px rgba(0,0,0,0.5);}
+.lang-drop.open{display:block;}
+.lang-opt{padding:9px 12px;cursor:pointer;font-size:0.82rem;display:flex;align-items:center;gap:7px;color:var(--text);}
+.lang-opt:hover{background:var(--dark3);color:var(--gold);}
+
+.menu-wrap{max-width:520px;margin:0 auto;padding:24px 14px 40px;}
+.menu-title{font-family:'Cinzel',serif;font-size:1.9rem;color:var(--gold);text-align:center;margin-bottom:4px;}
+.menu-sub{text-align:center;color:var(--text-dim);font-size:0.85rem;margin-bottom:20px;}
+.sec-title{color:var(--gold);font-size:0.85rem;font-weight:700;letter-spacing:1px;margin:18px 4px 10px;border-bottom:1px solid var(--dark3);padding-bottom:5px;}
+.games-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.game-card{background:var(--dark2);border:1px solid var(--dark3);border-radius:14px;padding:20px 14px;text-align:center;cursor:pointer;transition:all 0.22s;position:relative;overflow:hidden;text-decoration:none;display:block;}
+.game-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent);opacity:0;transition:opacity 0.3s;}
+.game-card:hover{border-color:var(--gold-dim);transform:translateY(-3px);box-shadow:0 8px 24px rgba(201,168,76,0.15);}
+.game-card:hover::before{opacity:1;}
+.game-icon{font-size:2.2rem;margin-bottom:8px;display:block;}
+.game-name{font-size:0.98rem;font-weight:700;color:var(--gold);margin-bottom:3px;}
+.game-desc{font-size:0.72rem;color:var(--text-dim);line-height:1.4;}
+
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.82);z-index:400;display:none;align-items:center;justify-content:center;padding:16px;}
+.modal-bg.open{display:flex;}
+.modal{background:var(--dark2);border:1px solid var(--gold-dim);border-radius:18px;padding:22px 18px;max-width:350px;width:100%;max-height:88vh;overflow-y:auto;}
+.modal-title{font-family:'Cinzel',serif;color:var(--gold);font-size:1.1rem;margin-bottom:12px;text-align:center;}
+.modal-close{float:left;background:none;border:1px solid var(--gold-dim);color:var(--gold);padding:3px 10px;border-radius:8px;cursor:pointer;font-family:'Heebo',sans-serif;font-size:0.78rem;}
+body.ltr .modal-close{float:right;}
+.modal p{color:var(--text-dim);font-size:0.85rem;line-height:1.7;margin-bottom:5px;}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <span class="logo-text">🧠 MindNest</span>
+    <span class="logo-sub">APPNEST COLLECTION</span>
+  </div>
+  <div class="hbtns">
+    <button class="icon-btn" id="dayBtn" onclick="toggleDay()">☀️</button>
+    <button class="lang-btn" id="langBtn" onclick="toggleLang()">🌐 עברית</button>
+    <div class="lang-drop" id="langDrop">
+      <div class="lang-opt" onclick="setLang('he')">🇮🇱 עברית</div>
+      <div class="lang-opt" onclick="setLang('en')">🇬🇧 English</div>
+      <div class="lang-opt" onclick="setLang('ru')">🇷🇺 Русский</div>
+      <div class="lang-opt" onclick="setLang('es')">🇪🇸 Español</div>
+      <div class="lang-opt" onclick="setLang('ar')">🇸🇦 العربية</div>
+    </div>
+    <button class="icon-btn" onclick="openModal()">ℹ️</button>
+  </div>
+</div>
+
+<div class="menu-wrap">
+  <div class="menu-title" data-i="title">לוח וחשיבה</div>
+  <div class="menu-sub" data-i="sub">13 משחקי אסטרטגיה, קלפים וחידות</div>
+
+  <div class="sec-title" data-i="secBoard">🎯 משחקי לוח</div>
+  <div class="games-grid">
+    <a class="game-card" href="arcadenest-hub1.html?game=chess">
+      <span class="game-icon">♟️</span>
+      <div class="game-name" data-i="chess">שחמט</div>
+      <div class="game-desc" data-i="chessD">מול המחשב</div>
+    </a>
+    <a class="game-card" href="arcadenest-hub4.html?game=checkers">
+      <span class="game-icon">🔴</span>
+      <div class="game-name" data-i="checkers">דמקה</div>
+      <div class="game-desc" data-i="checkersD">הקלאסיקה מול המחשב</div>
+    </a>
+    <a class="game-card" href="arcadenest-hub4.html?game=reversi">
+      <span class="game-icon">⚫</span>
+      <div class="game-name" data-i="reversi">רברסי</div>
+      <div class="game-desc" data-i="reversiD">הפוך את הלוח לטובתך</div>
+    </a>
+    <a class="game-card" href="arcadenest-hub4.html?game=ttt">
+      <span class="game-icon">❌</span>
+      <div class="game-name" data-i="ttt">איקס עיגול</div>
+      <div class="game-desc" data-i="tttD">3 ברצף מנצח</div>
+    </a>
+  </div>
+
+  <div class="sec-title" data-i="secPuzzle">🧩 חידות והיגיון</div>
+  <div class="games-grid">
+    <a class="game-card" href="sudoku.html">
+      <span class="game-icon">🔢</span>
+      <div class="game-name" data-i="sudoku">סודוקו</div>
+      <div class="game-desc" data-i="sudokuD">חידת המספרים הקלאסית</div>
+    </a>
+    <a class="game-card" href="2048.html">
+      <span class="game-icon">🎰</span>
+      <div class="game-name" data-i="g2048">2048</div>
+      <div class="game-desc" data-i="g2048D">חבר משבצות עד 2048</div>
+    </a>
+    <a class="game-card" href="arcadenest-hub1.html?game=mines">
+      <span class="game-icon">💣</span>
+      <div class="game-name" data-i="mines">שולה מוקשים</div>
+      <div class="game-desc" data-i="minesD">גלה בלי להתפוצץ</div>
+    </a>
+    <a class="game-card" href="gamenest-hub.html?game=memory">
+      <span class="game-icon">🃏</span>
+      <div class="game-name" data-i="memory">זיכרון</div>
+      <div class="game-desc" data-i="memoryD">מצא את הזוגות</div>
+    </a>
+    <a class="game-card" href="gamenest-hub.html?game=hangman">
+      <span class="game-icon">🪝</span>
+      <div class="game-name" data-i="hangman">איש תלוי</div>
+      <div class="game-desc" data-i="hangmanD">נחש את המילה</div>
+    </a>
+    <a class="game-card" href="gamenest-hub.html?game=numguess">
+      <span class="game-icon">🎯</span>
+      <div class="game-name" data-i="numguess">נחש מספר</div>
+      <div class="game-desc" data-i="numguessD">חם או קר?</div>
+    </a>
+  </div>
+
+  <div class="sec-title" data-i="secCards">🃏 קלפים וטריוויה</div>
+  <div class="games-grid">
+    <a class="game-card" href="gamenest-hub.html?game=blackjack">
+      <span class="game-icon">🎰</span>
+      <div class="game-name" data-i="blackjack">בלאקג'ק</div>
+      <div class="game-desc" data-i="blackjackD">21 מול הדילר</div>
+    </a>
+    <a class="game-card" href="arcadenest-hub4.html?game=war">
+      <span class="game-icon">⚔️</span>
+      <div class="game-name" data-i="war">מלחמה</div>
+      <div class="game-desc" data-i="warD">קלפים מול המחשב</div>
+    </a>
+    <a class="game-card" href="gamenest-hub.html?game=trivia">
+      <span class="game-icon">🧠</span>
+      <div class="game-name" data-i="trivia">טריוויה</div>
+      <div class="game-desc" data-i="triviaD">100 שאלות ידע</div>
+    </a>
+  </div>
+</div>
+
+<div class="modal-bg" id="aboutModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()" data-i="close">סגור ✕</button>
+    <div class="modal-title" data-i="aboutT">אודות</div>
+    <p data-i="aboutP1">אוסף לוח וחשיבה — 13 משחקי אסטרטגיה, קלפים וחידות במקום אחד.</p>
+    <p data-i="aboutP2">חלק מ-AppNest — החנות של ברק אפללו. כל משחק נפתח בלחיצה אחת.</p>
+  </div>
+</div>
+
+<script>
+const T={
+  he:{title:'לוח וחשיבה',sub:'13 משחקי אסטרטגיה, קלפים וחידות',secBoard:'🎯 משחקי לוח',secPuzzle:'🧩 חידות והיגיון',secCards:'🃏 קלפים וטריוויה',chess:'שחמט',chessD:'מול המחשב',checkers:'דמקה',checkersD:'הקלאסיקה מול המחשב',reversi:'רברסי',reversiD:'הפוך את הלוח לטובתך',ttt:'איקס עיגול',tttD:'3 ברצף מנצח',sudoku:'סודוקו',sudokuD:'חידת המספרים הקלאסית',g2048:'2048',g2048D:'חבר משבצות עד 2048',mines:'שולה מוקשים',minesD:'גלה בלי להתפוצץ',memory:'זיכרון',memoryD:'מצא את הזוגות',hangman:'איש תלוי',hangmanD:'נחש את המילה',numguess:'נחש מספר',numguessD:'חם או קר?',blackjack:'בלאקג\'ק',blackjackD:'21 מול הדילר',war:'מלחמה',warD:'קלפים מול המחשב',trivia:'טריוויה',triviaD:'100 שאלות ידע',close:'סגור ✕',aboutT:'אודות',aboutP1:'אוסף לוח וחשיבה — 13 משחקי אסטרטגיה, קלפים וחידות במקום אחד.',aboutP2:'חלק מ-AppNest — החנות של ברק אפללו. כל משחק נפתח בלחיצה אחת.',langN:'עברית'},
+  en:{title:'Board & Mind',sub:'13 strategy, card & puzzle games',secBoard:'🎯 Board Games',secPuzzle:'🧩 Puzzles & Logic',secCards:'🃏 Cards & Trivia',chess:'Chess',chessD:'vs computer',checkers:'Checkers',checkersD:'Classic vs computer',reversi:'Reversi',reversiD:'Flip the board your way',ttt:'Tic-Tac-Toe',tttD:'3 in a row wins',sudoku:'Sudoku',sudokuD:'Classic number puzzle',g2048:'2048',g2048D:'Merge tiles to 2048',mines:'Minesweeper',minesD:'Reveal without exploding',memory:'Memory',memoryD:'Find the pairs',hangman:'Hangman',hangmanD:'Guess the word',numguess:'Number Guess',numguessD:'Hot or cold?',blackjack:'Blackjack',blackjackD:'21 vs the dealer',war:'War',warD:'Cards vs computer',trivia:'Trivia',triviaD:'100 knowledge questions',close:'Close ✕',aboutT:'About',aboutP1:'Board & Mind — 13 strategy, card & puzzle games in one place.',aboutP2:'Part of AppNest — Barak Aflalo\'s store. Each game opens with one tap.',langN:'English'},
+  ru:{title:'Настольные и логика',sub:'13 игр: стратегии, карты, головоломки',secBoard:'🎯 Настольные',secPuzzle:'🧩 Головоломки',secCards:'🃏 Карты и викторина',chess:'Шахматы',chessD:'против ИИ',checkers:'Шашки',checkersD:'Классика против ИИ',reversi:'Реверси',reversiD:'Переверни доску',ttt:'Крестики-нолики',tttD:'3 в ряд — победа',sudoku:'Судоку',sudokuD:'Классическая головоломка',g2048:'2048',g2048D:'Соединяй до 2048',mines:'Сапёр',minesD:'Открой без взрыва',memory:'Память',memoryD:'Найди пары',hangman:'Виселица',hangmanD:'Угадай слово',numguess:'Угадай число',numguessD:'Горячо или холодно?',blackjack:'Блэкджек',blackjackD:'21 против дилера',war:'Война',warD:'Карты против ИИ',trivia:'Викторина',triviaD:'100 вопросов',close:'Закрыть ✕',aboutT:'О приложении',aboutP1:'13 игр в одном месте.',aboutP2:'Часть AppNest — магазина Барака Афлало.',langN:'Русский'},
+  es:{title:'Mesa y Mente',sub:'13 juegos de estrategia, cartas y puzles',secBoard:'🎯 Juegos de mesa',secPuzzle:'🧩 Puzles y lógica',secCards:'🃏 Cartas y trivia',chess:'Ajedrez',chessD:'vs computadora',checkers:'Damas',checkersD:'Clásico vs CPU',reversi:'Reversi',reversiD:'Voltea el tablero',ttt:'Tres en raya',tttD:'3 en línea gana',sudoku:'Sudoku',sudokuD:'Puzle clásico de números',g2048:'2048',g2048D:'Combina hasta 2048',mines:'Buscaminas',minesD:'Revela sin explotar',memory:'Memoria',memoryD:'Encuentra los pares',hangman:'Ahorcado',hangmanD:'Adivina la palabra',numguess:'Adivina el número',numguessD:'¿Frío o caliente?',blackjack:'Blackjack',blackjackD:'21 contra el crupier',war:'Guerra',warD:'Cartas vs CPU',trivia:'Trivia',triviaD:'100 preguntas',close:'Cerrar ✕',aboutT:'Acerca de',aboutP1:'13 juegos en un solo lugar.',aboutP2:'Parte de AppNest — la tienda de Barak Aflalo.',langN:'Español'},
+  ar:{title:'ألعاب ذهنية',sub:'13 لعبة استراتيجية وورق وألغاز',secBoard:'🎯 ألعاب لوحية',secPuzzle:'🧩 ألغاز ومنطق',secCards:'🃏 ورق وترويا',chess:'شطرنج',chessD:'ضد الحاسوب',checkers:'داما',checkersD:'الكلاسيكية ضد الحاسوب',reversi:'ريفرسي',reversiD:'اقلب اللوحة لصالحك',ttt:'إكس-أو',tttD:'3 متتالية تفوز',sudoku:'سودوكو',sudokuD:'لغز الأرقام الكلاسيكي',g2048:'2048',g2048D:'ادمج حتى 2048',mines:'كاسحة الألغام',minesD:'اكشف دون انفجار',memory:'الذاكرة',memoryD:'اعثر على الأزواج',hangman:'المشنقة',hangmanD:'خمن الكلمة',numguess:'خمّن الرقم',numguessD:'حار أم بارد؟',blackjack:'بلاك جاك',blackjackD:'21 ضد الموزع',war:'حرب',warD:'ورق ضد الحاسوب',trivia:'ترويا',triviaD:'100 سؤال معرفة',close:'إغلاق ✕',aboutT:'حول',aboutP1:'13 لعبة في مكان واحد.',aboutP2:'جزء من AppNest — متجر باراك أفلالو.',langN:'العربية'}
+};
+let curLang=localStorage.getItem('appnest_lang')||'he';
+function applyLang(){
+  const t=T[curLang];
+  document.querySelectorAll('[data-i]').forEach(el=>{const k=el.getAttribute('data-i');if(t[k])el.textContent=t[k];});
+  document.getElementById('langBtn').textContent='🌐 '+t.langN;
+  document.body.classList.toggle('ltr',curLang==='en'||curLang==='ru'||curLang==='es');
+  document.documentElement.lang=curLang;
+}
+function toggleLang(){document.getElementById('langDrop').classList.toggle('open');}
+function setLang(l){curLang=l;localStorage.setItem('appnest_lang',l);document.getElementById('langDrop').classList.remove('open');applyLang();}
+document.addEventListener('click',e=>{if(!e.target.closest('.hbtns'))document.getElementById('langDrop').classList.remove('open');});
+function toggleDay(){document.body.classList.toggle('day');localStorage.setItem('appnest_day',document.body.classList.contains('day')?'1':'0');document.getElementById('dayBtn').textContent=document.body.classList.contains('day')?'🌙':'☀️';}
+if(localStorage.getItem('appnest_day')==='1'){document.body.classList.add('day');document.getElementById('dayBtn').textContent='🌙';}
+function openModal(){document.getElementById('aboutModal').classList.add('open');}
+function closeModal(){document.getElementById('aboutModal').classList.remove('open');}
+document.getElementById('aboutModal').addEventListener('click',e=>{if(e.target.id==='aboutModal')closeModal();});
+applyLang();
+</script>
+</body>
+</html>

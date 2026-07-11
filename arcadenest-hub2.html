@@ -552,6 +552,12 @@ document.addEventListener('touchend',e=>{if(!e.target.closest('#brkLeft')&&!e.ta
 BRC.addEventListener('touchmove',e=>{e.preventDefault();const rect=BRC.getBoundingClientRect();brPaddle.x=Math.max(0,Math.min(BRW-brPaddle.w,(e.touches[0].clientX-rect.left)*(BRW/rect.width)-brPaddle.w/2));},{passive:false});
 
 applyT();tetInit();catchInit();runInit();brkInit();
+
+// Auto-open game from URL param (?game=xxx)
+try{
+  const _ug=new URLSearchParams(location.search).get('game');
+  if(_ug){setTimeout(function(){try{startGame(_ug)}catch(e){}},80);}
+}catch(e){}
 </script>
 </body>
 </html>

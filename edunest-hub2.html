@@ -821,6 +821,12 @@ function showProvQ(){
 function nextProverb(){showProvQ();}
 
 applyT();
+
+// Auto-open tool from URL param (?tool=xxx)
+try{
+  const _ut=new URLSearchParams(location.search).get('tool');
+  if(_ut){setTimeout(function(){try{startTool(_ut)}catch(e){}},80);}
+}catch(e){}
 </script>
 </body>
 </html>

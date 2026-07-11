@@ -889,6 +889,12 @@ document.addEventListener('keyup',e=>{if(e.key==='ArrowLeft'||e.key==='ArrowRigh
 
 // INIT
 applyT();tetInit();pongInit();
+
+// Auto-open game from URL param (?game=xxx)
+try{
+  const _ug=new URLSearchParams(location.search).get('game');
+  if(_ug){setTimeout(function(){try{startGame(_ug)}catch(e){}},80);}
+}catch(e){}
 </script>
 </body>
 </html>

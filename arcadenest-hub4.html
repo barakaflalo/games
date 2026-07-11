@@ -485,6 +485,12 @@ function doRoll(player,cb){const roll=Math.ceil(Math.random()*6);document.getEle
 function renderSL(){const bd=document.getElementById('slBoard');bd.innerHTML='';const cells=[];for(let row=9;row>=0;row--){const base=row*10;for(let col=0;col<10;col++)cells.push(row%2===0?base+10-col:base+col+1);}cells.forEach(num=>{const cell=document.createElement('div');cell.className='sl-cell';const sn=Object.keys(SNAKES).map(Number).includes(num);const ld=Object.keys(LADDERS).map(Number).includes(num);const h=(num%10)*36;cell.style.background=isDark?`hsl(${h},18%,${sn?8:ld?10:12}%)`:`hsl(${h},28%,${sn?75:ld?78:83}%)`;if(sn){cell.textContent='🐍';}else if(ld){cell.textContent='🪜';}const ne=document.createElement('span');ne.className='sl-num';ne.textContent=num;cell.appendChild(ne);const pw=document.createElement('div');pw.className='sl-pieces';[0,1].forEach(p=>{if(slPos[p]===num){const pc=document.createElement('div');pc.className='sl-piece p'+(p+1);pc.textContent=p===0?'1':'2';pw.appendChild(pc);}});if(pw.children.length)cell.appendChild(pw);bd.appendChild(cell);});}
 
 applyT();
+
+// Auto-open game from URL param (?game=xxx)
+try{
+  const _ug=new URLSearchParams(location.search).get('game');
+  if(_ug){setTimeout(function(){try{startGame(_ug)}catch(e){}},80);}
+}catch(e){}
 </script>
 </body>
 </html>

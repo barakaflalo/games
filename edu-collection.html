@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="he">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EduNest — אוסף לימוד — AppNest</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Heebo:wght@300;400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --gold:#C9A84C;--gold-light:#F0C060;--gold-dim:#8A6A2A;
+  --bg:#0A0A0A;--dark:#111;--dark2:#1A1A1A;--dark3:#222;
+  --text:#E8E0D0;--text-dim:#888;
+}
+body.day{--bg:#F0EDE6;--dark:#E8E2D8;--dark2:#FFF;--dark3:#F0EDE6;--text:#1A1A1A;--text-dim:#888;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'Heebo',sans-serif;min-height:100vh;direction:rtl;transition:background 0.3s,color 0.3s;}
+body.ltr{direction:ltr;}
+
+.header{background:var(--dark);border-bottom:2px solid var(--gold-dim);padding:10px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+.logo-text{font-family:'Cinzel',serif;color:var(--gold);font-size:1.1rem;letter-spacing:1px;}
+.logo-sub{font-size:0.55rem;color:var(--gold-dim);letter-spacing:3px;display:block;}
+.hbtns{display:flex;gap:6px;align-items:center;position:relative;}
+.icon-btn{background:var(--dark3);border:1px solid var(--gold-dim);color:var(--gold);width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:0.9rem;display:flex;align-items:center;justify-content:center;}
+.lang-btn{background:var(--dark3);border:1px solid var(--gold-dim);color:var(--gold);padding:5px 9px;border-radius:16px;cursor:pointer;font-size:0.75rem;font-family:'Heebo',sans-serif;}
+.lang-drop{position:absolute;top:110%;left:0;background:var(--dark2);border:1px solid var(--gold-dim);border-radius:10px;display:none;min-width:130px;z-index:200;box-shadow:0 4px 20px rgba(0,0,0,0.5);}
+.lang-drop.open{display:block;}
+.lang-opt{padding:9px 12px;cursor:pointer;font-size:0.82rem;display:flex;align-items:center;gap:7px;color:var(--text);}
+.lang-opt:hover{background:var(--dark3);color:var(--gold);}
+
+.menu-wrap{max-width:520px;margin:0 auto;padding:24px 14px 40px;}
+.menu-title{font-family:'Cinzel',serif;font-size:1.9rem;color:var(--gold);text-align:center;margin-bottom:4px;}
+.menu-sub{text-align:center;color:var(--text-dim);font-size:0.85rem;margin-bottom:20px;}
+.sec-title{color:var(--gold);font-size:0.85rem;font-weight:700;letter-spacing:1px;margin:18px 4px 10px;border-bottom:1px solid var(--dark3);padding-bottom:5px;}
+.games-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.game-card{background:var(--dark2);border:1px solid var(--dark3);border-radius:14px;padding:20px 14px;text-align:center;cursor:pointer;transition:all 0.22s;position:relative;overflow:hidden;text-decoration:none;display:block;}
+.game-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent);opacity:0;transition:opacity 0.3s;}
+.game-card:hover{border-color:var(--gold-dim);transform:translateY(-3px);box-shadow:0 8px 24px rgba(201,168,76,0.15);}
+.game-card:hover::before{opacity:1;}
+.game-icon{font-size:2.2rem;margin-bottom:8px;display:block;}
+.game-name{font-size:0.98rem;font-weight:700;color:var(--gold);margin-bottom:3px;}
+.game-desc{font-size:0.72rem;color:var(--text-dim);line-height:1.4;}
+
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.82);z-index:400;display:none;align-items:center;justify-content:center;padding:16px;}
+.modal-bg.open{display:flex;}
+.modal{background:var(--dark2);border:1px solid var(--gold-dim);border-radius:18px;padding:22px 18px;max-width:350px;width:100%;max-height:88vh;overflow-y:auto;}
+.modal-title{font-family:'Cinzel',serif;color:var(--gold);font-size:1.1rem;margin-bottom:12px;text-align:center;}
+.modal-close{float:left;background:none;border:1px solid var(--gold-dim);color:var(--gold);padding:3px 10px;border-radius:8px;cursor:pointer;font-family:'Heebo',sans-serif;font-size:0.78rem;}
+body.ltr .modal-close{float:right;}
+.modal p{color:var(--text-dim);font-size:0.85rem;line-height:1.7;margin-bottom:5px;}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <span class="logo-text">📚 EduNest</span>
+    <span class="logo-sub">APPNEST COLLECTION</span>
+  </div>
+  <div class="hbtns">
+    <button class="icon-btn" id="dayBtn" onclick="toggleDay()">☀️</button>
+    <button class="lang-btn" id="langBtn" onclick="toggleLang()">🌐 עברית</button>
+    <div class="lang-drop" id="langDrop">
+      <div class="lang-opt" onclick="setLang('he')">🇮🇱 עברית</div>
+      <div class="lang-opt" onclick="setLang('en')">🇬🇧 English</div>
+      <div class="lang-opt" onclick="setLang('ru')">🇷🇺 Русский</div>
+      <div class="lang-opt" onclick="setLang('es')">🇪🇸 Español</div>
+      <div class="lang-opt" onclick="setLang('ar')">🇸🇦 العربية</div>
+    </div>
+    <button class="icon-btn" onclick="openModal()">ℹ️</button>
+  </div>
+</div>
+
+<div class="menu-wrap">
+  <div class="menu-title" data-i="title">אוסף לימוד</div>
+  <div class="menu-sub" data-i="sub">11 כלים ומשחקים לימודיים</div>
+
+  <div class="sec-title" data-i="secBasic">✏️ יסודות</div>
+  <div class="games-grid">
+    <a class="game-card" href="edunest-hub.html?tool=math">
+      <span class="game-icon">➗</span>
+      <div class="game-name" data-i="math">מתמטיקה</div>
+      <div class="game-desc" data-i="mathD">תרגול חשבון מהיר</div>
+    </a>
+    <a class="game-card" href="edunest-hub.html?tool=english">
+      <span class="game-icon">🔤</span>
+      <div class="game-name" data-i="english">אנגלית</div>
+      <div class="game-desc" data-i="englishD">אוצר מילים לפי נושאים</div>
+    </a>
+    <a class="game-card" href="edunest-hub2.html?tool=geometry">
+      <span class="game-icon">📐</span>
+      <div class="game-name" data-i="geometry">גאומטריה</div>
+      <div class="game-desc" data-i="geometryD">שטח והיקף</div>
+    </a>
+    <a class="game-card" href="edunest-hub2.html?tool=sequence">
+      <span class="game-icon">🔢</span>
+      <div class="game-name" data-i="sequence">סדרות</div>
+      <div class="game-desc" data-i="sequenceD">מצא את החוקיות</div>
+    </a>
+    <a class="game-card" href="edunest-hub2.html?tool=time">
+      <span class="game-icon">🕐</span>
+      <div class="game-name" data-i="time">שעון</div>
+      <div class="game-desc" data-i="timeD">לימוד קריאת שעון</div>
+    </a>
+    <a class="game-card" href="edunest-hub2.html?tool=anagram">
+      <span class="game-icon">🔀</span>
+      <div class="game-name" data-i="anagram">אנגרמות</div>
+      <div class="game-desc" data-i="anagramD">סדר את האותיות</div>
+    </a>
+  </div>
+
+  <div class="sec-title" data-i="secWorld">🌍 עולם וידע</div>
+  <div class="games-grid">
+    <a class="game-card" href="edunest-hub.html?tool=flags">
+      <span class="game-icon">🚩</span>
+      <div class="game-name" data-i="flags">דגלים</div>
+      <div class="game-desc" data-i="flagsD">זהה מדינות ודגלים</div>
+    </a>
+    <a class="game-card" href="edunest-hub2.html?tool=planets">
+      <span class="game-icon">🪐</span>
+      <div class="game-name" data-i="planets">כוכבי לכת</div>
+      <div class="game-desc" data-i="planetsD">מערכת השמש</div>
+    </a>
+    <a class="game-card" href="edunest-hub.html?tool=periodic">
+      <span class="game-icon">🧪</span>
+      <div class="game-name" data-i="periodic">טבלה מחזורית</div>
+      <div class="game-desc" data-i="periodicD">יסודות כימיים</div>
+    </a>
+    <a class="game-card" href="edunest-hub.html?tool=calendar">
+      <span class="game-icon">📅</span>
+      <div class="game-name" data-i="calendar">לוח שנה</div>
+      <div class="game-desc" data-i="calendarD">ימים וחודשים</div>
+    </a>
+    <a class="game-card" href="edunest-hub2.html?tool=proverbs">
+      <span class="game-icon">💬</span>
+      <div class="game-name" data-i="proverbs">פתגמים</div>
+      <div class="game-desc" data-i="proverbsD">השלם את הפתגם</div>
+    </a>
+  </div>
+</div>
+
+<div class="modal-bg" id="aboutModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()" data-i="close">סגור ✕</button>
+    <div class="modal-title" data-i="aboutT">אודות</div>
+    <p data-i="aboutP1">אוסף לימוד — 11 כלים ומשחקים לימודיים במקום אחד.</p>
+    <p data-i="aboutP2">חלק מ-AppNest — החנות של ברק אפללו. כל כלי נפתח בלחיצה אחת.</p>
+  </div>
+</div>
+
+<script>
+const T={
+  he:{title:'אוסף לימוד',sub:'11 כלים ומשחקים לימודיים',secBasic:'✏️ יסודות',secWorld:'🌍 עולם וידע',math:'מתמטיקה',mathD:'תרגול חשבון מהיר',english:'אנגלית',englishD:'אוצר מילים לפי נושאים',geometry:'גאומטריה',geometryD:'שטח והיקף',sequence:'סדרות',sequenceD:'מצא את החוקיות',time:'שעון',timeD:'לימוד קריאת שעון',anagram:'אנגרמות',anagramD:'סדר את האותיות',flags:'דגלים',flagsD:'זהה מדינות ודגלים',planets:'כוכבי לכת',planetsD:'מערכת השמש',periodic:'טבלה מחזורית',periodicD:'יסודות כימיים',calendar:'לוח שנה',calendarD:'ימים וחודשים',proverbs:'פתגמים',proverbsD:'השלם את הפתגם',close:'סגור ✕',aboutT:'אודות',aboutP1:'אוסף לימוד — 11 כלים ומשחקים לימודיים במקום אחד.',aboutP2:'חלק מ-AppNest — החנות של ברק אפללו. כל כלי נפתח בלחיצה אחת.',langN:'עברית'},
+  en:{title:'Learning Collection',sub:'11 educational tools & games',secBasic:'✏️ Basics',secWorld:'🌍 World & Knowledge',math:'Math',mathD:'Quick arithmetic practice',english:'English',englishD:'Vocabulary by topic',geometry:'Geometry',geometryD:'Area & perimeter',sequence:'Sequences',sequenceD:'Find the pattern',time:'Clock',timeD:'Learn to read time',anagram:'Anagrams',anagramD:'Unscramble letters',flags:'Flags',flagsD:'Identify countries & flags',planets:'Planets',planetsD:'The solar system',periodic:'Periodic Table',periodicD:'Chemical elements',calendar:'Calendar',calendarD:'Days & months',proverbs:'Proverbs',proverbsD:'Complete the proverb',close:'Close ✕',aboutT:'About',aboutP1:'Learning Collection — 11 educational tools & games in one place.',aboutP2:'Part of AppNest — Barak Aflalo\'s store. Each tool opens with one tap.',langN:'English'},
+  ru:{title:'Обучение',sub:'11 обучающих инструментов и игр',secBasic:'✏️ Основы',secWorld:'🌍 Мир и знания',math:'Математика',mathD:'Быстрая арифметика',english:'Английский',englishD:'Словарь по темам',geometry:'Геометрия',geometryD:'Площадь и периметр',sequence:'Последовательности',sequenceD:'Найди закономерность',time:'Часы',timeD:'Учимся определять время',anagram:'Анаграммы',anagramD:'Расставь буквы',flags:'Флаги',flagsD:'Угадай страны и флаги',planets:'Планеты',planetsD:'Солнечная система',periodic:'Таблица Менделеева',periodicD:'Химические элементы',calendar:'Календарь',calendarD:'Дни и месяцы',proverbs:'Пословицы',proverbsD:'Заверши пословицу',close:'Закрыть ✕',aboutT:'О приложении',aboutP1:'11 обучающих инструментов в одном месте.',aboutP2:'Часть AppNest — магазина Барака Афлало.',langN:'Русский'},
+  es:{title:'Colección Educativa',sub:'11 herramientas y juegos educativos',secBasic:'✏️ Básicos',secWorld:'🌍 Mundo y saber',math:'Matemáticas',mathD:'Práctica de aritmética',english:'Inglés',englishD:'Vocabulario por temas',geometry:'Geometría',geometryD:'Área y perímetro',sequence:'Secuencias',sequenceD:'Encuentra el patrón',time:'Reloj',timeD:'Aprende a leer la hora',anagram:'Anagramas',anagramD:'Ordena las letras',flags:'Banderas',flagsD:'Identifica países y banderas',planets:'Planetas',planetsD:'El sistema solar',periodic:'Tabla periódica',periodicD:'Elementos químicos',calendar:'Calendario',calendarD:'Días y meses',proverbs:'Refranes',proverbsD:'Completa el refrán',close:'Cerrar ✕',aboutT:'Acerca de',aboutP1:'11 herramientas educativas en un solo lugar.',aboutP2:'Parte de AppNest — la tienda de Barak Aflalo.',langN:'Español'},
+  ar:{title:'مجموعة التعلم',sub:'11 أداة ولعبة تعليمية',secBasic:'✏️ أساسيات',secWorld:'🌍 العالم والمعرفة',math:'رياضيات',mathD:'تدريب حساب سريع',english:'إنجليزية',englishD:'مفردات حسب الموضوع',geometry:'هندسة',geometryD:'مساحة ومحيط',sequence:'متتاليات',sequenceD:'اعثر على النمط',time:'الساعة',timeD:'تعلم قراءة الوقت',anagram:'إعادة ترتيب',anagramD:'رتب الحروف',flags:'أعلام',flagsD:'تعرف على الدول والأعلام',planets:'كواكب',planetsD:'النظام الشمسي',periodic:'الجدول الدوري',periodicD:'العناصر الكيميائية',calendar:'التقويم',calendarD:'أيام وأشهر',proverbs:'أمثال',proverbsD:'أكمل المثل',close:'إغلاق ✕',aboutT:'حول',aboutP1:'11 أداة تعليمية في مكان واحد.',aboutP2:'جزء من AppNest — متجر باراك أفلالو.',langN:'العربية'}
+};
+let curLang=localStorage.getItem('appnest_lang')||'he';
+function applyLang(){
+  const t=T[curLang];
+  document.querySelectorAll('[data-i]').forEach(el=>{const k=el.getAttribute('data-i');if(t[k])el.textContent=t[k];});
+  document.getElementById('langBtn').textContent='🌐 '+t.langN;
+  document.body.classList.toggle('ltr',curLang==='en'||curLang==='ru'||curLang==='es');
+  document.documentElement.lang=curLang;
+}
+function toggleLang(){document.getElementById('langDrop').classList.toggle('open');}
+function setLang(l){curLang=l;localStorage.setItem('appnest_lang',l);document.getElementById('langDrop').classList.remove('open');applyLang();}
+document.addEventListener('click',e=>{if(!e.target.closest('.hbtns'))document.getElementById('langDrop').classList.remove('open');});
+function toggleDay(){document.body.classList.toggle('day');localStorage.setItem('appnest_day',document.body.classList.contains('day')?'1':'0');document.getElementById('dayBtn').textContent=document.body.classList.contains('day')?'🌙':'☀️';}
+if(localStorage.getItem('appnest_day')==='1'){document.body.classList.add('day');document.getElementById('dayBtn').textContent='🌙';}
+function openModal(){document.getElementById('aboutModal').classList.add('open');}
+function closeModal(){document.getElementById('aboutModal').classList.remove('open');}
+document.getElementById('aboutModal').addEventListener('click',e=>{if(e.target.id==='aboutModal')closeModal();});
+applyLang();
+</script>
+</body>
+</html>
