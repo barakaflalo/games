@@ -1,0 +1,1822 @@
+<!DOCTYPE html>
+<html lang="he">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Kangaroo Crossing 3D</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --neon: #ffcf5c;
+    --neon-dim: #b8862f;
+    --gold: #7ee8c8;
+    --panel-bg: rgba(18, 24, 38, 0.92);
+    --danger: #ff4d4d;
+  }
+  *{ box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body{
+    margin:0; padding:0; width:100%; height:100%;
+    overflow:hidden; background:#0e1524;
+    font-family: 'Trebuchet MS','Segoe UI',system-ui,sans-serif;
+    color:#fff; user-select:none;
+  }
+  #gameCanvas{ display:block; width:100vw; height:100vh; touch-action:none; }
+
+  /* ---------- HUD ---------- */
+  #hud{
+    position:fixed; top:0; left:0; right:0;
+    display:flex; justify-content:space-around; align-items:center;
+    padding: 8px 4px;
+    background: linear-gradient(to bottom, rgba(0,0,0,0.75), rgba(0,0,0,0));
+    pointer-events:none; z-index:10;
+  }
+  .hud-item{
+    text-align:center; font-size: 10px; color:var(--neon);
+    text-shadow: 0 1px 3px rgba(0,0,0,.5);
+    line-height:1.6; font-weight:700;
+  }
+  .hud-item span{ font-size: 15px; color:#fff; text-shadow: 0 1px 3px rgba(0,0,0,.6); }
+  #livesVal{ font-size:16px; letter-spacing:2px; }
+
+  #muteBtn{
+    position:fixed; top:8px; left:8px; z-index:20;
+    width:36px; height:36px; border-radius:8px;
+    background: rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.22);
+    color: #fff; font-size:16px;
+    display:flex; align-items:center; justify-content:center;
+    -webkit-user-select:none; backdrop-filter: blur(6px);
+  }
+  #muteBtn:active{ background: rgba(255,255,255,0.22); }
+
+  #pauseBtn{
+    position:fixed; top:8px; left:52px; z-index:20;
+    width:36px; height:36px; border-radius:8px;
+    background: rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.22);
+    color: #fff; font-size:16px;
+    display:flex; align-items:center; justify-content:center;
+    -webkit-user-select:none; backdrop-filter: blur(6px);
+  }
+  #pauseBtn:active{ background: rgba(255,255,255,0.22); }
+
+  #aboutBtn{
+    position:fixed; top:8px; right:8px; z-index:60;
+    width:36px; height:36px; border-radius:8px;
+    background: rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.22);
+    color: #7ee8c8; font-size:16px;
+    display:flex; align-items:center; justify-content:center;
+    -webkit-user-select:none; backdrop-filter: blur(6px);
+  }
+  #aboutBtn:active{ background: rgba(255,255,255,0.22); }
+
+  #pauseOverlay{
+    position:fixed; inset:0; z-index:25;
+    background: rgba(6,10,20,0.55);
+    display:flex; align-items:center; justify-content:center;
+    color: #fff; font-size:22px; text-align:center; font-weight:800;
+    text-shadow:0 2px 12px rgba(0,0,0,0.6);
+    font-family: inherit;
+  }
+  #pauseOverlay.hidden{ display:none; }
+  #pauseOverlay .small{ font-size:9px; color:#9fd; margin-top:10px; }
+
+  #levelBanner{
+    position:fixed; top:32%; left:0; right:0; text-align:center;
+    font-size:24px; font-weight:800; color:#fff; text-shadow:0 3px 16px rgba(0,0,0,0.7),0 0 22px var(--gold);
+    z-index:30; pointer-events:none;
+  }
+  #levelBanner.hidden{ display:none; }
+  #levelBanner.show{ animation: bannerPop 1.6s ease-out forwards; }
+  @keyframes bannerPop{
+    0%{ opacity:0; transform: scale(0.5) translateY(20px); }
+    18%{ opacity:1; transform: scale(1.15) translateY(0); }
+    30%{ transform: scale(1); }
+    78%{ opacity:1; }
+    100%{ opacity:0; transform: scale(1) translateY(-14px); }
+  }
+
+  #timeVal.warning{
+    color: var(--danger) !important;
+    text-shadow: 0 0 8px var(--danger) !important;
+    animation: timeFlash 0.5s infinite alternate;
+  }
+  @keyframes timeFlash{
+    from{ opacity:1; }
+    to{ opacity:0.25; }
+  }
+
+  #playerScores{
+    position:fixed; top:50px; left:0; right:0; text-align:center;
+    font-size:10px; color:var(--gold); text-shadow:0 0 6px var(--gold);
+    pointer-events:none; z-index:10; display:none;
+  }
+  #playerScores .active{ color:#fff; text-shadow:0 0 8px var(--neon); }
+
+  /* ---------- Touch controls ---------- */
+  #touchControls{
+    position:fixed; bottom: 18px; right: 18px;
+    display:grid;
+    grid-template-areas: ". up ." "left down right";
+    grid-template-columns: 58px 58px 58px;
+    grid-template-rows: 58px 58px;
+    gap:8px; z-index:15;
+  }
+  .ctrl{
+    width:60px; height:60px;
+    background: rgba(255,255,255,0.10);
+    border: 1px solid rgba(255,255,255,0.28);
+    border-radius: 16px;
+    color: #fff;
+    font-size: 24px;
+    display:flex; align-items:center; justify-content:center;
+    backdrop-filter: blur(2px);
+    -webkit-user-select:none;
+  }
+  .ctrl:active{ background: rgba(255,255,255,0.28); }
+  #btnUp{ grid-area: up; }
+  #btnDown{ grid-area: down; }
+  #btnLeft{ grid-area: left; }
+  #btnRight{ grid-area: right; }
+
+  /* ---------- Overlays ---------- */
+  .overlay{
+    position:fixed; inset:0; z-index:50;
+    display:flex; align-items:center; justify-content:center;
+    background: rgba(2,4,10,0.78);
+  }
+  .overlay.hidden{ display:none; }
+  #aboutOverlay{ z-index:55; }
+  .panel{
+    background: var(--panel-bg);
+    border: 1px solid rgba(255,255,255,0.14);
+    box-shadow: 0 18px 50px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.08);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 26px 28px;
+    max-width: 420px;
+    width: 90%;
+    max-height: 88vh;
+    overflow-y:auto;
+    text-align:center;
+    direction: rtl;
+  }
+  .panel h1{
+    color:#fff; font-size: 22px; margin: 0 0 14px 0; font-weight:800;
+    letter-spacing:0.5px; text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+  }
+  .panel p{ font-size: 13px; line-height:1.7; color:#e8edf6; margin:9px 0; }
+  .panel .small{ font-size:11px; color:#aeb9cc; opacity:0.9; line-height:1.6; }
+
+  .lb-table{
+    width:100%; border-collapse: collapse; margin: 12px 0;
+    font-size: 10px;
+  }
+  .lb-table.rtl{ direction: rtl; }
+  .lb-table.ltr{ direction: ltr; }
+  .lb-table th, .lb-table td{
+    padding: 6px 4px; border-bottom: 1px solid rgba(255,255,255,0.10);
+    color:#fff;
+  }
+  .lb-table th{ color:var(--gold); text-shadow:none; font-weight:700; }
+  .lb-table tr:nth-child(odd) td{ background: rgba(255,255,255,0.03); }
+  .lb-table tr.highlight td{
+    background: rgba(126,232,200,0.16); color:var(--gold);
+  }
+
+  .lang-row{ display:flex; gap:6px; justify-content:center; margin: 0 0 10px; direction:ltr; }
+  .lang-btn{
+    font-size:18px; background:rgba(255,255,255,0.05); border:1px solid transparent;
+    border-radius:8px; padding:3px 7px; cursor:pointer; opacity:0.5;
+    transition: all 0.2s; line-height:1.3;
+  }
+  .lang-btn.sel{ opacity:1; border-color:var(--neon); background:rgba(255,207,92,0.16); }
+
+  .arcade-btn{
+    font-family: inherit; font-size: 14px; font-weight:700; cursor:pointer;
+    background: linear-gradient(135deg,#ffcf5c,#ff9d5c); color:#3a2405;
+    border:none; border-radius:12px; padding: 13px 22px;
+    margin-top: 10px; box-shadow: 0 8px 20px rgba(255,157,92,0.35);
+    text-shadow:none; text-decoration:none; display:inline-block;
+    transition: transform .12s, box-shadow .12s;
+  }
+  .arcade-btn:active{ transform: scale(0.97); }
+  .arcade-btn.secondary{
+    background: rgba(255,255,255,0.06); color: #e8edf6;
+    border: 1px solid rgba(255,255,255,0.22);
+    box-shadow: none;
+  }
+
+  .btnRow{ display:flex; gap:10px; justify-content:center; flex-wrap:wrap; }
+
+  .playerSelect{ display:flex; gap:10px; justify-content:center; margin: 10px 0; }
+  .select-btn{
+    font-family: inherit; font-size: 12px; font-weight:600; cursor:pointer;
+    background: rgba(255,255,255,0.05); color: #cfd8e6;
+    border: 1px solid rgba(255,255,255,0.15); border-radius:12px;
+    padding: 11px 16px; opacity:0.8;
+  }
+  .select-btn.active{
+    opacity:1; border-color: var(--neon); color:#fff;
+    box-shadow: 0 6px 16px rgba(255,207,92,0.25);
+    background: rgba(255,207,92,0.14);
+  }
+
+  #nameInput{
+    font-family: inherit; font-size:20px; font-weight:800;
+    width: 110px; text-align:center; letter-spacing:8px;
+    text-transform:uppercase; padding:10px 4px;
+    background:rgba(0,0,0,0.35); color:#fff; border:1px solid var(--neon);
+    border-radius:10px; margin: 8px 0;
+  }
+  #nameEntry.hidden, #restartBtn.hidden{ display:none; }
+  #finalScore{ margin: 8px 0; }
+  #finalScore .gold{ color:var(--gold); text-shadow:0 0 8px var(--gold); }
+</style>
+</head>
+<body>
+
+<canvas id="gameCanvas"></canvas>
+
+<button id="muteBtn" data-i-title="muteTooltip" title="השתק / בטל השתקה">🔊</button>
+<button id="pauseBtn" data-i-title="pauseTooltip" title="הפסקה">⏸</button>
+<button id="aboutBtn" data-i-title="aboutTooltip" title="אודות AppNest">ℹ️</button>
+
+<div id="pauseOverlay" class="hidden">
+  <div><span data-i="pausedLabel">⏸ מושהה</span><br><span class="small" data-i="pausedHint">לחץ כדי להמשיך</span></div>
+</div>
+
+<div id="levelBanner" class="hidden"></div>
+
+<!-- HUD -->
+<div id="hud">
+  <div class="hud-item"><span data-i="hudScore">ניקוד</span><br><span id="scoreVal">0</span></div>
+  <div class="hud-item"><span data-i="hudLevel">שלב</span><br><span id="levelVal">1/3</span></div>
+  <div class="hud-item"><span data-i="hudTime">זמן</span><br><span id="timeVal">45</span></div>
+  <div class="hud-item"><span data-i="hudLives">חיים</span><br><span id="livesVal">🦘🦘🦘</span></div>
+</div>
+<div id="playerScores"></div>
+
+<!-- Touch controls -->
+<div id="touchControls">
+  <button class="ctrl" id="btnUp">▲</button>
+  <button class="ctrl" id="btnLeft">◀</button>
+  <button class="ctrl" id="btnDown">▼</button>
+  <button class="ctrl" id="btnRight">▶</button>
+</div>
+
+<!-- Start screen -->
+<div id="startScreen" class="overlay">
+  <div class="panel">
+    <h1>🦘 Kangaroo Crossing 3D 🦘</h1>
+    <div class="lang-row" id="langRow">
+      <button class="lang-btn" data-lang="he">🇮🇱</button>
+      <button class="lang-btn" data-lang="en">🇬🇧</button>
+      <button class="lang-btn" data-lang="ru">🇷🇺</button>
+      <button class="lang-btn" data-lang="es">🇪🇸</button>
+      <button class="lang-btn" data-lang="ar">🇸🇦</button>
+    </div>
+    <p data-i="introText">
+      עזרו לצפרדע לחצות את הכביש המהיר ולשחות על גבי בולי עץ וצבים בנהר,
+      עד שתגיע לאחת מ-5 נקודות היעד בראש המסך. 3 שלבים, כל שלב קשה מהקודם!
+    </p>
+    <p class="small" data-i="controlsText">
+      שליטה: מקשי החצים במחשב, או הכפתורים השקופים על המסך בנייד.<br>
+      פגיעה ברכב או טביעה במים = אובדן חיים. יש 3 חיים בלבד!
+    </p>
+    <p class="small" data-i="bonusText">💎 על הלוח יופיעו מדי פעם בונוסים זוהרים: צהוב = +100 נקודות, כחול = +5 שניות. בשלב 3 חלק מבולי העץ צוללים - שימו לב לאור הכתום המהבהב!</p>
+    <p class="small" data-i="landscapeTip">📱 טיפ: מומלץ לשחק במצב לרוחב (Landscape) לתצוגה רחבה יותר.</p>
+    <div class="playerSelect">
+      <button class="select-btn active" id="p1Btn" data-i="onePlayerBtn">🐸 שחקן אחד</button>
+      <button class="select-btn" id="p2Btn" data-i="twoPlayerBtn">🐸🐸 שני שחקנים</button>
+    </div>
+    <div id="startLeaderboard"></div>
+    <button class="arcade-btn" id="startBtn" data-i="startBtn">▶ התחל משחק</button>
+  </div>
+</div>
+
+<!-- Turn transition screen (2 players) -->
+<div id="turnScreen" class="overlay hidden">
+  <div class="panel">
+    <h1 id="turnTitle">תור לשחקן 2!</h1>
+    <p data-i="turnInstructions">הניחו לשחקן הבא לקחת שליטה, ואז לחצו "המשך".</p>
+    <button class="arcade-btn" id="turnContinueBtn" data-i="continueBtn">▶ המשך</button>
+  </div>
+</div>
+
+<!-- Game over screen -->
+<div id="gameOverScreen" class="overlay hidden">
+  <div class="panel">
+    <h1 id="gameOverTitle" data-i="gameOverTitle">תם המשחק</h1>
+    <div id="finalScore"></div>
+    <div id="nameEntry" class="hidden">
+      <p id="nameEntryLabel">🏆 שיא חדש! הכנס שם (3 אותיות):</p>
+      <input id="nameInput" maxlength="3" autocomplete="off">
+      <br>
+      <button class="arcade-btn" id="saveScoreBtn" data-i="saveScoreBtn">שמור שיא</button>
+    </div>
+    <div id="gameOverLeaderboard"></div>
+    <div class="btnRow">
+      <button class="arcade-btn hidden" id="restartBtn" data-i="restartBtn">🔄 שחק שוב</button>
+      <button class="arcade-btn secondary" id="homeBtn" data-i="homeBtn">🏠 מסך הבית</button>
+    </div>
+  </div>
+</div>
+
+<!-- About screen -->
+<div id="aboutOverlay" class="overlay hidden">
+  <div class="panel">
+    <h1>🦘 Kangaroo Crossing 3D</h1>
+    <p data-i="aboutDesc">המשחק נוצר על ידי ברק אפללו במסגרת AppNest — קן האפליקציות.</p>
+    <p class="small" data-i="aboutCopyright">© 2026 · כל הזכויות שמורות לברק אפללו</p>
+    <div class="btnRow">
+      <a class="arcade-btn" href="https://barakaflalo.github.io/appnest" target="_blank" rel="noopener" data-i="aboutLink">🪺 AppNest — עוד משחקים בחינם</a>
+      <button class="arcade-btn secondary" id="aboutCloseBtn" data-i="closeBtn">סגור</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+<script>
+(function(){
+  "use strict";
+
+  /* =========================================================
+     קבועים כלליים של הלוח (Grid)
+     ========================================================= */
+  const CELL = 1;
+  const COLS = 13;            // עמודות 0..12, מרכז = 6
+  const ROWS = 13;             // שורות 0..12
+  const HALF_COLS = (COLS - 1) / 2; // 6
+  const BOARD_EDGE = HALF_COLS + 0.5; // 6.5 - גבול הנהר לפני "טביעה בקצה"
+
+  // סוג כל שורה: 0=התחלה, 1-5=כביש, 6=אי-תיווך, 7-11=נהר, 12=יעד
+  const ROW_TYPES = ['start','road','road','road','road','road','median','river','river','river','river','river','goal'];
+  const GOAL_COLS = [1, 3, 6, 9, 11]; // 5 נקודות יעד
+
+  const JUMP_DURATION = 0.16;  // שניות לקפיצה אחת
+  const JUMP_HEIGHT = 0.7;
+  const FROG_HALF = 0.32;
+  const DYING_DURATION = 0.5;
+
+  /* =========================================================
+     i18n - תרגומים ל-5 שפות
+     ========================================================= */
+  const T = {
+    he:{
+      muteTooltip:"השתק / בטל השתקה",pauseTooltip:"הפסקה",aboutTooltip:"אודות AppNest",
+      pausedLabel:"⏸ מושהה",pausedHint:"לחץ כדי להמשיך",
+      hudScore:"ניקוד",hudLevel:"שלב",hudTime:"זמן",hudLives:"חיים",
+      bonusTimeMsg:"⏱️ +5 שניות!",bonusScoreMsg:"💰 +100 נקודות!",
+      introText:"עזרו לקנגורו לחצות את השדרה הסואנת מלאת חיות דוהרות, ולשוט על גבי קאנו וגלשני סאפ בנהר, עד שיגיע לאחת מ-5 נקודות היעד בראש המסך. 3 שלבים, כל שלב קשה מהקודם!",
+      controlsText:"שליטה: מקשי החצים במחשב, או הכפתורים השקופים על המסך בנייד.<br>פגיעה בחיה דוהרת או טביעה במים = אובדן חיים. יש 3 חיים בלבד!",
+      bonusText:"💎 על הלוח יופיעו מדי פעם בונוסים זוהרים: צהוב = +100 נקודות, כחול = +5 שניות. בשלב 3 חלק מגלשני הסאפ שוקעים במים - שימו לב לאור הכתום המהבהב!",
+      landscapeTip:"📱 טיפ: מומלץ לשחק במצב לרוחב (Landscape) לתצוגה רחבה יותר.",
+      onePlayerBtn:"🦘 שחקן אחד",twoPlayerBtn:"🦘🦘 שני שחקנים",startBtn:"▶ התחל משחק",
+      player:"שחקן",turnPrefix:"תור לשחקן ",turnSuffix:"!",
+      turnInstructions:'הניחו לשחקן הבא לקחת שליטה, ואז לחצו "המשך".',
+      continueBtn:"▶ המשך",gameOverTitle:"תם המשחק",victoryMsg:"🏆 ניצחת את המשחק!",
+      enterNameSuffix:"הכנס שם (3 אותיות):",
+      newHighScoreGeneric:"🏆 שיא חדש! ",
+      newHighScorePlayerPrefix:"🏆 שיא חדש לשחקן ",newHighScorePlayerSuffix:"! ",
+      saveScoreBtn:"שמור שיא",restartBtn:"🔄 שחק שוב",homeBtn:"🏠 מסך הבית",
+      aboutDesc:"המשחק נוצר על ידי ברק אפללו במסגרת AppNest — קן האפליקציות.",
+      aboutCopyright:"© 2026 · כל הזכויות שמורות לברק אפללו",
+      aboutLink:"🪺 AppNest — עוד משחקים בחינם",closeBtn:"סגור",
+      levelUpPrefix:"🎉 רמה ",
+      noScores:"אין שיאים עדיין - תהיה הראשון!",
+      thRank:"#",thName:"שם",
+      finalResultsTitle:"🏁 תוצאות סופיות",winSuffix:" מנצח!",tieMsg:"🤝 שוויון!",
+      yourFinalScorePrefix:"הניקוד הסופי שלך: "
+    },
+    en:{
+      muteTooltip:"Mute / Unmute",pauseTooltip:"Pause",aboutTooltip:"About AppNest",
+      pausedLabel:"⏸ Paused",pausedHint:"Tap to continue",
+      hudScore:"Score",hudLevel:"Level",hudTime:"Time",hudLives:"Lives",
+      bonusTimeMsg:"⏱️ +5 seconds!",bonusScoreMsg:"💰 +100 points!",
+      introText:"Help the kangaroo cross a busy avenue full of stampeding animals, then ride canoes and SUP paddleboards across the river, until it reaches one of the 5 goal pads at the top of the screen. 3 levels, each harder than the last!",
+      controlsText:"Controls: arrow keys on computer, or the transparent on-screen buttons on mobile.<br>Getting run over by an animal or drowning in water = losing a life. You only have 3 lives!",
+      bonusText:"💎 Glowing bonuses occasionally appear on the board: yellow = +100 points, blue = +5 seconds. In level 3 some paddleboards sink underwater - watch for the flashing orange light!",
+      landscapeTip:"📱 Tip: it's recommended to play in landscape mode for a wider view.",
+      onePlayerBtn:"🦘 One Player",twoPlayerBtn:"🦘🦘 Two Players",startBtn:"▶ Start Game",
+      player:"Player",turnPrefix:"Player ",turnSuffix:"'s turn!",
+      turnInstructions:'Let the next player take control, then press "Continue".',
+      continueBtn:"▶ Continue",gameOverTitle:"Game Over",victoryMsg:"🏆 You won the game!",
+      enterNameSuffix:"Enter name (3 letters):",
+      newHighScoreGeneric:"🏆 New high score! ",
+      newHighScorePlayerPrefix:"🏆 New high score for Player ",newHighScorePlayerSuffix:"! ",
+      saveScoreBtn:"Save Score",restartBtn:"🔄 Play Again",homeBtn:"🏠 Home Screen",
+      aboutDesc:"Created by Barak Aflalo as part of AppNest — the App Nest.",
+      aboutCopyright:"© 2026 · All rights reserved to Barak Aflalo",
+      aboutLink:"🪺 AppNest — More free games",closeBtn:"Close",
+      levelUpPrefix:"🎉 Level ",
+      noScores:"No scores yet - be the first!",
+      thRank:"#",thName:"Name",
+      finalResultsTitle:"🏁 Final Results",winSuffix:" wins!",tieMsg:"🤝 Tie!",
+      yourFinalScorePrefix:"Your final score: "
+    },
+    ru:{
+      muteTooltip:"Звук вкл/выкл",pauseTooltip:"Пауза",aboutTooltip:"О AppNest",
+      pausedLabel:"⏸ Пауза",pausedHint:"Нажмите, чтобы продолжить",
+      hudScore:"Очки",hudLevel:"Уровень",hudTime:"Время",hudLives:"Жизни",
+      bonusTimeMsg:"⏱️ +5 секунд!",bonusScoreMsg:"💰 +100 очков!",
+      introText:"Помогите кенгуру перейти оживлённую улицу, полную мчащихся животных, и переплыть реку на каноэ и SUP-досках, пока он не достигнет одной из 5 целевых площадок наверху экрана. 3 уровня, каждый сложнее предыдущего!",
+      controlsText:"Управление: клавиши со стрелками на компьютере, или прозрачные кнопки на экране в мобильной версии.<br>Столкновение с животным или утопление в воде = потеря жизни. У вас всего 3 жизни!",
+      bonusText:"💎 На поле периодически появляются светящиеся бонусы: жёлтый = +100 очков, синий = +5 секунд. На уровне 3 некоторые доски уходят под воду - следите за мигающим оранжевым светом!",
+      landscapeTip:"📱 Совет: рекомендуется играть в горизонтальном режиме для более широкого обзора.",
+      onePlayerBtn:"🦘 Один игрок",twoPlayerBtn:"🦘🦘 Два игрока",startBtn:"▶ Начать игру",
+      player:"Игрок",turnPrefix:"Ход игрока ",turnSuffix:"!",
+      turnInstructions:'Передайте управление следующему игроку, затем нажмите "Продолжить".',
+      continueBtn:"▶ Продолжить",gameOverTitle:"Игра окончена",victoryMsg:"🏆 Вы выиграли игру!",
+      enterNameSuffix:"Введите имя (3 буквы):",
+      newHighScoreGeneric:"🏆 Новый рекорд! ",
+      newHighScorePlayerPrefix:"🏆 Новый рекорд игрока ",newHighScorePlayerSuffix:"! ",
+      saveScoreBtn:"Сохранить рекорд",restartBtn:"🔄 Играть снова",homeBtn:"🏠 Главный экран",
+      aboutDesc:"Создано Бараком Афлало в рамках AppNest — гнезда приложений.",
+      aboutCopyright:"© 2026 · Все права защищены, Барак Афлало",
+      aboutLink:"🪺 AppNest — больше бесплатных игр",closeBtn:"Закрыть",
+      levelUpPrefix:"🎉 Уровень ",
+      noScores:"Пока нет рекордов - станьте первым!",
+      thRank:"#",thName:"Имя",
+      finalResultsTitle:"🏁 Итоговые результаты",winSuffix:" победил!",tieMsg:"🤝 Ничья!",
+      yourFinalScorePrefix:"Ваш итоговый счёт: "
+    },
+    es:{
+      muteTooltip:"Silenciar / Activar sonido",pauseTooltip:"Pausa",aboutTooltip:"Acerca de AppNest",
+      pausedLabel:"⏸ Pausado",pausedHint:"Toca para continuar",
+      hudScore:"Puntos",hudLevel:"Nivel",hudTime:"Tiempo",hudLives:"Vidas",
+      bonusTimeMsg:"⏱️ +5 segundos!",bonusScoreMsg:"💰 +100 puntos!",
+      introText:"Ayuda al canguro a cruzar una avenida llena de animales al galope, y a navegar sobre canoas y tablas de SUP en el río, hasta llegar a una de las 5 metas en la parte superior de la pantalla. ¡3 niveles, cada uno más difícil que el anterior!",
+      controlsText:"Controles: teclas de flecha en la computadora, o los botones transparentes en pantalla en móvil.<br>Que te atropelle un animal o ahogarte en el agua = pierdes una vida. ¡Solo tienes 3 vidas!",
+      bonusText:"💎 En el tablero aparecen ocasionalmente bonus brillantes: amarillo = +100 puntos, azul = +5 segundos. En el nivel 3 algunas tablas se hunden bajo el agua - ¡presta atención a la luz naranja parpadeante!",
+      landscapeTip:"📱 Consejo: se recomienda jugar en modo horizontal para una vista más amplia.",
+      onePlayerBtn:"🦘 Un jugador",twoPlayerBtn:"🦘🦘 Dos jugadores",startBtn:"▶ Iniciar juego",
+      player:"Jugador",turnPrefix:"¡Turno del jugador ",turnSuffix:"!",
+      turnInstructions:'Deja que el siguiente jugador tome el control y luego pulsa "Continuar".',
+      continueBtn:"▶ Continuar",gameOverTitle:"Fin del juego",victoryMsg:"🏆 ¡Ganaste el juego!",
+      enterNameSuffix:"Ingresa tu nombre (3 letras):",
+      newHighScoreGeneric:"🏆 ¡Nuevo récord! ",
+      newHighScorePlayerPrefix:"🏆 ¡Nuevo récord del Jugador ",newHighScorePlayerSuffix:"! ",
+      saveScoreBtn:"Guardar puntuación",restartBtn:"🔄 Jugar de nuevo",homeBtn:"🏠 Pantalla principal",
+      aboutDesc:"Creado por Barak Aflalo como parte de AppNest — el nido de apps.",
+      aboutCopyright:"© 2026 · Todos los derechos reservados a Barak Aflalo",
+      aboutLink:"🪺 AppNest — más juegos gratis",closeBtn:"Cerrar",
+      levelUpPrefix:"🎉 Nivel ",
+      noScores:"Aún no hay puntuaciones - ¡sé el primero!",
+      thRank:"#",thName:"Nombre",
+      finalResultsTitle:"🏁 Resultados finales",winSuffix:" gana!",tieMsg:"🤝 ¡Empate!",
+      yourFinalScorePrefix:"Tu puntuación final: "
+    },
+    ar:{
+      muteTooltip:"كتم / إلغاء الكتم",pauseTooltip:"إيقاف مؤقت",aboutTooltip:"حول AppNest",
+      pausedLabel:"⏸ متوقف",pausedHint:"اضغط للمتابعة",
+      hudScore:"النتيجة",hudLevel:"المستوى",hudTime:"الوقت",hudLives:"الأرواح",
+      bonusTimeMsg:"⏱️ +5 ثوانٍ!",bonusScoreMsg:"💰 +100 نقطة!",
+      introText:"ساعد الكنغر على عبور شارع مزدحم مليء بالحيوانات المندفعة، والإبحار على الزوارق وألواح التجديف في النهر، حتى يصل إلى أحد المواقع الخمسة في أعلى الشاشة. 3 مراحل، كل مرحلة أصعب من السابقة!",
+      controlsText:"التحكم: مفاتيح الأسهم على الكمبيوتر، أو الأزرار الشفافة على الشاشة في الهاتف.<br>أن يدهسك حيوان أو الغرق في الماء = خسارة حياة. لديك 3 أرواح فقط!",
+      bonusText:"💎 تظهر مكافآت متوهجة من وقت لآخر على اللوحة: الأصفر = +100 نقطة، الأزرق = +5 ثوانٍ. في المرحلة 3 بعض الألواح تغرق تحت الماء - انتبه للضوء البرتقالي المتقطع!",
+      landscapeTip:"📱 نصيحة: يُفضّل اللعب في الوضع الأفقي للحصول على عرض أوسع.",
+      onePlayerBtn:"🦘 لاعب واحد",twoPlayerBtn:"🦘🦘 لاعبان",startBtn:"▶ بدء اللعبة",
+      player:"اللاعب",turnPrefix:"دور اللاعب ",turnSuffix:"!",
+      turnInstructions:'دع اللاعب التالي يتحكم، ثم اضغط على "متابعة".',
+      continueBtn:"▶ متابعة",gameOverTitle:"انتهت اللعبة",victoryMsg:"🏆 لقد فزت باللعبة!",
+      enterNameSuffix:"أدخل الاسم (3 أحرف):",
+      newHighScoreGeneric:"🏆 رقم قياسي جديد! ",
+      newHighScorePlayerPrefix:"🏆 رقم قياسي جديد للاعب ",newHighScorePlayerSuffix:"! ",
+      saveScoreBtn:"حفظ النتيجة",restartBtn:"🔄 العب مرة أخرى",homeBtn:"🏠 الشاشة الرئيسية",
+      aboutDesc:"صنع بواسطة باراك أفللو كجزء من AppNest — عش التطبيقات.",
+      aboutCopyright:"© 2026 · جميع الحقوق محفوظة لباراك أفللو",
+      aboutLink:"🪺 AppNest — ألعاب مجانية أخرى",closeBtn:"إغلاق",
+      levelUpPrefix:"🎉 المستوى ",
+      noScores:"لا توجد نتائج بعد - كن الأول!",
+      thRank:"#",thName:"الاسم",
+      finalResultsTitle:"🏁 النتائج النهائية",winSuffix:" فاز!",tieMsg:"🤝 تعادل!",
+      yourFinalScorePrefix:"نتيجتك النهائية: "
+    }
+  };
+  let curLang = localStorage.getItem('kangarooLang') || 'he';
+  function isRtl(lang){ return lang==='he' || lang==='ar'; }
+  function pL(n){ return T[curLang].player+' '+n; }
+  function applyLang(lang){
+    curLang = lang;
+    localStorage.setItem('kangarooLang', lang);
+    document.documentElement.lang = lang;
+    var tt = T[lang];
+    document.querySelectorAll('[data-i]').forEach(function(el){
+      var k = el.getAttribute('data-i');
+      if(tt[k]===undefined) return;
+      if(el.tagName==='INPUT') el.placeholder = tt[k];
+      else el.innerHTML = tt[k];
+    });
+    document.querySelectorAll('[data-i-title]').forEach(function(el){
+      var k = el.getAttribute('data-i-title');
+      if(tt[k]!==undefined) el.title = tt[k];
+    });
+    document.querySelectorAll('.lang-btn').forEach(function(b){
+      b.classList.toggle('sel', b.getAttribute('data-lang')===lang);
+    });
+    renderLeaderboard(document.getElementById('startLeaderboard'), -1);
+    if(!document.getElementById('gameOverScreen').classList.contains('hidden')){
+      renderLeaderboard(document.getElementById('gameOverLeaderboard'), -1);
+    }
+    updateHUD();
+  }
+
+  function colToX(col){ return (col - HALF_COLS) * CELL; }
+  function rowToZ(row){ return (HALF_COLS - row) * CELL; }
+  function getRowType(row){ return ROW_TYPES[row]; }
+  function clamp(v, lo, hi){ return Math.max(lo, Math.min(hi, v)); }
+
+  /* =========================================================
+     הגדרות 3 שלבים - כל שלב קשה יותר מהקודם.
+     רמה 1 קלה בכוונה (איטית, רפסודות גדולות) כדי שהמשחק
+     יהיה נגיש, ורמה 3 קרובה לקושי המקורי.
+     ========================================================= */
+  const CAR_COLORS   = [0xe53935,0xff7043,0xfdd835,0x29b6f6,0xab47bc,0x66bb6a,0xec407a,0x9ccc65];
+  const TRUCK_COLORS = [0x42a5f5,0x8d6e63,0xff8a65,0x90a4ae];
+
+  const LEVEL_CONFIGS = [
+    { // רמה 1 - קלה
+      timeLimit: 45,
+      roadLanes: [
+        { row:1, dir: 1, speed:0.9, type:'car',   count:2, halfWidth:0.45, colors:CAR_COLORS },
+        { row:2, dir:-1, speed:0.8, type:'truck', count:2, halfWidth:0.9,  colors:TRUCK_COLORS },
+        { row:3, dir: 1, speed:1.1, type:'car',   count:2, halfWidth:0.45, colors:CAR_COLORS },
+        { row:4, dir:-1, speed:1.0, type:'truck', count:1, halfWidth:0.9,  colors:TRUCK_COLORS },
+        { row:5, dir: 1, speed:1.2, type:'car',   count:2, halfWidth:0.45, colors:CAR_COLORS }
+      ],
+      riverLanes: [
+        { row:7,  dir:-1, speed:0.7, type:'log',    count:2, halfWidth:2.0, dive:false },
+        { row:8,  dir: 1, speed:0.6, type:'turtle', count:2, halfWidth:1.3, dive:false },
+        { row:9,  dir:-1, speed:0.9, type:'log',    count:2, halfWidth:1.8, dive:false },
+        { row:10, dir: 1, speed:0.7, type:'turtle', count:2, halfWidth:1.4, dive:false },
+        { row:11, dir:-1, speed:0.8, type:'log',    count:2, halfWidth:2.2, dive:false }
+      ]
+    },
+    { // רמה 2 - בינונית
+      timeLimit: 38,
+      roadLanes: [
+        { row:1, dir: 1, speed:1.4, type:'car',   count:3, halfWidth:0.45, colors:CAR_COLORS },
+        { row:2, dir:-1, speed:1.2, type:'truck', count:2, halfWidth:0.9,  colors:TRUCK_COLORS },
+        { row:3, dir: 1, speed:1.8, type:'car',   count:4, halfWidth:0.45, colors:CAR_COLORS },
+        { row:4, dir:-1, speed:1.5, type:'truck', count:2, halfWidth:0.9,  colors:TRUCK_COLORS },
+        { row:5, dir: 1, speed:2.0, type:'car',   count:3, halfWidth:0.45, colors:CAR_COLORS }
+      ],
+      riverLanes: [
+        { row:7,  dir:-1, speed:1.0, type:'log',    count:2, halfWidth:1.7, dive:false },
+        { row:8,  dir: 1, speed:0.8, type:'turtle', count:2, halfWidth:1.2, dive:true, diveThreshold:-0.75 },
+        { row:9,  dir:-1, speed:1.3, type:'log',    count:3, halfWidth:1.3, dive:false },
+        { row:10, dir: 1, speed:0.9, type:'turtle', count:2, halfWidth:1.3, dive:true, diveThreshold:-0.75 },
+        { row:11, dir:-1, speed:1.1, type:'log',    count:2, halfWidth:2.0, dive:false }
+      ]
+    },
+    { // רמה 3 - קשה
+      timeLimit: 32,
+      roadLanes: [
+        { row:1, dir: 1, speed:1.8, type:'car',   count:4, halfWidth:0.45, colors:CAR_COLORS },
+        { row:2, dir:-1, speed:1.5, type:'truck', count:3, halfWidth:0.9,  colors:TRUCK_COLORS },
+        { row:3, dir: 1, speed:2.4, type:'car',   count:5, halfWidth:0.45, colors:CAR_COLORS },
+        { row:4, dir:-1, speed:2.0, type:'truck', count:2, halfWidth:0.9,  colors:TRUCK_COLORS },
+        { row:5, dir: 1, speed:2.8, type:'car',   count:4, halfWidth:0.45, colors:CAR_COLORS }
+      ],
+      riverLanes: [
+        { row:7,  dir:-1, speed:1.3, type:'log',    count:2, halfWidth:1.5, dive:false },
+        { row:8,  dir: 1, speed:1.0, type:'turtle', count:3, halfWidth:1.0, dive:true, diveThreshold:-0.5 },
+        { row:9,  dir:-1, speed:1.7, type:'log',    count:3, halfWidth:1.1, dive:true, diveThreshold:-0.45 },
+        { row:10, dir: 1, speed:1.1, type:'turtle', count:2, halfWidth:1.2, dive:true, diveThreshold:-0.5 },
+        { row:11, dir:-1, speed:1.5, type:'log',    count:2, halfWidth:1.8, dive:false }
+      ]
+    }
+  ];
+  const MAX_LEVEL = LEVEL_CONFIGS.length; // 3
+
+  /* =========================================================
+     מצב המשחק
+     ========================================================= */
+  let numPlayers = 1;
+  let currentPlayerIndex = 0;
+  let pendingTurnIdx = 0;
+  let players = [
+    { score:0, lives:3, finished:false, won:false },
+    { score:0, lives:3, finished:false, won:false }
+  ];
+
+  let score = 0, level = 1, lives = 3, timeLeft = LEVEL_CONFIGS[0].timeLimit;
+  let currentTimeLimit = LEVEL_CONFIGS[0].timeLimit;
+  let padsFilled = GOAL_COLS.map(()=>false);
+  let gameRunning = false;
+  let paused = false;
+  let timeWarningPlayed = false;
+  let pendingLBQueue = [];
+
+  // בונוסים מתגלגלים (Pickups) - אובייקט פעיל אחד בלבד בכל זמן נתון
+  let pickup = null;
+  let pickupSpawnTimer = 0;
+
+  const frog = {
+    row:0, col:6, x:0,
+    isJumping:false, jumpT:0,
+    fromX:0, fromZ:0, toX:0, toZ:0, toCol:6, toRow:0,
+    maxRow:0,
+    ridingRaft:null,
+    dying:false, dyingT:0, dyingReason:'crash'
+  };
+
+  /* =========================================================
+     אודיו פשוט (Web Audio, בלי קבצים חיצוניים)
+     ========================================================= */
+  let audioCtx = null;
+  let muted = false;
+  function beep(freq, duration, type, vol){
+    if(muted) return;
+    try{
+      if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = type || 'sine';
+      osc.frequency.value = freq;
+      gain.gain.value = vol || 0.15;
+      osc.connect(gain); gain.connect(audioCtx.destination);
+      osc.start();
+      gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+      osc.stop(audioCtx.currentTime + duration);
+    }catch(e){ /* תקלת אודיו - לא קריטית */ }
+  }
+
+  // רטט קצר לטלפונים נתמכים (Vibration API) - לא קריטי אם לא נתמך
+  function vibrate(pattern){
+    try{
+      if(!muted && navigator.vibrate) navigator.vibrate(pattern);
+    }catch(e){ /* לא נתמך - לא קריטי */ }
+  }
+
+  /* =========================================================
+     Three.js - הקמת סצנה
+     ========================================================= */
+  const canvas = document.getElementById('gameCanvas');
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x0e1524);
+  scene.fog = new THREE.Fog(0x121a2c, 20, 34);
+
+  // המסך נחלק לרוחב (X, ~14.5 יח' כדי להכיל את כל 13 העמודות + שוליים)
+  // ולעומק (Z, ~13.5 יח' לאחר הטיית המצלמה). כדי שכל הלוח יהיה גלוי גם
+  // בטלפון במצב לאורך (portrait) וגם לרוחב (landscape), גודל התצוגה
+  // האורתוגונלית מחושב דינמית לפי יחס הגובה-רוחב של המסך.
+  const BOARD_VISIBLE_WIDTH = 14.5;
+  const BOARD_VISIBLE_HEIGHT = 13.5;
+  function computeViewSize(a){
+    return Math.max(BOARD_VISIBLE_HEIGHT, BOARD_VISIBLE_WIDTH / a);
+  }
+  let aspect = window.innerWidth / window.innerHeight;
+  let viewSize = computeViewSize(aspect);
+  const camera = new THREE.OrthographicCamera(
+    -viewSize * aspect / 2, viewSize * aspect / 2,
+    viewSize / 2, -viewSize / 2, 0.1, 100
+  );
+  camera.position.set(0, 14, 11);
+  camera.lookAt(0, 0, 0);
+
+  const renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+  // תאורה
+  const ambient = new THREE.AmbientLight(0xcfe0ff, 0.62);
+  scene.add(ambient);
+
+  const hemi = new THREE.HemisphereLight(0xbfe0ff, 0x2a3b28, 0.5);
+  scene.add(hemi);
+
+  const sun = new THREE.DirectionalLight(0xfff2df, 1.05);
+  sun.position.set(9, 18, 11);
+  sun.castShadow = true;
+  sun.shadow.mapSize.set(2048, 2048);
+  sun.shadow.camera.left = -11;
+  sun.shadow.camera.right = 11;
+  sun.shadow.camera.top = 11;
+  sun.shadow.camera.bottom = -11;
+  sun.shadow.camera.near = 0.5;
+  sun.shadow.camera.far = 50;
+  scene.add(sun);
+
+  window.addEventListener('resize', ()=>{
+    aspect = window.innerWidth / window.innerHeight;
+    viewSize = computeViewSize(aspect);
+    camera.left = -viewSize * aspect / 2;
+    camera.right = viewSize * aspect / 2;
+    camera.top = viewSize / 2;
+    camera.bottom = -viewSize / 2;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  });
+
+  /* =========================================================
+     בניית הקרקע (כביש / נהר / דשא) - נבנית פעם אחת בלבד
+     ========================================================= */
+  function createGround(){
+    for(let row = 0; row < ROWS; row++){
+      const type = getRowType(row);
+      const z = rowToZ(row);
+      const w = COLS + 0.4;
+      if(type === 'road'){
+        // asphalt with subtle dashed lane line
+        const mat = new THREE.MeshStandardMaterial({ color: 0x3a3f47, roughness: 0.95, metalness: 0.02 });
+        const plane = new THREE.Mesh(new THREE.PlaneGeometry(w, 1.0), mat);
+        plane.rotation.x = -Math.PI/2; plane.position.set(0, 0, z); plane.receiveShadow = true; scene.add(plane);
+        const dashMat = new THREE.MeshStandardMaterial({ color: 0xf4e7c4, roughness: 0.7, emissive: 0x3a3320, emissiveIntensity: 0.15 });
+        for(let dx = -6; dx <= 6; dx += 1.5){
+          const dash = new THREE.Mesh(new THREE.PlaneGeometry(0.6, 0.09), dashMat);
+          dash.rotation.x = -Math.PI/2; dash.position.set(dx, 0.011, z - 0.5); scene.add(dash);
+        }
+      } else if(type === 'river'){
+        // glossy water
+        const mat = new THREE.MeshStandardMaterial({ color: 0x1b6ea8, roughness: 0.25, metalness: 0.55, emissive: 0x0a2740, emissiveIntensity: 0.3 });
+        const plane = new THREE.Mesh(new THREE.PlaneGeometry(w, 1.0), mat);
+        plane.rotation.x = -Math.PI/2; plane.position.set(0, -0.02, z); plane.receiveShadow = true; scene.add(plane);
+      } else if(type === 'goal'){
+        // sandy river bank
+        const mat = new THREE.MeshStandardMaterial({ color: 0xd8c48a, roughness: 0.9 });
+        const plane = new THREE.Mesh(new THREE.PlaneGeometry(w, 1.0), mat);
+        plane.rotation.x = -Math.PI/2; plane.position.set(0, 0, z); plane.receiveShadow = true; scene.add(plane);
+      } else {
+        // grass (start / median) with faint stripe for depth
+        const base = (row % 2 === 0) ? 0x4e9d4a : 0x57a851;
+        const mat = new THREE.MeshStandardMaterial({ color: base, roughness: 0.95 });
+        const plane = new THREE.Mesh(new THREE.PlaneGeometry(w, 1.0), mat);
+        plane.rotation.x = -Math.PI/2; plane.position.set(0, 0, z); plane.receiveShadow = true; scene.add(plane);
+      }
+    }
+    // curbs at the edges of the road block for a modern street feel
+    const curbMat = new THREE.MeshStandardMaterial({ color: 0x9aa1a8, roughness: 0.8 });
+    [rowToZ(0)+0.5, rowToZ(6)-0.5, rowToZ(6)+0.5].forEach((cz)=>{
+      const curb = new THREE.Mesh(new THREE.BoxGeometry(COLS + 0.4, 0.08, 0.08), curbMat);
+      curb.position.set(0, 0.04, cz); curb.receiveShadow = true; curb.castShadow = true; scene.add(curb);
+    });
+  }
+
+  /* =========================================================
+     נקודות יעד (Lily pads)
+     ========================================================= */
+  const pads = [];
+  function createGoalPads(){
+    GOAL_COLS.forEach((col)=>{
+      const grp = new THREE.Group();
+      const disc = new THREE.Mesh(new THREE.CylinderGeometry(0.44, 0.44, 0.1, 24),
+        new THREE.MeshStandardMaterial({ color: 0x2f8f6a, roughness: 0.5, emissive: 0x000000 }));
+      grp.add(disc);
+      const ring = new THREE.Mesh(new THREE.TorusGeometry(0.44, 0.05, 8, 24),
+        new THREE.MeshStandardMaterial({ color: 0x7ee8c8, emissive: 0x1f8f6a, emissiveIntensity: 0.5, roughness: 0.4 }));
+      ring.rotation.x = Math.PI/2; ring.position.y = 0.06; grp.add(ring);
+      const mesh = grp;
+      mesh.userData.disc = disc;
+      mesh.position.set(colToX(col), 0.06, rowToZ(12));
+      mesh.receiveShadow = true;
+      mesh.castShadow = true;
+      scene.add(mesh);
+      pads.push({ mesh: mesh });
+    });
+  }
+  function updatePadVisual(i){
+    const filled = padsFilled[i];
+    const disc = pads[i].mesh.userData.disc;
+    disc.material.color.setHex(filled ? 0xffcf5c : 0x2f8f6a);
+    disc.material.emissive.setHex(filled ? 0x6a4a12 : 0x000000);
+  }
+
+  /* =========================================================
+     בונוסים מתגלגלים (Pickups) - "אבן חן" ניאון שמופיעה מדי פעם
+     על הלוח ומעניקה בונוס ניקוד או זמן. תמיד אובייקט יחיד פעיל
+     - כדי לשמור על צריכת זיכרון/הקצאות מינימלית.
+     ========================================================= */
+  function randomPickupDelay(){
+    return 6 + Math.random() * 5; // 6-11 שניות בין הופעות
+  }
+
+  function spawnPickup(){
+    // נמנעים מהשורות הראשונה/אחרונה (התחלה/יעד) - תא רנדומלי בכל שאר הלוח
+    const row = 1 + Math.floor(Math.random() * 11); // 1..11
+    const col = Math.floor(Math.random() * 13);     // 0..12
+    const isTimeBonus = Math.random() < 0.5;
+    const color = isTimeBonus ? 0x29b6f6 : 0xffd54f;
+
+    const mesh = new THREE.Mesh(
+      new THREE.IcosahedronGeometry(0.22, 0),
+      new THREE.MeshStandardMaterial({ color: color, emissive: color, emissiveIntensity: 0.9, roughness: 0.3 })
+    );
+    mesh.position.set(colToX(col), 0.5, rowToZ(row));
+    mesh.castShadow = true;
+    scene.add(mesh);
+
+    pickup = { mesh: mesh, row: row, col: col, isTimeBonus: isTimeBonus, life: 9, t: Math.random() * Math.PI * 2 };
+  }
+
+  function removePickup(){
+    if(!pickup) return;
+    scene.remove(pickup.mesh);
+    pickup.mesh.geometry.dispose();
+    pickup.mesh.material.dispose();
+    pickup = null;
+  }
+
+  function collectPickup(){
+    if(pickup.isTimeBonus){
+      timeLeft = Math.min(timeLeft + 5, currentTimeLimit + 10);
+      showBanner(T[curLang].bonusTimeMsg);
+      beep(660, 0.15, 'sine', 0.18);
+    } else {
+      score += 100;
+      showBanner(T[curLang].bonusScoreMsg);
+      beep(880, 0.15, 'square', 0.18);
+    }
+    vibrate(40);
+    removePickup();
+    pickupSpawnTimer = randomPickupDelay();
+    updateHUD();
+  }
+
+  function updatePickup(delta){
+    if(pickup){
+      // אנימציית ריחוף וסחרור עדינה
+      pickup.t += delta;
+      pickup.mesh.position.y = 0.5 + Math.sin(pickup.t * 4) * 0.08;
+      pickup.mesh.rotation.y += delta * 2.2;
+      pickup.mesh.rotation.x += delta * 1.3;
+
+      pickup.life -= delta;
+      if(pickup.life <= 0){
+        removePickup();
+        pickupSpawnTimer = randomPickupDelay();
+        return;
+      }
+
+      // איסוף - הצפרדע יושבת (לא באוויר) על אותה משבצת בדיוק
+      if(!frog.dying && !frog.isJumping && frog.row === pickup.row){
+        const dist = Math.abs(frog.x - colToX(pickup.col));
+        if(dist < 0.45) collectPickup();
+      }
+    } else {
+      pickupSpawnTimer -= delta;
+      if(pickupSpawnTimer <= 0) spawnPickup();
+    }
+  }
+
+  /* =========================================================
+     הצפרדע - מורכבת מכדורים ירוקים
+     ========================================================= */
+  let frogGroup;
+  function createFrog(){
+    const group = new THREE.Group();
+    const furMat  = new THREE.MeshStandardMaterial({ color: 0xc47a3d, roughness: 0.65 });
+    const bellyMat= new THREE.MeshStandardMaterial({ color: 0xe9c9a0, roughness: 0.7 });
+    const darkMat = new THREE.MeshStandardMaterial({ color: 0x8a4f26, roughness: 0.7 });
+    const whiteMat= new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.4 });
+    const blackMat= new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.3 });
+
+    // torso - leaning slightly forward, facing -Z (direction of travel)
+    const body = new THREE.Mesh(new THREE.SphereGeometry(0.3, 16, 16), furMat);
+    body.scale.set(0.85, 1.0, 0.95);
+    body.position.set(0, 0.34, 0.02);
+    body.rotation.x = -0.35;
+    body.castShadow = true; group.add(body);
+
+    // lighter belly
+    const belly = new THREE.Mesh(new THREE.SphereGeometry(0.2, 14, 14), bellyMat);
+    belly.scale.set(0.7, 0.9, 0.5);
+    belly.position.set(0, 0.3, -0.16);
+    group.add(belly);
+
+    // head
+    const head = new THREE.Mesh(new THREE.SphereGeometry(0.19, 16, 16), furMat);
+    head.scale.set(0.9, 0.95, 1.1);
+    head.position.set(0, 0.62, -0.16);
+    head.castShadow = true; group.add(head);
+    // snout
+    const snout = new THREE.Mesh(new THREE.SphereGeometry(0.1, 12, 12), furMat);
+    snout.scale.set(0.8, 0.7, 1.1);
+    snout.position.set(0, 0.57, -0.34);
+    group.add(snout);
+    const nose = new THREE.Mesh(new THREE.SphereGeometry(0.045, 8, 8), blackMat);
+    nose.position.set(0, 0.58, -0.44); group.add(nose);
+
+    // tall ears
+    [-0.09, 0.09].forEach((x)=>{
+      const ear = new THREE.Mesh(new THREE.CylinderGeometry(0.035,0.05,0.24,8), furMat);
+      ear.position.set(x, 0.8, -0.12);
+      ear.rotation.x = -0.2;
+      ear.castShadow = true; group.add(ear);
+    });
+
+    // eyes
+    [-0.08, 0.08].forEach((x)=>{
+      const eye = new THREE.Mesh(new THREE.SphereGeometry(0.05, 10, 10), whiteMat);
+      eye.position.set(x, 0.66, -0.3); group.add(eye);
+      const pupil = new THREE.Mesh(new THREE.SphereGeometry(0.026, 8, 8), blackMat);
+      pupil.position.set(x, 0.66, -0.35); group.add(pupil);
+    });
+
+    // small front paws
+    [-0.13, 0.13].forEach((x)=>{
+      const arm = new THREE.Mesh(new THREE.SphereGeometry(0.06, 10, 10), darkMat);
+      arm.scale.set(1, 1.5, 1);
+      arm.position.set(x, 0.36, -0.2); group.add(arm);
+    });
+
+    // big hind feet
+    [-0.15, 0.15].forEach((x)=>{
+      const foot = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.08, 0.34), darkMat);
+      foot.position.set(x, 0.04, 0.02);
+      foot.castShadow = true; group.add(foot);
+      const thigh = new THREE.Mesh(new THREE.SphereGeometry(0.12, 12, 12), furMat);
+      thigh.scale.set(0.8, 1.1, 1.2);
+      thigh.position.set(x, 0.2, 0.06); group.add(thigh);
+    });
+
+    // thick tail sweeping back
+    const tail = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.14, 0.55, 10), furMat);
+    tail.position.set(0, 0.12, 0.32);
+    tail.rotation.x = 1.15;
+    tail.castShadow = true; group.add(tail);
+
+    group.position.set(colToX(6), 0, rowToZ(0));
+    scene.add(group);
+    return group;
+  }
+
+  /* =========================================================
+     רכבים / בולי עץ / צבים - מאגר אובייקטים (Pooling) לכל שלב.
+     בתוך שלב נתון, האובייקטים ממוחזרים (מועברים מצד לצד) -
+     כך שאין הקצאות זיכרון חדשות במהלך המשחק (0 GC נוסף).
+     במעבר שלב / מעבר תור אנחנו מוחקים (dispose) את כל
+     האובייקטים הישנים ובונים מערכת חדשה לשלב הבא.
+     ========================================================= */
+  let lanesData = [];
+
+  /* =========================================================
+     חיות דוהרות (במקום רכבים), קאנו ו-סאפ (במקום בולי עץ/צבים).
+     כל האובייקטים בונים "רגליים"/"משוטים" שמונפשים ב-updateLanes.
+     ========================================================= */
+
+  // מאגר סוגי חיות לכביש. length ~ אורך הפלטפורמה, כדי שהגוף יתאים ל-halfWidth.
+  const ANIMAL_TYPES = ['elephant','hippo','bull','pig','dog','chicken'];
+
+  function makeLeg(mat, w, h){
+    const leg = new THREE.Mesh(new THREE.CylinderGeometry(w, w*0.9, h, 8), mat);
+    leg.castShadow = true;
+    return leg;
+  }
+
+  // בונה חיה גנרית. מחזירה {group, legs:[], bob} — legs מונפשות בריצה.
+  function buildAnimal(kind, bodyLen){
+    const g = new THREE.Group();
+    const legs = [];
+    let bodyMat, y, bodyR, headInfo, legLen, legR, tuskColor;
+
+    const palette = {
+      elephant: 0x8f9aa6, hippo: 0x8b6b8f, bull: 0x5a4636,
+      pig: 0xe79aad, dog: 0xc8a15a, chicken: 0xf4f0e6
+    };
+    bodyMat = new THREE.MeshStandardMaterial({ color: palette[kind], roughness: 0.72 });
+    const darkMat = new THREE.MeshStandardMaterial({ color: 0x3a2c22, roughness: 0.7 });
+    const whiteMat= new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.4 });
+    const blackMat= new THREE.MeshStandardMaterial({ color: 0x161616, roughness: 0.3 });
+
+    // scale factor so the animal roughly fills the platform length along X
+    // (animals face +X or -X; we build facing +X then flip by lane dir outside)
+    const sizeMap = { elephant:1.0, hippo:0.95, bull:0.85, pig:0.62, dog:0.6, chicken:0.5 };
+    const sc = sizeMap[kind];
+    const bodyH = 0.42 * sc + 0.12;
+    legLen = 0.28 * sc + 0.08;
+    legR = 0.05 * sc + 0.02;
+    y = legLen + bodyH*0.5;
+
+    // torso (stretched along X = travel axis)
+    const torso = new THREE.Mesh(new THREE.SphereGeometry(0.34, 16, 14), bodyMat);
+    torso.scale.set((bodyLen*0.5)/0.34, bodyH/0.34*0.85, (0.5*sc+0.18)/0.34);
+    torso.position.set(0, y, 0);
+    torso.castShadow = true; g.add(torso);
+
+    // head at +X end
+    const headR = 0.2*sc + 0.07;
+    const head = new THREE.Mesh(new THREE.SphereGeometry(headR, 16, 14), bodyMat);
+    head.position.set(bodyLen*0.42, y + bodyH*0.35, 0);
+    head.castShadow = true; g.add(head);
+
+    // eyes
+    [-1,1].forEach((sz)=>{
+      const eye = new THREE.Mesh(new THREE.SphereGeometry(headR*0.22, 8, 8), whiteMat);
+      eye.position.set(bodyLen*0.42 + headR*0.5, y + bodyH*0.5, sz*headR*0.5); g.add(eye);
+      const pup = new THREE.Mesh(new THREE.SphereGeometry(headR*0.1, 8, 8), blackMat);
+      pup.position.set(bodyLen*0.42 + headR*0.7, y + bodyH*0.5, sz*headR*0.5); g.add(pup);
+    });
+
+    // kind-specific features
+    if(kind === 'elephant'){
+      const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.05*sc,0.09*sc,0.5*sc,8), bodyMat);
+      trunk.position.set(bodyLen*0.42 + headR*0.6, y, 0.0);
+      trunk.rotation.z = Math.PI/2.2; trunk.castShadow = true; g.add(trunk);
+      [-1,1].forEach((sz)=>{ const ear = new THREE.Mesh(new THREE.CircleGeometry(headR*0.7, 12), bodyMat);
+        ear.position.set(bodyLen*0.4, y + bodyH*0.4, sz*headR*0.9); ear.rotation.y = sz*Math.PI/2; g.add(ear); });
+      [-1,1].forEach((sz)=>{ const tusk = new THREE.Mesh(new THREE.ConeGeometry(0.03,0.28*sc,6), whiteMat);
+        tusk.position.set(bodyLen*0.42+headR*0.5, y-0.05, sz*0.08); tusk.rotation.z = Math.PI/2; g.add(tusk); });
+    } else if(kind === 'hippo'){
+      const jaw = new THREE.Mesh(new THREE.BoxGeometry(headR*0.9, headR*0.5, headR*1.3), bodyMat);
+      jaw.position.set(bodyLen*0.5, y+bodyH*0.15, 0); g.add(jaw);
+      [-1,1].forEach((sz)=>{ const nos = new THREE.Mesh(new THREE.SphereGeometry(headR*0.14,8,8), darkMat);
+        nos.position.set(bodyLen*0.56, y+bodyH*0.55, sz*headR*0.35); g.add(nos); });
+    } else if(kind === 'bull'){
+      [-1,1].forEach((sz)=>{ const horn = new THREE.Mesh(new THREE.ConeGeometry(0.04,0.24*sc,6), whiteMat);
+        horn.position.set(bodyLen*0.4, y+bodyH*0.7, sz*headR*0.7); horn.rotation.z = -sz*0.5; g.add(horn); });
+      const snout = new THREE.Mesh(new THREE.SphereGeometry(headR*0.6,10,10), new THREE.MeshStandardMaterial({color:0x2c2320,roughness:0.7}));
+      snout.position.set(bodyLen*0.5, y+bodyH*0.15,0); g.add(snout);
+    } else if(kind === 'pig'){
+      const snout = new THREE.Mesh(new THREE.CylinderGeometry(headR*0.4,headR*0.4,0.1,10), new THREE.MeshStandardMaterial({color:0xd97b95,roughness:0.6}));
+      snout.rotation.z = Math.PI/2; snout.position.set(bodyLen*0.5, y+bodyH*0.25, 0); g.add(snout);
+      const curl = new THREE.Mesh(new THREE.TorusGeometry(0.06*sc,0.02,6,12), bodyMat);
+      curl.position.set(-bodyLen*0.5, y+bodyH*0.2, 0); g.add(curl);
+      [-1,1].forEach((sz)=>{ const ear=new THREE.Mesh(new THREE.ConeGeometry(headR*0.35,headR*0.6,6),bodyMat);
+        ear.position.set(bodyLen*0.36,y+bodyH*0.7,sz*headR*0.5); g.add(ear); });
+    } else if(kind === 'dog'){
+      [-1,1].forEach((sz)=>{ const ear=new THREE.Mesh(new THREE.BoxGeometry(0.04,headR*0.9,headR*0.5),new THREE.MeshStandardMaterial({color:0x8a6a34,roughness:0.7}));
+        ear.position.set(bodyLen*0.36,y+bodyH*0.7,sz*headR*0.6); ear.rotation.x = sz*0.3; g.add(ear); });
+      const tail = new THREE.Mesh(new THREE.CylinderGeometry(0.03,0.05,0.3*sc,6), bodyMat);
+      tail.position.set(-bodyLen*0.5, y+bodyH*0.5, 0); tail.rotation.z = -0.8; g.add(tail);
+    } else if(kind === 'chicken'){
+      const comb = new THREE.Mesh(new THREE.BoxGeometry(headR*0.3, headR*0.5, headR*0.8), new THREE.MeshStandardMaterial({color:0xe23b3b,roughness:0.6}));
+      comb.position.set(bodyLen*0.42, y+bodyH*0.9, 0); g.add(comb);
+      const beak = new THREE.Mesh(new THREE.ConeGeometry(headR*0.25,headR*0.5,6), new THREE.MeshStandardMaterial({color:0xf6a12a,roughness:0.5}));
+      beak.rotation.z = -Math.PI/2; beak.position.set(bodyLen*0.42+headR*0.7, y+bodyH*0.3, 0); g.add(beak);
+      const wattle = new THREE.Mesh(new THREE.SphereGeometry(headR*0.18,8,8), new THREE.MeshStandardMaterial({color:0xe23b3b,roughness:0.6}));
+      wattle.position.set(bodyLen*0.44, y-0.02, 0); g.add(wattle);
+    }
+
+    // legs — 2 pairs (front/back). chicken gets 2 legs only.
+    const legMat = new THREE.MeshStandardMaterial({ color: kind==='chicken'?0xf6a12a:0x3a2c22, roughness: 0.7 });
+    const legXs = kind==='chicken' ? [0] : [bodyLen*0.28, -bodyLen*0.28];
+    const legZs = kind==='chicken' ? [-0.08, 0.08] : [-(0.28*sc+0.02), (0.28*sc+0.02)];
+    legXs.forEach((lx)=>{
+      legZs.forEach((lz)=>{
+        const leg = makeLeg(legMat, legR, legLen);
+        // pivot at hip: shift geometry down so it swings from the top
+        leg.geometry.translate(0, -legLen/2, 0);
+        leg.position.set(lx, legLen, lz);
+        g.add(leg);
+        legs.push(leg);
+      });
+    });
+
+    return { group: g, legs: legs };
+  }
+
+  function createLaneObject(cfg, x){
+    let mesh;
+    let collisionHalf;
+    let legs = null, animKind = null, isBoat = false;
+    const z = rowToZ(cfg.row);
+    const halfWidth = cfg.halfWidth;
+
+    if(cfg.type === 'car' || cfg.type === 'truck'){
+      // חיה דוהרת. trucks -> חיות גדולות (פיל/היפו/שור); cars -> קטנות (חזיר/כלב/תרנגולת)
+      const bigKinds   = ['elephant','hippo','bull'];
+      const smallKinds = ['bull','pig','dog','chicken'];
+      const kind = (cfg.type === 'truck')
+        ? bigKinds[Math.floor(Math.random()*bigKinds.length)]
+        : smallKinds[Math.floor(Math.random()*smallKinds.length)];
+      const bodyLen = halfWidth * 2 * 0.9;
+      const built = buildAnimal(kind, bodyLen);
+      mesh = built.group;
+      legs = built.legs;
+      animKind = kind;
+      // face movement direction: built facing +X, flip if moving -X
+      mesh.rotation.y = (cfg.dir < 0) ? Math.PI : 0;
+      mesh.position.set(x, 0, z);
+      collisionHalf = halfWidth * 0.86;
+
+    } else if(cfg.type === 'log'){
+      // קאנו — גוף מוארך, פנים חלולות, שני משוטים
+      mesh = new THREE.Group();
+      const hullMat = new THREE.MeshStandardMaterial({ color: 0xb5651d, roughness: 0.55, metalness: 0.05 });
+      if(cfg.dive){ hullMat.emissive = new THREE.Color(0xff8800); hullMat.emissiveIntensity = 0; }
+      const len = halfWidth * 2;
+      const hull = new THREE.Mesh(new THREE.CylinderGeometry(0.26, 0.26, len, 16, 1, false, 0, Math.PI), hullMat);
+      hull.rotation.z = Math.PI/2; hull.rotation.y = Math.PI; hull.position.y = 0.16; hull.castShadow = true;
+      mesh.add(hull);
+      // pointed ends
+      [-1,1].forEach((sz)=>{ const tip = new THREE.Mesh(new THREE.ConeGeometry(0.26, 0.5, 12, 1, false, 0, Math.PI), hullMat);
+        tip.rotation.z = sz*Math.PI/2; tip.rotation.x = Math.PI; tip.position.set(sz*(len/2+0.18), 0.16, 0); mesh.add(tip); });
+      // inner rim (darker) for depth
+      const rimMat = new THREE.MeshStandardMaterial({ color: 0x7a3f12, roughness: 0.7 });
+      const rim = new THREE.Mesh(new THREE.BoxGeometry(len, 0.04, 0.36), rimMat);
+      rim.position.y = 0.28; mesh.add(rim);
+      // two paddles across the gunwale
+      const padMat = new THREE.MeshStandardMaterial({ color: 0x5a3a1c, roughness: 0.6 });
+      [-len*0.22, len*0.22].forEach((px)=>{
+        const pad = new THREE.Group();
+        const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.03,0.03,0.6,6), padMat);
+        shaft.rotation.x = 0.5; pad.add(shaft);
+        const blade = new THREE.Mesh(new THREE.BoxGeometry(0.14,0.02,0.22), padMat);
+        blade.position.set(0,-0.28,0.16); pad.add(blade);
+        pad.position.set(px, 0.32, 0);
+        mesh.add(pad); if(!legs) legs = []; legs.push(pad);
+      });
+      isBoat = true;
+      mesh.position.set(x, 0.0, z);
+      collisionHalf = halfWidth;
+
+    } else { // turtle -> SUP paddleboard
+      mesh = new THREE.Group();
+      const boardMat = new THREE.MeshStandardMaterial({ color: 0x18b7c9, roughness: 0.4, metalness: 0.1 });
+      if(cfg.dive){ boardMat.emissive = new THREE.Color(0xff8800); boardMat.emissiveIntensity = 0; }
+      const len = halfWidth * 2;
+      const board = new THREE.Mesh(new THREE.BoxGeometry(len, 0.1, 0.7), boardMat);
+      board.position.y = 0.12; board.castShadow = true; mesh.add(board);
+      // rounded nose/tail
+      [-1,1].forEach((sz)=>{ const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.35,0.35,0.1,16,1,false,0,Math.PI), boardMat);
+        cap.rotation.x = Math.PI/2; cap.rotation.z = sz>0?0:Math.PI; cap.position.set(sz*len/2, 0.12, 0); cap.scale.z = 0.7; mesh.add(cap); });
+      // deck pad stripe (contrast)
+      const pad = new THREE.Mesh(new THREE.BoxGeometry(len*0.8, 0.02, 0.4), new THREE.MeshStandardMaterial({ color: 0xffcf5c, roughness: 0.6 }));
+      pad.position.y = 0.175; mesh.add(pad);
+      // a single paddle laid across
+      const paddleMat = new THREE.MeshStandardMaterial({ color: 0xdedede, roughness: 0.4, metalness: 0.3 });
+      const paddle = new THREE.Group();
+      const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.025,0.025,0.9,6), paddleMat);
+      shaft.rotation.z = Math.PI/2; paddle.add(shaft);
+      const blade = new THREE.Mesh(new THREE.BoxGeometry(0.16,0.02,0.16), paddleMat);
+      blade.position.set(-0.5,0,0); paddle.add(blade);
+      paddle.position.set(0, 0.3, 0.1);
+      mesh.add(paddle); legs = [paddle];
+      isBoat = true;
+      mesh.position.set(x, 0, z);
+      collisionHalf = halfWidth;
+    }
+
+    // אוסף חומרים בעלי "אור אזהרה" (לקאנו/סאפ שצוללים)
+    let warnMaterials = null;
+    if(cfg.dive){
+      warnMaterials = [];
+      mesh.traverse((o)=>{ if(o.isMesh && o.material && o.material.emissive){ warnMaterials.push(o.material); } });
+    }
+
+    mesh.traverse((o)=>{ if(o.isMesh){ o.castShadow = true; } });
+    scene.add(mesh);
+
+    return {
+      mesh: mesh, x: x, halfWidth: halfWidth, collisionHalf: collisionHalf,
+      submerged: false,
+      warnMaterials: warnMaterials,
+      legs: legs, animKind: animKind, isBoat: isBoat,
+      runPhase: Math.random() * Math.PI * 2,
+      divePhase: Math.random() * 10,
+      phaseOffset: Math.random() * Math.PI * 2
+    };
+  }
+
+  function disposeLanes(){
+    lanesData.forEach((lane)=>{
+      lane.objects.forEach((obj)=>{
+        scene.remove(obj.mesh);
+        obj.mesh.traverse((o)=>{
+          if(o.isMesh){
+            o.geometry.dispose();
+            if(Array.isArray(o.material)) o.material.forEach((m)=> m.dispose());
+            else o.material.dispose();
+          }
+        });
+      });
+    });
+    lanesData = [];
+  }
+
+  function buildLanesForLevel(levelIdx){
+    disposeLanes();
+    const cfg = LEVEL_CONFIGS[levelIdx - 1];
+    cfg.roadLanes.concat(cfg.riverLanes).forEach((laneCfg)=>{
+      const lane = { config: laneCfg, objects: [] };
+      const spacing = 18 / laneCfg.count;
+      for(let i = 0; i < laneCfg.count; i++){
+        const x = -9 + spacing / 2 + i * spacing + (Math.random() - 0.5) * spacing * 0.3;
+        lane.objects.push(createLaneObject(laneCfg, x));
+      }
+      lanesData.push(lane);
+    });
+  }
+
+  function updateLanes(delta){
+    lanesData.forEach((lane)=>{
+      const cfg = lane.config;
+      lane.objects.forEach((obj)=>{
+        obj.x += cfg.dir * cfg.speed * delta;
+        // מחזור: כשהאובייקט יוצא מהמסך, מעבירים אותו לקצה השני
+        if(cfg.dir > 0 && obj.x - obj.halfWidth > 9){
+          obj.x -= 18;
+        } else if(cfg.dir < 0 && obj.x + obj.halfWidth < -9){
+          obj.x += 18;
+        }
+        obj.mesh.position.x = obj.x;
+
+        // --- אנימציה: רגלי חיה רצות / משוטים חותרים + נדנוד גוף ---
+        obj.runPhase += delta * (6 + cfg.speed * 2.5);
+        if(obj.legs){
+          if(obj.animKind){
+            // חיה: רגליים מתנדנדות לסירוגין + נדנוד גוף קל (ריצה)
+            for(let li = 0; li < obj.legs.length; li++){
+              const ph = obj.runPhase + (li % 2) * Math.PI;
+              obj.legs[li].rotation.z = Math.sin(ph) * 0.6;
+            }
+            obj.mesh.position.y = Math.abs(Math.sin(obj.runPhase)) * 0.06;
+          } else {
+            // סירה: משוטים חותרים + נדנוד עדין על המים
+            for(let li = 0; li < obj.legs.length; li++){
+              obj.legs[li].rotation.z = Math.sin(obj.runPhase * 0.5 + li * Math.PI) * 0.4;
+            }
+            if(!obj.submerged) obj.mesh.position.y = Math.sin(obj.runPhase * 0.4 + obj.phaseOffset) * 0.03;
+          }
+        }
+
+        if(cfg.dive){
+          obj.divePhase += delta;
+          const wave = Math.sin(obj.divePhase * 0.9 + obj.phaseOffset);
+          const threshold = (cfg.diveThreshold !== undefined) ? cfg.diveThreshold : -0.5;
+          obj.submerged = wave < threshold;
+          obj.mesh.position.y = obj.submerged ? -0.45 : 0;
+
+          // אור אזהרה כתום שמתחזק לפני שהפלטפורמה צוללת מתחת למים
+          if(obj.warnMaterials){
+            const dangerZone = 0.35;
+            let warn = 0;
+            if(!obj.submerged && wave < threshold + dangerZone){
+              warn = clamp(1 - (wave - threshold) / dangerZone, 0, 1);
+            }
+            obj.warnMaterials.forEach((m)=>{ m.emissiveIntensity = warn * 1.3; });
+          }
+        }
+      });
+    });
+  }
+
+  /* =========================================================
+     לוגיקת הצפרדע - תנועה, קפיצה, התנגשויות
+     ========================================================= */
+  // מציג הודעת-בלורית קצרה במרכז המסך (לדוגמה "עלית לרמה 2!")
+  function showBanner(text){
+    const el = document.getElementById('levelBanner');
+    el.textContent = text;
+    el.classList.remove('hidden', 'show');
+    // לאלץ את הדפדפן "לאתחל" את האנימציה גם אם היא רצה כבר
+    void el.offsetWidth;
+    el.classList.add('show');
+    setTimeout(()=>{ el.classList.add('hidden'); el.classList.remove('show'); }, 1600);
+  }
+
+  function resetFrogPosition(){
+    frog.row = 0; frog.col = 6;
+    frog.x = colToX(6);
+    frog.maxRow = 0;
+    frog.ridingRaft = null;
+    frog.isJumping = false;
+    frog.dying = false;
+    frogGroup.scale.set(1, 1, 1);
+    frogGroup.position.set(frog.x, 0, rowToZ(0));
+    frogGroup.rotation.y = 0;
+  }
+
+  function updateHUD(){
+    document.getElementById('scoreVal').textContent = score;
+    document.getElementById('levelVal').textContent = level + '/' + MAX_LEVEL;
+
+    const timeEl = document.getElementById('timeVal');
+    const t = Math.max(0, Math.ceil(timeLeft));
+    timeEl.textContent = t;
+    if(gameRunning && !paused && timeLeft > 0 && timeLeft <= 5){
+      timeEl.classList.add('warning');
+      if(!timeWarningPlayed){ timeWarningPlayed = true; beep(220, 0.12, 'square', 0.1); }
+    } else {
+      timeEl.classList.remove('warning');
+      if(timeLeft > 5) timeWarningPlayed = false;
+    }
+
+    document.getElementById('livesVal').textContent = '🦘'.repeat(Math.max(0, lives));
+
+    const psEl = document.getElementById('playerScores');
+    if(numPlayers === 2){
+      psEl.style.display = 'block';
+      const s1 = (currentPlayerIndex === 0) ? score : players[0].score;
+      const s2 = (currentPlayerIndex === 1) ? score : players[1].score;
+      const c1 = (currentPlayerIndex === 0) ? ' class="active"' : '';
+      const c2 = (currentPlayerIndex === 1) ? ' class="active"' : '';
+      psEl.innerHTML = '<span' + c1 + '>' + pL(1) + ': ' + s1 + '</span>&nbsp;&nbsp;|&nbsp;&nbsp;<span' + c2 + '>' + pL(2) + ': ' + s2 + '</span>';
+    } else {
+      psEl.style.display = 'none';
+    }
+  }
+
+  function loseLife(reason){
+    if(frog.dying || !gameRunning) return;
+    frog.dying = true;
+    frog.dyingT = 0;
+    frog.dyingReason = reason;
+    frog.ridingRaft = null;
+    lives = Math.max(0, lives - 1);
+    updateHUD();
+    if(reason === 'drown'){
+      beep(180, 0.4, 'sine', 0.18);
+      vibrate([60, 40, 60]);
+    } else {
+      beep(90, 0.35, 'sawtooth', 0.2);
+      vibrate(200);
+    }
+  }
+
+  function checkRiverLanding(){
+    const lane = lanesData.find((l)=> l.config.row === frog.row);
+    if(!lane){ loseLife('drown'); return; }
+    for(let i = 0; i < lane.objects.length; i++){
+      const obj = lane.objects[i];
+      if(obj.submerged) continue;
+      if(Math.abs(frog.x - obj.x) <= obj.collisionHalf + 0.1){
+        frog.ridingRaft = { lane: lane, obj: obj };
+        return;
+      }
+    }
+    loseLife('drown');
+  }
+
+  function checkGoalLanding(){
+    const idx = GOAL_COLS.indexOf(frog.col);
+    if(idx !== -1 && !padsFilled[idx]){
+      padsFilled[idx] = true;
+      updatePadVisual(idx);
+      const timeBonus = Math.floor(timeLeft) * 2;
+      score += 50 + timeBonus;
+      beep(660, 0.18, 'square', 0.18);
+      setTimeout(()=>beep(880, 0.22, 'square', 0.18), 120);
+
+      if(padsFilled.every((p)=>p)){
+        if(level >= MAX_LEVEL){
+          score += 300; // בונוס ניצחון
+          updateHUD();
+          gameRunning = false;
+          showBanner(T[curLang].victoryMsg);
+          vibrate([60, 60, 60, 60, 150]);
+          setTimeout(()=> finishPlayer(true), 1500);
+          return;
+        } else {
+          levelUp();
+        }
+      } else {
+        resetFrogPosition();
+        timeLeft = currentTimeLimit;
+      }
+      updateHUD();
+    } else {
+      loseLife('crash');
+    }
+  }
+
+  function levelUp(){
+    level += 1;
+    currentTimeLimit = LEVEL_CONFIGS[level - 1].timeLimit;
+    padsFilled = padsFilled.map(()=>false);
+    pads.forEach((_, i)=> updatePadVisual(i));
+    score += 200;
+    buildLanesForLevel(level);
+    resetFrogPosition();
+    timeLeft = currentTimeLimit;
+    removePickup();
+    pickupSpawnTimer = randomPickupDelay();
+    showBanner(T[curLang].levelUpPrefix + level + '!');
+    vibrate([40, 40, 40]);
+    beep(523, 0.12, 'square', 0.2);
+    setTimeout(()=>beep(659, 0.12, 'square', 0.2), 110);
+    setTimeout(()=>beep(784, 0.2, 'square', 0.2), 220);
+  }
+
+  function onLand(){
+    if(frog.row > frog.maxRow){
+      score += 10 * (frog.row - frog.maxRow);
+      frog.maxRow = frog.row;
+      updateHUD();
+    }
+    const type = getRowType(frog.row);
+    if(type === 'river'){
+      checkRiverLanding();
+    } else if(type === 'goal'){
+      checkGoalLanding();
+    } else {
+      frog.ridingRaft = null;
+    }
+  }
+
+  function move(drow, dcol){
+    if(!gameRunning || paused || frog.isJumping || frog.dying) return;
+    const newRow = frog.row + drow;
+    const newCol = frog.col + dcol;
+    if(newRow < 0 || newRow > 12 || newCol < 0 || newCol > 12) return;
+
+    frog.isJumping = true;
+    frog.jumpT = 0;
+    frog.fromX = frog.x;
+    frog.fromZ = rowToZ(frog.row);
+    frog.toCol = newCol;
+    frog.toRow = newRow;
+    frog.toX = colToX(newCol);
+    frog.toZ = rowToZ(newRow);
+    frog.ridingRaft = null;
+
+    // סיבוב הצפרדע לכיוון הקפיצה
+    if(dcol > 0) frogGroup.rotation.y = -Math.PI / 2;
+    else if(dcol < 0) frogGroup.rotation.y = Math.PI / 2;
+    else if(drow > 0) frogGroup.rotation.y = 0;
+    else if(drow < 0) frogGroup.rotation.y = Math.PI;
+
+    beep(440, 0.06, 'square', 0.1);
+  }
+
+  function updateFrog(delta){
+    if(frog.dying){
+      frog.dyingT += delta;
+      const p = Math.min(frog.dyingT / DYING_DURATION, 1);
+      if(frog.dyingReason === 'drown'){
+        frogGroup.position.y = -p * 0.6;
+        frogGroup.scale.setScalar(1 - p * 0.6);
+      } else {
+        frogGroup.scale.set(1 + p * 0.6, Math.max(0.05, 1 - p * 0.85), 1 + p * 0.6);
+      }
+      if(p >= 1){
+        if(lives <= 0){
+          finishPlayer(false);
+        } else {
+          resetFrogPosition();
+          timeLeft = currentTimeLimit;
+        }
+      }
+      return;
+    }
+
+    if(frog.isJumping){
+      frog.jumpT += delta / JUMP_DURATION;
+      const t = Math.min(frog.jumpT, 1);
+      frog.x = THREE.MathUtils.lerp(frog.fromX, frog.toX, t);
+      const z = THREE.MathUtils.lerp(frog.fromZ, frog.toZ, t);
+      const y = Math.sin(t * Math.PI) * JUMP_HEIGHT;
+      frogGroup.position.set(frog.x, y, z);
+
+      // "מתיחה" (Stretch) בשיא הקפיצה - הצפרדע מתארכת לאורך כיוון התנועה
+      const stretch = Math.sin(t * Math.PI);
+      frogGroup.scale.set(1 - stretch * 0.18, 1 + stretch * 0.35, 1 - stretch * 0.18);
+
+      if(t >= 1){
+        frog.isJumping = false;
+        frog.row = frog.toRow;
+        frog.col = frog.toCol;
+        frogGroup.position.set(frog.x, 0, z);
+        // "מעיכה" (Squash) ברגע הנחיתה - תתחיל לדעוך לגודל רגיל בפריימים הבאים
+        frogGroup.scale.set(1.22, 0.68, 1.22);
+        onLand();
+      }
+      return;
+    }
+
+    // דעיכה חלקה (Lerp) חזרה לגודל הרגיל אחרי "מעיכת" הנחיתה
+    frogGroup.scale.x += (1 - frogGroup.scale.x) * 0.25;
+    frogGroup.scale.y += (1 - frogGroup.scale.y) * 0.25;
+    frogGroup.scale.z += (1 - frogGroup.scale.z) * 0.25;
+
+    // נהיגה על בול עץ / צב - שומרים על frog.col מסונכרן עם המיקום
+    // הרציף הנוכחי, כדי שקפיצה הבאה תחושב מהמקום הנכון (ולא "תקפוץ"
+    // למיקום ישן וגרמה לצפרדע "להיעלם" לצד השני של המסך)
+    if(frog.ridingRaft){
+      const obj = frog.ridingRaft.obj;
+      const cfg = frog.ridingRaft.lane.config;
+      if(obj.submerged){
+        loseLife('drown');
+        return;
+      }
+      frog.x += cfg.dir * cfg.speed * delta;
+      frogGroup.position.x = frog.x;
+      frog.col = clamp(Math.round(frog.x + HALF_COLS), 0, 12);
+      if(frog.x < -BOARD_EDGE || frog.x > BOARD_EDGE){
+        loseLife('drown');
+        return;
+      }
+    }
+
+    // בדיקת התנגשות עם רכבים
+    if(getRowType(frog.row) === 'road'){
+      const lane = lanesData.find((l)=> l.config.row === frog.row);
+      if(lane){
+        for(let i = 0; i < lane.objects.length; i++){
+          const obj = lane.objects[i];
+          if(Math.abs(frog.x - obj.x) < (obj.collisionHalf + FROG_HALF * 0.85)){
+            loseLife('crash');
+            break;
+          }
+        }
+      }
+    }
+  }
+
+  /* =========================================================
+     ניהול שחקנים ותורות (מצב 2 שחקנים)
+     ========================================================= */
+  function setupAttempt(){
+    score = 0; lives = 3; level = 1;
+    currentTimeLimit = LEVEL_CONFIGS[0].timeLimit;
+    timeLeft = currentTimeLimit;
+    padsFilled = GOAL_COLS.map(()=>false);
+    pads.forEach((_, i)=> updatePadVisual(i));
+    buildLanesForLevel(1);
+    resetFrogPosition();
+    paused = false;
+    timeWarningPlayed = false;
+    removePickup();
+    pickupSpawnTimer = randomPickupDelay();
+    document.getElementById('pauseBtn').textContent = '⏸';
+    document.getElementById('pauseOverlay').classList.add('hidden');
+    updateHUD();
+  }
+
+  function finishPlayer(won){
+    gameRunning = false;
+    removePickup();
+    players[currentPlayerIndex].score = score;
+    players[currentPlayerIndex].finished = true;
+    players[currentPlayerIndex].won = won;
+
+    const otherIdx = 1 - currentPlayerIndex;
+    if(numPlayers === 2 && !players[otherIdx].finished){
+      pendingTurnIdx = otherIdx;
+      document.getElementById('turnTitle').textContent = T[curLang].turnPrefix + (otherIdx + 1) + T[curLang].turnSuffix;
+      document.getElementById('turnScreen').classList.remove('hidden');
+    } else {
+      endGame();
+    }
+  }
+
+  document.getElementById('turnContinueBtn').addEventListener('click', ()=>{
+    document.getElementById('turnScreen').classList.add('hidden');
+    currentPlayerIndex = pendingTurnIdx;
+    setupAttempt();
+    gameRunning = true;
+    clock.getDelta();
+  });
+
+  /* =========================================================
+     Game Over + טבלת שיאים (LocalStorage)
+     ========================================================= */
+  const LB_KEY = 'kangaroo3d_top10';
+
+  function getLeaderboard(){
+    try{
+      const raw = localStorage.getItem(LB_KEY);
+      const arr = raw ? JSON.parse(raw) : [];
+      return Array.isArray(arr) ? arr : [];
+    }catch(e){ return []; }
+  }
+  function saveLeaderboard(arr){
+    try{ localStorage.setItem(LB_KEY, JSON.stringify(arr)); }catch(e){}
+  }
+  function qualifiesForLeaderboard(s){
+    if(s <= 0) return false;
+    const lb = getLeaderboard();
+    if(lb.length < 10) return true;
+    return s > lb[lb.length - 1].score;
+  }
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, function(c){
+      return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c];
+    });
+  }
+  function renderLeaderboard(container, highlightIdx){
+    const lb = getLeaderboard();
+    const tt = T[curLang];
+    const dirClass = isRtl(curLang) ? 'rtl' : 'ltr';
+    let html = '<table class="lb-table ' + dirClass + '"><thead><tr><th>' + tt.thRank + '</th><th>' + tt.thName + '</th><th>' + tt.hudScore + '</th></tr></thead><tbody>';
+    if(lb.length === 0){
+      html += '<tr><td colspan="3">' + tt.noScores + '</td></tr>';
+    } else {
+      lb.forEach((entry, i)=>{
+        const cls = (i === highlightIdx) ? ' class="highlight"' : '';
+        html += '<tr' + cls + '><td>' + (i+1) + '</td><td>' + escapeHtml(entry.name) + '</td><td>' + entry.score + '</td></tr>';
+      });
+    }
+    html += '</tbody></table>';
+    container.innerHTML = html;
+  }
+
+  function endGame(){
+    gameRunning = false;
+    const goScreen = document.getElementById('gameOverScreen');
+    goScreen.classList.remove('hidden');
+
+    const titleEl = document.getElementById('gameOverTitle');
+    const finalEl = document.getElementById('finalScore');
+
+    const tt = T[curLang];
+    if(numPlayers === 2){
+      titleEl.textContent = tt.finalResultsTitle;
+      const p1 = players[0], p2 = players[1];
+      let winnerText;
+      if(p1.score > p2.score) winnerText = '🏆 ' + pL(1) + tt.winSuffix;
+      else if(p2.score > p1.score) winnerText = '🏆 ' + pL(2) + tt.winSuffix;
+      else winnerText = tt.tieMsg;
+      finalEl.innerHTML =
+        '<p>' + pL(1) + ': <span class="gold">' + p1.score + '</span>' + (p1.won ? ' 🏁' : '') + '</p>' +
+        '<p>' + pL(2) + ': <span class="gold">' + p2.score + '</span>' + (p2.won ? ' 🏁' : '') + '</p>' +
+        '<p>' + winnerText + '</p>';
+    } else {
+      titleEl.textContent = players[0].won ? tt.victoryMsg : tt.gameOverTitle;
+      finalEl.innerHTML = '<p>' + tt.yourFinalScorePrefix + '<span class="gold">' + players[0].score + '</span></p>';
+    }
+
+    pendingLBQueue = [];
+    for(let i = 0; i < numPlayers; i++){
+      pendingLBQueue.push(i);
+    }
+    processNextLBEntry();
+  }
+
+  function processNextLBEntry(){
+    const nameEntry = document.getElementById('nameEntry');
+    const restartBtn = document.getElementById('restartBtn');
+
+    while(pendingLBQueue.length > 0 && !qualifiesForLeaderboard(players[pendingLBQueue[0]].score)){
+      pendingLBQueue.shift();
+    }
+
+    if(pendingLBQueue.length === 0){
+      nameEntry.classList.add('hidden');
+      restartBtn.classList.remove('hidden');
+      renderLeaderboard(document.getElementById('gameOverLeaderboard'), -1);
+      return;
+    }
+
+    const idx = pendingLBQueue[0];
+    nameEntry.classList.remove('hidden');
+    restartBtn.classList.add('hidden');
+    document.getElementById('nameEntryLabel').textContent =
+      (numPlayers === 2 ? (T[curLang].newHighScorePlayerPrefix + (idx + 1) + T[curLang].newHighScorePlayerSuffix) : T[curLang].newHighScoreGeneric) + T[curLang].enterNameSuffix;
+    renderLeaderboard(document.getElementById('gameOverLeaderboard'), -1);
+    const input = document.getElementById('nameInput');
+    input.value = '';
+    setTimeout(()=> input.focus(), 150);
+  }
+
+  function saveScoreAndShow(){
+    if(pendingLBQueue.length === 0) return;
+    const idx = pendingLBQueue.shift();
+    const input = document.getElementById('nameInput');
+    let name = (input.value || '').trim().toUpperCase().replace(/[^A-Zא-ת0-9]/g, '').slice(0, 3);
+    if(name.length === 0) name = 'AAA';
+    while(name.length < 3) name += 'A';
+
+    const lb = getLeaderboard();
+    lb.push({ name: name, score: players[idx].score });
+    lb.sort((a, b)=> b.score - a.score);
+    lb.length = Math.min(lb.length, 10);
+    saveLeaderboard(lb);
+
+    const newIdx = lb.findIndex((e)=> e.name === name && e.score === players[idx].score);
+    renderLeaderboard(document.getElementById('gameOverLeaderboard'), newIdx);
+    processNextLBEntry();
+  }
+
+  function initNewGame(){
+    players = [
+      { score:0, lives:3, finished:false, won:false },
+      { score:0, lives:3, finished:false, won:false }
+    ];
+    currentPlayerIndex = 0;
+    setupAttempt();
+    gameRunning = true;
+    clock.getDelta();
+  }
+
+  function goHome(){
+    document.getElementById('gameOverScreen').classList.add('hidden');
+    document.getElementById('turnScreen').classList.add('hidden');
+    renderLeaderboard(document.getElementById('startLeaderboard'), -1);
+    document.getElementById('startScreen').classList.remove('hidden');
+  }
+
+  /* =========================================================
+     קלט: מקלדת + כפתורי מסך
+     ========================================================= */
+  window.addEventListener('keydown', (e)=>{
+    switch(e.key){
+      case 'ArrowUp':    move(1, 0);  e.preventDefault(); break;
+      case 'ArrowDown':  move(-1, 0); e.preventDefault(); break;
+      case 'ArrowLeft':  move(0, -1); e.preventDefault(); break;
+      case 'ArrowRight': move(0, 1);  e.preventDefault(); break;
+    }
+  }, { passive:false });
+
+  function bindTouch(id, fn){
+    const el = document.getElementById(id);
+    const handler = (e)=>{ e.preventDefault(); fn(); };
+    el.addEventListener('touchstart', handler, { passive:false });
+    el.addEventListener('click', handler);
+  }
+  bindTouch('btnUp',    ()=> move(1, 0));
+  bindTouch('btnDown',  ()=> move(-1, 0));
+  bindTouch('btnLeft',  ()=> move(0, -1));
+  bindTouch('btnRight', ()=> move(0, 1));
+
+  // בחירת מספר שחקנים
+  document.getElementById('p1Btn').addEventListener('click', ()=>{
+    numPlayers = 1;
+    document.getElementById('p1Btn').classList.add('active');
+    document.getElementById('p2Btn').classList.remove('active');
+  });
+  document.getElementById('p2Btn').addEventListener('click', ()=>{
+    numPlayers = 2;
+    document.getElementById('p2Btn').classList.add('active');
+    document.getElementById('p1Btn').classList.remove('active');
+  });
+
+  document.getElementById('startBtn').addEventListener('click', ()=>{
+    document.getElementById('startScreen').classList.add('hidden');
+    initNewGame();
+  });
+  document.getElementById('saveScoreBtn').addEventListener('click', saveScoreAndShow);
+  document.getElementById('nameInput').addEventListener('keydown', (e)=>{
+    if(e.key === 'Enter') saveScoreAndShow();
+  });
+  document.getElementById('restartBtn').addEventListener('click', ()=>{
+    document.getElementById('gameOverScreen').classList.add('hidden');
+    initNewGame();
+  });
+  document.getElementById('homeBtn').addEventListener('click', goHome);
+  document.getElementById('muteBtn').addEventListener('click', ()=>{
+    muted = !muted;
+    document.getElementById('muteBtn').textContent = muted ? '🔇' : '🔊';
+  });
+
+  document.getElementById('aboutBtn').addEventListener('click', ()=>{
+    document.getElementById('aboutOverlay').classList.remove('hidden');
+  });
+  document.getElementById('aboutCloseBtn').addEventListener('click', ()=>{
+    document.getElementById('aboutOverlay').classList.add('hidden');
+  });
+  document.getElementById('aboutOverlay').addEventListener('click', (e)=>{
+    if(e.target.id === 'aboutOverlay') document.getElementById('aboutOverlay').classList.add('hidden');
+  });
+
+  function togglePause(){
+    if(!gameRunning) return; // אין מה להשהות מחוץ למשחק פעיל
+    paused = !paused;
+    document.getElementById('pauseBtn').textContent = paused ? '▶' : '⏸';
+    document.getElementById('pauseOverlay').classList.toggle('hidden', !paused);
+    if(paused) document.getElementById('timeVal').classList.remove('warning');
+  }
+  document.getElementById('pauseBtn').addEventListener('click', togglePause);
+  document.getElementById('pauseOverlay').addEventListener('click', togglePause);
+
+  /* =========================================================
+     אתחול
+     ========================================================= */
+  createGround();
+  createGoalPads();
+  buildLanesForLevel(1);
+  frogGroup = createFrog();
+  resetFrogPosition();
+  updateHUD();
+  renderLeaderboard(document.getElementById('startLeaderboard'), -1);
+
+  document.querySelectorAll('.lang-btn').forEach(function(b){
+    b.addEventListener('click', function(){ applyLang(b.getAttribute('data-lang')); });
+  });
+  applyLang(curLang);
+
+  /* =========================================================
+     לופ ראשי
+     ========================================================= */
+  const clock = new THREE.Clock();
+
+  function animate(){
+    requestAnimationFrame(animate);
+    const rawDelta = Math.min(clock.getDelta(), 0.05);
+    const delta = paused ? 0 : rawDelta;
+
+    updateLanes(delta);
+
+    if(gameRunning && !paused){
+      updateFrog(delta);
+      updatePickup(delta);
+      if(!frog.dying){
+        timeLeft -= delta;
+        if(timeLeft <= 0){
+          timeLeft = 0;
+          loseLife('crash');
+        }
+      }
+      updateHUD();
+    }
+
+    renderer.render(scene, camera);
+  }
+  animate();
+
+})();
+</script>
+</body>
+</html>
