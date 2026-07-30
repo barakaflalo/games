@@ -6,6 +6,7 @@
 <meta name="theme-color" content="#0a0a0a">
 <meta name="description" content="Poker 3D - AppNest">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Poker 3D — AppNest</title>
 <style>
@@ -1497,13 +1498,13 @@ function onResize(){
   camera.aspect = w / h;
   const portrait = camera.aspect < 0.8;
   const tall = camera.aspect < 0.55;      // phone held upright
-  // Base camera position, then multiplied outward by the user's zoom setting so
-  // the player can pull the whole table into view if the default is too close.
-  camera.fov = portrait ? (tall ? 52 : 48) : 44;
-  const by = portrait ? (tall ? 12.5 : 11) : 7.9;
-  const bz = portrait ? (tall ? 12.5 : 11) : 7.9;
-  camera.position.set(0, by * camZoom, bz * camZoom);
-  camera.lookAt(0, portrait ? 0.5 : 0.45, portrait ? -0.2 : -0.25);
+  // Aim at the TABLE CENTRE (y≈0.9), not near the horizon — that was the bug that
+  // filled a narrow screen with empty background. camZoom scales the distance.
+  camera.fov = portrait ? 50 : 44;
+  const by = (portrait ? (tall ? 9 : 8.6) : 7.9) * camZoom;
+  const bz = (portrait ? (tall ? 10 : 9.4) : 7.9) * camZoom;
+  camera.position.set(0, by, bz);
+  camera.lookAt(0, portrait ? 0.9 : 0.45, portrait ? 0 : -0.25);
   camera.updateProjectionMatrix();
 }
 
@@ -1819,7 +1820,7 @@ function initPWA(){
   }
 
   const manifest = {
-    name:"Poker 3D — AppNest", short_name:"Poker 3D", start_url:".", scope:".",
+    name:"Poker 3D — AppNest", short_name:"Poker 3D", start_url:location.href, scope:"./",
     display:"standalone", orientation:"any",
     background_color:"#080808", theme_color:"#080808",
     description:"Texas Hold'em poker in real 3D",
