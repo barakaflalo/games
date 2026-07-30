@@ -1882,15 +1882,19 @@ function computeBounds(){
   const dist = camera.position.z - PLAYER_Z;
   const vH = 2 * Math.tan(camera.fov * Math.PI / 360) * dist;
   const vW = vH * camera.aspect;
-  BX = Math.max(4.5, vW/2 - 1.8);
-  BY = Math.max(4.5, vH/2 - 1.8);
+  BX = Math.max(4, vW/2 - 1.4);
+  BY = Math.max(6, vH/2 - 2.2);
 }
 function onResize(){
   if(!renderer) return;
   const w = innerWidth, h = innerHeight;
   renderer.setSize(w, h, false);
   camera.aspect = w / h;
-  camera.fov = camera.aspect < .75 ? 58 : 52;
+  const portrait = camera.aspect < 1;
+  // taller screens need the camera further back and a wider lens to fit the field
+  camera.fov = portrait ? Math.min(74, 52 + (1 - camera.aspect) * 46) : 52;
+  camera.position.set(0, portrait ? 12 : 6, portrait ? 40 : 30);
+  camera.lookAt(0, portrait ? -2 : 0, portrait ? -34 : -30);
   camera.updateProjectionMatrix();
   computeBounds();
 }
@@ -2015,7 +2019,7 @@ function startGame(){
   G.lives = d.lives; G.bombs = d.bombs;
   G.combo = 0; G.comboT = 0; G.streak = 0; G.streakT = 0; G.bestCombo = 0;
   G.weapon = "normal"; G.wTimer = 0; G.shieldT = 0; G.fireCd = 0;
-  G.px = 0; G.py = -BY * .55; G.roll = 0;
+  G.px = 0; G.py = -BY * .62; G.roll = 0;
   G.invuln = 1.6; G.dead = false; G.intermission = 0;
   G.mission = null; G.msnDone = false;
   inX = 0; inY = 0; firing = false; shake = 0;
