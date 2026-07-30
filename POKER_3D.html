@@ -133,6 +133,12 @@ input:focus,select:focus{border-color:var(--gold);outline:none}
   justify-content:space-between;align-items:flex-start;gap:8px}
 .g-back{width:44px;height:44px;border-radius:12px;background:rgba(0,0,0,.62);backdrop-filter:blur(8px);
   border:1.5px solid var(--gold);color:var(--gold);font-size:19px;display:grid;place-items:center;flex:none}
+.zoombar{position:absolute;inset-inline-start:14px;top:calc(var(--safe-t) + 70px);
+  display:flex;flex-direction:column;gap:8px;z-index:9;pointer-events:auto}
+.zbtn{width:42px;height:42px;border-radius:10px;background:rgba(0,0,0,.6);backdrop-filter:blur(8px);
+  border:1.5px solid var(--gold-dim);color:var(--gold);font-size:22px;font-weight:700;
+  display:grid;place-items:center;line-height:1}
+.zbtn:active{background:color-mix(in srgb,var(--gold) 22%,transparent)}
 .potbox{background:rgba(0,0,0,.62);backdrop-filter:blur(8px);border:1px solid var(--gold-dim);
   border-radius:12px;padding:8px 16px;text-align:center;color:#fff}
 .potbox .k{font-size:10px;letter-spacing:.18em;color:var(--gold);text-transform:uppercase}
@@ -230,6 +236,10 @@ input:focus,select:focus{border-color:var(--gold);outline:none}
       <button class="g-back" data-go="home"><span class="arr">←</span></button>
       <div class="potbox"><div class="k" id="t-pot">POT</div><div class="v" id="hud-pot">0</div></div>
       <div class="stagebox" id="hud-stage">—</div>
+    </div>
+    <div class="zoombar">
+      <button class="zbtn" id="zoom-out" aria-label="zoom out">−</button>
+      <button class="zbtn" id="zoom-in" aria-label="zoom in">+</button>
     </div>
     <div class="msg" id="hud-msg"><span></span></div>
     <div class="actions">
@@ -557,7 +567,7 @@ const LANG_ORDER = ["he","en","ru","es","ar"];
 const KEY = "appnest.poker3d.v1";
 const DEFAULTS = {
   name:"", lang:"he", theme:"gold", mode:"dark", sound:true,
-  diff:"normal", startChips:2000, chips:2000, seenTutorial:false,
+  diff:"normal", startChips:2000, chips:2000, seenTutorial:false, zoom:1,
   stats:{played:0, won:0, bestHand:-1, biggestPot:0, peak:2000}
 };
 let S = JSON.parse(JSON.stringify(DEFAULTS));
@@ -1216,6 +1226,7 @@ const seatPos = i => new THREE.Vector3(RX*Math.cos(SEAT_A[i]), TY, RZ*Math.sin(S
 const AV_COLORS = [0x2f6f8f, 0x8f4a6b, 0x4a7a4a, 0x8f6a3a];
 
 let scene, camera, renderer, raf = 0;
+let camZoom = 1;   // user-adjustable camera distance via on-screen zoom buttons
 let feltMat, rimMat, woodMat, floorMat, lampMat, lampLight, keyLight, ambLight;
 let tableGroup, seatGroups = [], boardCards = [], holeCards = [[],[],[],[]];
 let potStack, dealerBtn, glowRing;
@@ -1486,12 +1497,13 @@ function onResize(){
   camera.aspect = w / h;
   const portrait = camera.aspect < 0.8;
   const tall = camera.aspect < 0.55;      // phone held upright
-  // Portrait: sit lower and closer so the elliptical table fills the tall frame;
-  // the lamp has been raised out of the way, so we no longer fight it here.
-  camera.fov = portrait ? (tall ? 54 : 50) : 44;
-  camera.position.set(0, portrait ? (tall ? 8.6 : 8.2) : 7.9,
-                          portrait ? (tall ? 8.8 : 8.6) : 7.9);
-  camera.lookAt(0, portrait ? 0.55 : 0.45, portrait ? -0.15 : -0.25);
+  // Base camera position, then multiplied outward by the user's zoom setting so
+  // the player can pull the whole table into view if the default is too close.
+  camera.fov = portrait ? (tall ? 52 : 48) : 44;
+  const by = portrait ? (tall ? 12.5 : 11) : 7.9;
+  const bz = portrait ? (tall ? 12.5 : 11) : 7.9;
+  camera.position.set(0, by * camZoom, bz * camZoom);
+  camera.lookAt(0, portrait ? 0.5 : 0.45, portrait ? -0.2 : -0.25);
   camera.updateProjectionMatrix();
 }
 
@@ -1763,6 +1775,7 @@ function startGame(){
     return;
   }
   if(!renderer) buildScene();
+  camZoom = S.zoom || 1;
   G.running = true;
   resetTable();                       // picks up the current starting-chips / blind setting
   G.players[0].chips = S.chips;
@@ -1770,6 +1783,22 @@ function startGame(){
   onResize();
   if(S.chips < 10){ showBroke(); return; }
   newHand();
+}
+function setupZoomButtons(){
+  function setZoom(z){
+    camZoom = Math.max(0.75, Math.min(1.7, z));
+    S.zoom = camZoom; save();
+    if(renderer) onResize();
+    blip(680, .03);
+  }
+  const zi = document.getElementById("zoom-in"), zo = document.getElementById("zoom-out");
+  if(!zi || !zo) return;
+  const tap = (el, fn)=>{
+    el.addEventListener("click", fn);
+    el.addEventListener("touchstart", e=>{ e.preventDefault(); fn(); }, {passive:false});
+  };
+  tap(zi, ()=>setZoom(camZoom - 0.12));   // + = closer
+  tap(zo, ()=>setZoom(camZoom + 0.12));   // − = further back
 }
 function stopGame(){
   G.running = false; G.handOver = true;
@@ -1828,6 +1857,7 @@ function iconDataURL(size){
   if(!S.chips || S.chips < 0) S.chips = S.startChips;
   applyTheme(); applyLang(); buildSettings(); buildGuide(); buildStats(); refreshHome();
   initPWA();
+  setupZoomButtons();
   document.addEventListener("gesturestart", e=>e.preventDefault());
   $("c3d").addEventListener("contextmenu", e=>e.preventDefault());
   addEventListener("beforeunload", ()=>{ if(G.players.length) S.chips = G.players[0].chips; save(); });

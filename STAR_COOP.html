@@ -145,9 +145,14 @@ input:focus{border-color:var(--gold);outline:none}
 .gcol{display:flex;flex-direction:column;gap:6px;align-items:flex-end}
 .chipline{background:rgba(0,0,0,.62);backdrop-filter:blur(8px);border:1px solid var(--line);
   border-radius:999px;padding:5px 12px;font-size:12px;color:#e8e8e8;white-space:nowrap}
-#radar{position:absolute;inset-inline-start:10px;top:calc(var(--safe-t) + 92px);
-  width:74px;height:104px;border-radius:8px;border:1.5px solid var(--gold-dim);
+#radar{position:absolute;inset-inline-start:10px;top:calc(var(--safe-t) + 92px);  width:74px;height:104px;border-radius:8px;border:1.5px solid var(--gold-dim);
   background:rgba(0,0,0,.45);z-index:9}
+.zoombar{position:absolute;inset-inline-start:10px;top:calc(var(--safe-t) + 205px);
+  display:flex;flex-direction:column;gap:8px;z-index:10}
+.zbtn{width:42px;height:42px;border-radius:10px;background:rgba(0,0,0,.55);backdrop-filter:blur(8px);
+  border:1.5px solid var(--gold-dim);color:var(--gold);font-size:22px;font-weight:700;
+  display:grid;place-items:center;line-height:1;pointer-events:auto}
+.zbtn:active{background:rgba(212,175,55,.25)}
 #bossbar{position:absolute;top:calc(var(--safe-t) + 74px);inset-inline:0;margin:auto;
   width:min(300px,70vw);z-index:9;display:none}
 #bossbar .lb{font-size:10px;color:var(--danger);text-align:center;letter-spacing:.2em;margin-bottom:3px}
@@ -252,6 +257,10 @@ input:focus{border-color:var(--gold);outline:none}
     </div>
     <div class="msg" id="hud-msg"><span></span></div>
     <div class="kmsg" id="hud-kmsg"></div>
+  </div>
+  <div class="zoombar">
+    <button class="zbtn" id="zoom-out" aria-label="zoom out">−</button>
+    <button class="zbtn" id="zoom-in" aria-label="zoom in">+</button>
   </div>
   <div id="touch">
     <div id="jz"><div id="jk"></div></div>
@@ -622,7 +631,7 @@ const KEY = "appnest.starcoop.v1";
 const DEFAULTS = {
   name:"", lang:"he", theme:"gold", mode:"dark",
   sound:true, music:true, crt:false, autofire:true, shake:true,
-  diff:"normal", seenTutorial:false, scores:[],
+  diff:"normal", seenTutorial:false, scores:[], zoom:1,
   stats:{games:0, best:0, wave:0, kills:0, time:0, combo:0}
 };
 let S = JSON.parse(JSON.stringify(DEFAULTS));
@@ -1883,6 +1892,7 @@ function buildScene(){
 // visible width. This keeps the ship reachable and correctly sized on any
 // screen shape instead of drifting off a too-tall portrait field.
 let shipScale = 1;
+let camZoom = 1;   // user-adjustable via on-screen zoom buttons (0.7 close .. 1.6 far)
 function computeBounds(){
   const dist = camera.position.z - PLAYER_Z;
   const vH = 2 * Math.tan(camera.fov * Math.PI / 360) * dist;
@@ -1910,7 +1920,10 @@ function onResize(){
   // Straight down the -Z axis, no tilt. Pull back and widen only as much as the
   // aspect needs; the frustum math above then sizes the field and the ship.
   camera.fov = portrait ? Math.min(76, 54 + (1 - camera.aspect) * 46) : 50;
-  camera.position.set(0, 0, portrait ? 42 : 30);
+  // Pull the camera well back so the whole field is visible; the player can
+  // fine-tune with the on-screen zoom buttons (camZoom, 1 = default).
+  const baseZ = portrait ? 60 : 40;
+  camera.position.set(0, 0, baseZ * camZoom);
   camera.lookAt(0, 0, -30);
   camera.updateProjectionMatrix();
   computeBounds();
@@ -2029,6 +2042,7 @@ function clearEntities(){
 function startGame(){
   if(!window.THREE){ showMsg("Three.js failed to load", 4); return; }
   if(!renderer) buildScene();
+  camZoom = S.zoom || 1;
   clearEntities();
   const d = D();
   G.running = true; G.state = "playing";
@@ -2143,6 +2157,21 @@ function setupInput(){
   const bb = $("bb");
   bb.addEventListener("touchstart", e=>{ e.preventDefault(); useBomb(); bb.classList.add("act"); }, {passive:false});
   bb.addEventListener("touchend",   e=>{ e.preventDefault(); bb.classList.remove("act"); });
+
+  /* camera zoom buttons — the player can pull the view further out or closer */
+  function setZoom(z){
+    camZoom = Math.max(0.7, Math.min(1.7, z));
+    S.zoom = camZoom; save();
+    if(renderer) onResize();
+    blip(680, .03);
+  }
+  const zi = $("zoom-in"), zo = $("zoom-out");
+  const tap = (el, fn)=>{
+    el.addEventListener("click", fn);
+    el.addEventListener("touchstart", e=>{ e.preventDefault(); fn(); }, {passive:false});
+  };
+  tap(zi, ()=>setZoom(camZoom - 0.15));   // + button = closer = smaller Z
+  tap(zo, ()=>setZoom(camZoom + 0.15));   // − button = further = larger Z
 
   /* keyboard drives the same two axes the joystick does */
   setInterval(()=>{
