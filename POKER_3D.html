@@ -134,15 +134,6 @@ input:focus,select:focus{border-color:var(--gold);outline:none}
   justify-content:space-between;align-items:flex-start;gap:8px}
 .g-back{width:44px;height:44px;border-radius:12px;background:rgba(0,0,0,.62);backdrop-filter:blur(8px);
   border:1.5px solid var(--gold);color:var(--gold);font-size:19px;display:grid;place-items:center;flex:none}
-.zoombar{position:absolute;inset-inline-start:14px;top:calc(var(--safe-t) + 70px);
-  display:flex;flex-direction:column;gap:8px;z-index:9;pointer-events:auto}
-.zbtn{width:42px;height:42px;border-radius:10px;background:rgba(0,0,0,.6);backdrop-filter:blur(8px);
-  border:1.5px solid var(--gold-dim);color:var(--gold);font-size:22px;font-weight:700;
-  display:grid;place-items:center;line-height:1}
-.zbtn:active{background:color-mix(in srgb,var(--gold) 22%,transparent)}
-.dpad{display:flex;flex-direction:column;align-items:center;gap:4px;margin-top:4px}
-.dpad-mid{display:flex;gap:4px}
-.zbtn.dp{width:36px;height:36px;font-size:14px}
 .potbox{background:rgba(0,0,0,.62);backdrop-filter:blur(8px);border:1px solid var(--gold-dim);
   border-radius:12px;padding:8px 16px;text-align:center;color:#fff}
 .potbox .k{font-size:10px;letter-spacing:.18em;color:var(--gold);text-transform:uppercase}
@@ -240,19 +231,6 @@ input:focus,select:focus{border-color:var(--gold);outline:none}
       <button class="g-back" data-go="home"><span class="arr">←</span></button>
       <div class="potbox"><div class="k" id="t-pot">POT</div><div class="v" id="hud-pot">0</div></div>
       <div class="stagebox" id="hud-stage">—</div>
-    </div>
-    <div class="zoombar">
-      <button class="zbtn" id="zoom-out" aria-label="zoom out">−</button>
-      <button class="zbtn" id="zoom-in" aria-label="zoom in">+</button>
-      <div class="dpad">
-        <button class="zbtn dp" id="cam-up" aria-label="up">▲</button>
-        <div class="dpad-mid">
-          <button class="zbtn dp" id="cam-left" aria-label="left">◀</button>
-          <button class="zbtn dp" id="cam-reset" aria-label="reset">⟳</button>
-          <button class="zbtn dp" id="cam-right" aria-label="right">▶</button>
-        </div>
-        <button class="zbtn dp" id="cam-down" aria-label="down">▼</button>
-      </div>
     </div>
     <div class="msg" id="hud-msg"><span></span></div>
     <div class="actions">
@@ -1239,7 +1217,6 @@ const seatPos = i => new THREE.Vector3(RX*Math.cos(SEAT_A[i]), TY, RZ*Math.sin(S
 const AV_COLORS = [0x2f6f8f, 0x8f4a6b, 0x4a7a4a, 0x8f6a3a];
 
 let scene, camera, renderer, raf = 0;
-let camZoom = 1;   // user-adjustable camera distance via on-screen zoom buttons
 let feltMat, rimMat, woodMat, floorMat, lampMat, lampLight, keyLight, ambLight;
 let tableGroup, seatGroups = [], boardCards = [], holeCards = [[],[],[],[]];
 let potStack, dealerBtn, glowRing;
@@ -1505,39 +1482,24 @@ function buildScene(){
 
 // Orbit camera around the table centre. The player can drag to rotate, and use
 // the on-screen buttons. Angles are stored and applied every resize/frame.
-const ORBIT_TARGET = new THREE.Vector3(0, 0.9, 0);
-let camYaw = 0;        // left/right rotation (radians)
-let camPitch = 0.92;   // downward tilt (radians from horizontal); set per-aspect
-let camDist = 12;      // distance from target, derived from aspect * camZoom
-let camTouched = false; // true once the player drags or nudges the camera
-
-function applyCamera(){
-  if(!camera) return;
-  camPitch = Math.max(0.35, Math.min(1.45, camPitch));   // clamp so you can't flip under/over
-  camYaw = Math.max(-0.9, Math.min(0.9, camYaw));         // limited swing left/right
-  const cp = Math.cos(camPitch), sp = Math.sin(camPitch);
-  const cy = Math.cos(camYaw), sy = Math.sin(camYaw);
-  camera.position.set(
-    ORBIT_TARGET.x + camDist * cp * sy,
-    ORBIT_TARGET.y + camDist * sp,
-    ORBIT_TARGET.z + camDist * cp * cy
-  );
-  camera.lookAt(ORBIT_TARGET);
-  camera.updateProjectionMatrix();
-}
 function onResize(){
   if(!renderer) return;
   const w = innerWidth, h = innerHeight;
   renderer.setSize(w, h, false);
   camera.aspect = w / h;
-  const portrait = camera.aspect < 0.8;
-  const tall = camera.aspect < 0.55;
-  camera.fov = portrait ? 50 : 44;
-  // distance grows on narrow screens so the wide table fits; camZoom fine-tunes
-  const baseDist = portrait ? (tall ? 13.5 : 12.5) : 11.2;
-  camDist = baseDist * camZoom;
-  if(!camTouched) camPitch = portrait ? 0.80 : 0.92;   // gentler tilt on phones until the user adjusts
-  applyCamera();
+  const portrait = camera.aspect < 0.9;
+  // Simple fixed camera: high above the table looking down at a gentle angle.
+  // On a narrow portrait screen we lift higher and widen slightly so the whole
+  // table fits top-to-bottom; on landscape we sit lower for a classic table view.
+  if(portrait){
+    camera.fov = 44;
+    camera.position.set(0, 15.5, 6.0);
+  }else{
+    camera.fov = 42;
+    camera.position.set(0, 11, 8.5);
+  }
+  camera.lookAt(0, 0.9, -0.4);
+  camera.updateProjectionMatrix();
 }
 
 function applyTheme3D(){
@@ -1808,9 +1770,6 @@ function startGame(){
     return;
   }
   if(!renderer) buildScene();
-  camZoom = S.zoom || 1;
-  if(typeof S.camYaw === "number"){ camYaw = S.camYaw; camTouched = true; }
-  if(typeof S.camPitch === "number"){ camPitch = S.camPitch; camTouched = true; }
   G.running = true;
   resetTable();                       // picks up the current starting-chips / blind setting
   G.players[0].chips = S.chips;
@@ -1818,60 +1777,6 @@ function startGame(){
   onResize();
   if(S.chips < 10){ showBroke(); return; }
   newHand();
-}
-function saveCam(){ S.zoom = camZoom; S.camYaw = camYaw; S.camPitch = camPitch; save(); }
-function setupZoomButtons(){
-  function setZoom(z){
-    camZoom = Math.max(0.7, Math.min(1.8, z));
-    camTouched = true; saveCam();
-    if(renderer) onResize();
-    blip(680, .03);
-  }
-  function nudge(dyaw, dpitch){
-    camTouched = true;
-    camYaw += dyaw; camPitch += dpitch;
-    applyCamera(); saveCam(); blip(640, .02);
-  }
-  function resetCam(){
-    camTouched = false; camYaw = 0; camZoom = 1;
-    S.camYaw = 0; S.camPitch = undefined; S.zoom = 1; save();
-    if(renderer) onResize();            // recomputes the default pitch for this aspect
-    blip(760, .04);
-  }
-  const tap = (id, fn)=>{
-    const el = document.getElementById(id); if(!el) return;
-    el.addEventListener("click", fn);
-    el.addEventListener("touchstart", e=>{ e.preventDefault(); fn(); }, {passive:false});
-  };
-  tap("zoom-in",  ()=>setZoom(camZoom - 0.12));   // + = closer
-  tap("zoom-out", ()=>setZoom(camZoom + 0.12));   // − = further back
-  tap("cam-left",  ()=>nudge(-0.12, 0));
-  tap("cam-right", ()=>nudge( 0.12, 0));
-  tap("cam-up",    ()=>nudge(0,  0.10));           // tilt higher (steeper top-down)
-  tap("cam-down",  ()=>nudge(0, -0.10));           // tilt lower (flatter)
-  tap("cam-reset", resetCam);
-
-  /* drag anywhere on the canvas to orbit the camera */
-  const cv = document.getElementById("c3d");
-  if(cv){
-    let dragging = false, lx = 0, ly = 0, moved = 0;
-    const start = (x, y)=>{ dragging = true; lx = x; ly = y; moved = 0; };
-    const move = (x, y)=>{
-      if(!dragging) return;
-      const dx = x - lx, dy = y - ly; lx = x; ly = y; moved += Math.abs(dx) + Math.abs(dy);
-      camTouched = true;
-      camYaw   -= dx * 0.005;
-      camPitch += dy * 0.005;
-      applyCamera();
-    };
-    const end = ()=>{ if(dragging && moved > 4) saveCam(); dragging = false; };
-    cv.addEventListener("mousedown", e=>start(e.clientX, e.clientY));
-    window.addEventListener("mousemove", e=>move(e.clientX, e.clientY));
-    window.addEventListener("mouseup", end);
-    cv.addEventListener("touchstart", e=>{ const t = e.touches[0]; start(t.clientX, t.clientY); }, {passive:true});
-    cv.addEventListener("touchmove", e=>{ const t = e.touches[0]; move(t.clientX, t.clientY); }, {passive:true});
-    cv.addEventListener("touchend", end);
-  }
 }
 function stopGame(){
   G.running = false; G.handOver = true;
@@ -1930,7 +1835,6 @@ function iconDataURL(size){
   if(!S.chips || S.chips < 0) S.chips = S.startChips;
   applyTheme(); applyLang(); buildSettings(); buildGuide(); buildStats(); refreshHome();
   initPWA();
-  setupZoomButtons();
   document.addEventListener("gesturestart", e=>e.preventDefault());
   $("c3d").addEventListener("contextmenu", e=>e.preventDefault());
   addEventListener("beforeunload", ()=>{ if(G.players.length) S.chips = G.players[0].chips; save(); });
