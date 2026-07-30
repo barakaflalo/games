@@ -1878,12 +1878,28 @@ function buildScene(){
   onResize();
   window.addEventListener("resize", onResize);
 }
+// The play field is measured at the PLAYER plane from the actual camera
+// frustum, then the SHIP is scaled so it's always a sensible fraction of the
+// visible width. This keeps the ship reachable and correctly sized on any
+// screen shape instead of drifting off a too-tall portrait field.
+let shipScale = 1;
 function computeBounds(){
   const dist = camera.position.z - PLAYER_Z;
   const vH = 2 * Math.tan(camera.fov * Math.PI / 360) * dist;
   const vW = vH * camera.aspect;
-  BX = Math.max(4, vW/2 - 1.4);
-  BY = Math.max(6, vH/2 - 2.2);
+  const halfW = vW / 2, halfH = vH / 2;
+  // horizontal: full width minus a small margin
+  BX = Math.max(3.5, halfW - halfW * 0.10);
+  // vertical: the ship lives in the lower part of the screen. Cap how far up it
+  // can travel so it never climbs behind the HUD, but keep the field playable.
+  BY = Math.max(5, Math.min(halfH - halfH * 0.12, halfW * 2.1));
+  // Scale the ship to a constant ~8% of visible height no matter how far the
+  // camera sits. (A far portrait camera would otherwise render it tiny.)
+  const shipModelH = 2.2;
+  shipScale = (vH * 0.085) / shipModelH;
+  shipScale = Math.max(0.7, Math.min(2.6, shipScale));
+  if(ship) ship.scale.setScalar(shipScale);
+  if(shieldMesh) shieldMesh.scale.setScalar(shipScale * 1.1);
 }
 function onResize(){
   if(!renderer) return;
@@ -1891,11 +1907,10 @@ function onResize(){
   renderer.setSize(w, h, false);
   camera.aspect = w / h;
   const portrait = camera.aspect < 1;
-  // Camera looks straight down the -Z axis (NO tilt). A tilt makes the near
-  // ship balloon on a tall screen. To fit a tall portrait field we only pull
-  // back and widen the lens; on landscape we stay close.
-  camera.fov = portrait ? Math.min(72, 52 + (1 - camera.aspect) * 42) : 52;
-  camera.position.set(0, 0, portrait ? 40 : 30);
+  // Straight down the -Z axis, no tilt. Pull back and widen only as much as the
+  // aspect needs; the frustum math above then sizes the field and the ship.
+  camera.fov = portrait ? Math.min(76, 54 + (1 - camera.aspect) * 46) : 50;
+  camera.position.set(0, 0, portrait ? 42 : 30);
   camera.lookAt(0, 0, -30);
   camera.updateProjectionMatrix();
   computeBounds();
