@@ -1484,9 +1484,13 @@ function onResize(){
   renderer.setSize(w, h, false);
   camera.aspect = w / h;
   const portrait = camera.aspect < 0.8;
-  camera.fov = portrait ? 56 : 44;
-  camera.position.set(0, portrait ? 9.3 : 7.9, portrait ? 8.4 : 7.9);
-  camera.lookAt(0, portrait ? 0.5 : 0.45, portrait ? 0.05 : -0.25);
+  // On a tall phone, pull the camera back and up and narrow the lens so the
+  // pendant lamp shrinks out of the way and the whole table fits in frame.
+  const tall = camera.aspect < 0.55;
+  camera.fov = portrait ? (tall ? 46 : 52) : 44;
+  camera.position.set(0, portrait ? (tall ? 11 : 10) : 7.9,
+                          portrait ? (tall ? 11 : 10) : 7.9);
+  camera.lookAt(0, portrait ? 0.6 : 0.45, portrait ? -0.4 : -0.25);
   camera.updateProjectionMatrix();
 }
 

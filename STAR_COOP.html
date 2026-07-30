@@ -1891,10 +1891,12 @@ function onResize(){
   renderer.setSize(w, h, false);
   camera.aspect = w / h;
   const portrait = camera.aspect < 1;
-  // taller screens need the camera further back and a wider lens to fit the field
-  camera.fov = portrait ? Math.min(74, 52 + (1 - camera.aspect) * 46) : 52;
-  camera.position.set(0, portrait ? 12 : 6, portrait ? 40 : 30);
-  camera.lookAt(0, portrait ? -2 : 0, portrait ? -34 : -30);
+  // Camera looks straight down the -Z axis (NO tilt). A tilt makes the near
+  // ship balloon on a tall screen. To fit a tall portrait field we only pull
+  // back and widen the lens; on landscape we stay close.
+  camera.fov = portrait ? Math.min(72, 52 + (1 - camera.aspect) * 42) : 52;
+  camera.position.set(0, 0, portrait ? 40 : 30);
+  camera.lookAt(0, 0, -30);
   camera.updateProjectionMatrix();
   computeBounds();
 }
