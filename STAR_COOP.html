@@ -2157,6 +2157,13 @@ function iconDataURL(size){
   return cv.toDataURL("image/png");
 }
 function initPWA(){
+  /* development: tear down any previously installed service worker + its caches
+     so a fresh upload always loads immediately instead of a stale cached copy */
+  if("serviceWorker" in navigator){
+    navigator.serviceWorker.getRegistrations().then(rs=>rs.forEach(r=>r.unregister())).catch(()=>{});
+    if(window.caches && caches.keys) caches.keys().then(ks=>ks.forEach(k=>caches.delete(k))).catch(()=>{});
+  }
+
   const manifest = {
     name:"Star Coop — AppNest", short_name:"Star Coop", start_url:".", scope:".",
     display:"standalone", orientation:"any", background_color:"#080808", theme_color:"#080808",
@@ -2168,8 +2175,6 @@ function initPWA(){
     const url = URL.createObjectURL(new Blob([JSON.stringify(manifest)], {type:"application/manifest+json"}));
     const l = document.createElement("link"); l.rel = "manifest"; l.href = url; document.head.appendChild(l);
   }catch(e){}
-  if("serviceWorker" in navigator && location.protocol.startsWith("http"))
-    navigator.serviceWorker.register("sw.js").catch(()=>{});
   const ic = iconDataURL(192);
   [["icon"],["apple-touch-icon"]].forEach(r=>{
     const l = document.createElement("link"); l.rel = r[0]; l.href = ic; document.head.appendChild(l);
