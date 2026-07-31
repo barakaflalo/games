@@ -1541,7 +1541,14 @@ function onResize(){
   camera.aspect = w / h;
   const portrait = camera.aspect < 0.9;
   camera.fov = portrait ? 46 : 42;
-  if(!camUserSet) camDist = portrait ? 15 : 12;
+  // Default view (matches the framing the player settled on): a gentle angled
+  // look at the table. Narrower screens need more distance so the table fits;
+  // this only applies until the player adjusts the camera themselves.
+  if(!camUserSet){
+    camPitch = 0.88;
+    camYaw = 0;
+    camDist = portrait ? Math.min(22, 13 / Math.max(0.4, camera.aspect)) : 12;
+  }
   applyCamera();
 }
 function saveCam(){
