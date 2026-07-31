@@ -352,6 +352,7 @@ const VERSION = "1.0.0";
 const LANG = {
 he:{ dir:"rtl", name:"עברית",
  tagline:"טקסס הולדם", play:"שחק", play_sub:"טקסס הולדם מול 3 יריבים",
+ cam_hint:"גרור לסובב · שתי אצבעות להזזה · צביטה לזום",
  stats:"סטטיסטיקה", stats_sub:"ההישגים שלך", guide:"מדריך", guide_sub:"איך משחקים",
  settings:"הגדרות", settings_sub:"שפה, עיצוב ונתונים", about:"אודות", about_sub:"גרסה ופרטים",
  pot:"קופה", fold:"פרוש", check:"צ'ק", call:"קול", raise:"העלאה", allin:"אול-אין", bet:"הימור",
@@ -392,6 +393,7 @@ he:{ dir:"rtl", name:"עברית",
 },
 en:{ dir:"ltr", name:"English",
  tagline:"Texas Hold'em", play:"Play", play_sub:"Hold'em against 3 opponents",
+ cam_hint:"Drag to rotate · two fingers to move · pinch to zoom",
  stats:"Statistics", stats_sub:"Your record", guide:"Guide", guide_sub:"How to play",
  settings:"Settings", settings_sub:"Language, theme and data", about:"About", about_sub:"Version and credits",
  pot:"Pot", fold:"Fold", check:"Check", call:"Call", raise:"Raise", allin:"All-in", bet:"Bet",
@@ -432,6 +434,7 @@ en:{ dir:"ltr", name:"English",
 },
 ru:{ dir:"ltr", name:"Русский",
  tagline:"Техасский холдем", play:"Играть", play_sub:"Холдем против 3 соперников",
+ cam_hint:"Тащите чтобы вращать · два пальца двигать · щипок для зума",
  stats:"Статистика", stats_sub:"Ваши результаты", guide:"Руководство", guide_sub:"Как играть",
  settings:"Настройки", settings_sub:"Язык, оформление и данные", about:"О программе", about_sub:"Версия и авторы",
  pot:"Банк", fold:"Пас", check:"Чек", call:"Колл", raise:"Рейз", allin:"Ва-банк", bet:"Ставка",
@@ -472,6 +475,7 @@ ru:{ dir:"ltr", name:"Русский",
 },
 es:{ dir:"ltr", name:"Español",
  tagline:"Texas Hold'em", play:"Jugar", play_sub:"Hold'em contra 3 rivales",
+ cam_hint:"Arrastra para girar · dos dedos para mover · pellizca para zoom",
  stats:"Estadísticas", stats_sub:"Tu historial", guide:"Guía", guide_sub:"Cómo se juega",
  settings:"Ajustes", settings_sub:"Idioma, tema y datos", about:"Acerca de", about_sub:"Versión y créditos",
  pot:"Bote", fold:"Retirarse", check:"Pasar", call:"Igualar", raise:"Subir", allin:"All-in", bet:"Apuesta",
@@ -512,6 +516,7 @@ es:{ dir:"ltr", name:"Español",
 },
 ar:{ dir:"rtl", name:"العربية",
  tagline:"تكساس هولدم", play:"العب", play_sub:"هولدم أمام ٣ منافسين",
+ cam_hint:"اسحب للتدوير · إصبعان للتحريك · قرصة للتكبير",
  stats:"الإحصائيات", stats_sub:"سجلّك", guide:"الدليل", guide_sub:"كيف تلعب",
  settings:"الإعدادات", settings_sub:"اللغة والمظهر والبيانات", about:"حول", about_sub:"الإصدار والمعلومات",
  pot:"القِدر", fold:"انسحاب", check:"تمرير", call:"مجاراة", raise:"رفع", allin:"كل الرقائق", bet:"رهان",
@@ -1217,6 +1222,7 @@ const seatPos = i => new THREE.Vector3(RX*Math.cos(SEAT_A[i]), TY, RZ*Math.sin(S
 const AV_COLORS = [0x2f6f8f, 0x8f4a6b, 0x4a7a4a, 0x8f6a3a];
 
 let scene, camera, renderer, raf = 0;
+let camUserSet = false;   // true once the player has set their own camera view
 let feltMat, rimMat, woodMat, floorMat, lampMat, lampLight, keyLight, ambLight;
 let tableGroup, seatGroups = [], boardCards = [], holeCards = [[],[],[],[]];
 let potStack, dealerBtn, glowRing;
@@ -1380,6 +1386,7 @@ function setStack(group, n, color){
 /* ---------- build the world ---------- */
 function buildScene(){
   const cv = $("c3d");
+  setupCameraGestures(cv);
   renderer = new THREE.WebGLRenderer({canvas:cv, antialias:true, powerPreference:"high-performance"});
   renderer.setPixelRatio(Math.min(devicePixelRatio||1, 2));
   renderer.shadowMap.enabled = true;
@@ -1482,24 +1489,124 @@ function buildScene(){
 
 // Orbit camera around the table centre. The player can drag to rotate, and use
 // the on-screen buttons. Angles are stored and applied every resize/frame.
+/* ---------- fully free camera (total touch control) ----------
+   one finger drag  = rotate (orbit around the look point)
+   two fingers drag = pan (slide the view up/down/left/right)
+   two fingers pinch = zoom in/out
+   desktop: drag = rotate, shift+drag = pan, wheel = zoom
+   Everything persists so the chosen view sticks. */
+const CAM_TARGET = new THREE.Vector3(0, 0.9, 0);
+let camYaw = 0;          // horizontal orbit angle
+let camPitch = 0.95;     // vertical orbit angle (radians)
+let camDist = 13;        // distance from target
+function applyCamera(){
+  if(!camera) return;
+  camPitch = Math.max(0.12, Math.min(1.55, camPitch));   // ~7deg .. ~89deg
+  camDist  = Math.max(4, Math.min(40, camDist));
+  const cp = Math.cos(camPitch), sp = Math.sin(camPitch);
+  const cy = Math.cos(camYaw),   sy = Math.sin(camYaw);
+  camera.position.set(
+    CAM_TARGET.x + camDist * cp * sy,
+    CAM_TARGET.y + camDist * sp,
+    CAM_TARGET.z + camDist * cp * cy
+  );
+  camera.lookAt(CAM_TARGET);
+  camera.updateProjectionMatrix();
+}
+/* pan moves the look point across the camera's own right/up axes */
+function panCamera(dxScreen, dyScreen){
+  const cp = Math.cos(camPitch), sp = Math.sin(camPitch);
+  const cy = Math.cos(camYaw),   sy = Math.sin(camYaw);
+  // forward (target - camera), normalised
+  const fx = -cp*sy, fy = -sp, fz = -cp*cy;
+  // right = normalize(cross(forward, worldUp(0,1,0))) = (fz,0,-fx)
+  let rx = fz, rz = -fx;
+  const rl = Math.hypot(rx, rz) || 1; rx/=rl; rz/=rl;
+  // up = cross(right, forward)
+  let ux = 0*fz - rz*fy, uy = rz*fx - rx*fz, uz = rx*fy - 0*fx;
+  const ul = Math.hypot(ux,uy,uz) || 1; ux/=ul; uy/=ul; uz/=ul;
+  const scale = camDist * 0.0016;
+  CAM_TARGET.x += (-dxScreen*rx + dyScreen*ux) * scale;
+  CAM_TARGET.y += ( dyScreen*uy) * scale;
+  CAM_TARGET.z += (-dxScreen*rz + dyScreen*uz) * scale;
+  CAM_TARGET.x = Math.max(-9, Math.min(9, CAM_TARGET.x));
+  CAM_TARGET.y = Math.max(-3, Math.min(9, CAM_TARGET.y));
+  CAM_TARGET.z = Math.max(-9, Math.min(9, CAM_TARGET.z));
+  applyCamera();
+}
 function onResize(){
   if(!renderer) return;
   const w = innerWidth, h = innerHeight;
   renderer.setSize(w, h, false);
   camera.aspect = w / h;
   const portrait = camera.aspect < 0.9;
-  // Simple fixed camera: high above the table looking down at a gentle angle.
-  // On a narrow portrait screen we lift higher and widen slightly so the whole
-  // table fits top-to-bottom; on landscape we sit lower for a classic table view.
-  if(portrait){
-    camera.fov = 44;
-    camera.position.set(0, 15.5, 6.0);
-  }else{
-    camera.fov = 42;
-    camera.position.set(0, 11, 8.5);
-  }
-  camera.lookAt(0, 0.9, -0.4);
-  camera.updateProjectionMatrix();
+  camera.fov = portrait ? 46 : 42;
+  if(!camUserSet) camDist = portrait ? 15 : 12;
+  applyCamera();
+}
+function saveCam(){
+  S.camYaw = camYaw; S.camPitch = camPitch; S.camDist = camDist;
+  S.camTx = CAM_TARGET.x; S.camTy = CAM_TARGET.y; S.camTz = CAM_TARGET.z;
+  save();
+}
+
+function setupCameraGestures(cv){
+  let mode = 0;   // 0 none, 1 rotate(1 finger), 2 pinch/pan(2 fingers)
+  let lx = 0, ly = 0, pinchStart = 0, distStart = 0;
+  let midX = 0, midY = 0;
+  const dist2 = (a,b)=> Math.hypot(a.clientX-b.clientX, a.clientY-b.clientY);
+  const mid = (a,b)=> [ (a.clientX+b.clientX)/2, (a.clientY+b.clientY)/2 ];
+
+  cv.addEventListener("touchstart", e=>{
+    if(e.touches.length === 1){
+      mode = 1; lx = e.touches[0].clientX; ly = e.touches[0].clientY;
+    }else if(e.touches.length === 2){
+      mode = 2;
+      pinchStart = dist2(e.touches[0], e.touches[1]); distStart = camDist;
+      const m = mid(e.touches[0], e.touches[1]); midX = m[0]; midY = m[1];
+    }
+  }, {passive:true});
+
+  cv.addEventListener("touchmove", e=>{
+    if(mode === 1 && e.touches.length === 1){
+      const t = e.touches[0];
+      const dx = t.clientX - lx, dy = t.clientY - ly; lx = t.clientX; ly = t.clientY;
+      camUserSet = true;
+      camYaw   -= dx * 0.006;
+      camPitch += dy * 0.006;
+      applyCamera();
+    }else if(mode === 2 && e.touches.length === 2){
+      camUserSet = true;
+      // zoom from the change in finger spread
+      const d = dist2(e.touches[0], e.touches[1]);
+      if(pinchStart > 0) camDist = distStart * (pinchStart / d);
+      // pan from the movement of the fingers' midpoint
+      const m = mid(e.touches[0], e.touches[1]);
+      panCamera(m[0] - midX, m[1] - midY);
+      midX = m[0]; midY = m[1];
+      applyCamera();
+    }
+  }, {passive:true});
+
+  const endTouch = ()=>{ if(mode) saveCam(); mode = 0; };
+  cv.addEventListener("touchend", endTouch);
+  cv.addEventListener("touchcancel", endTouch);
+
+  /* desktop: drag = rotate, shift+drag = pan, wheel = zoom */
+  let mdown = false, panning = false;
+  cv.addEventListener("mousedown", e=>{ mdown = true; panning = e.shiftKey; lx = e.clientX; ly = e.clientY; });
+  window.addEventListener("mousemove", e=>{
+    if(!mdown) return;
+    const dx = e.clientX - lx, dy = e.clientY - ly; lx = e.clientX; ly = e.clientY;
+    camUserSet = true;
+    if(panning || e.shiftKey) panCamera(dx, dy);
+    else { camYaw -= dx * 0.006; camPitch += dy * 0.006; applyCamera(); }
+  });
+  window.addEventListener("mouseup", ()=>{ if(mdown) saveCam(); mdown = false; });
+  cv.addEventListener("wheel", e=>{
+    e.preventDefault(); camUserSet = true;
+    camDist *= (1 + Math.sign(e.deltaY) * 0.08); applyCamera(); saveCam();
+  }, {passive:false});
 }
 
 function applyTheme3D(){
@@ -1770,6 +1877,10 @@ function startGame(){
     return;
   }
   if(!renderer) buildScene();
+  if(typeof S.camYaw === "number"){
+    camYaw = S.camYaw; camPitch = S.camPitch; camDist = S.camDist; camUserSet = true;
+    if(typeof S.camTx === "number") CAM_TARGET.set(S.camTx, S.camTy, S.camTz);
+  }
   G.running = true;
   resetTable();                       // picks up the current starting-chips / blind setting
   G.players[0].chips = S.chips;
@@ -1777,6 +1888,7 @@ function startGame(){
   onResize();
   if(S.chips < 10){ showBroke(); return; }
   newHand();
+  if(!S.camHintShown){ S.camHintShown = true; save(); setTimeout(()=>toast(T("cam_hint")), 900); }
 }
 function stopGame(){
   G.running = false; G.handOver = true;
